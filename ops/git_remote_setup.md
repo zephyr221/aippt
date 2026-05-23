@@ -1,42 +1,26 @@
 # Git Remote Setup
 
-This workspace is ready to push to two private remotes:
+Created on 2026-05-23:
 
-- GitHub private repository
-- SJTU GitLab project on `git.dev.sjtu.edu.cn`
+- GitHub private repo: `https://github.com/zephyr221/aippt.git`
+- SJTU GitLab private repo: `https://git.dev.sjtu.edu.cn/moran/aippt.git`
 
-Automated creation requires tokens:
-
-```bash
-export GITHUB_TOKEN=...
-export GITLAB_TOKEN=...
-export REPO_NAME=aippt
-
-# Optional:
-export GITHUB_OWNER=...
-export GITLAB_NAMESPACE_ID=...
-
-bash ops/create_private_repos.sh
-git push -u github main
-git push -u sjtu main
-```
-
-Current blocker:
-
-- GitHub has no authenticated CLI or SSH identity in this environment.
-- `git.dev.sjtu.edu.cn` is reachable through `aippt`, but the local SJTU GitLab
-  SSH keys are not accepted by that server yet.
-
-Manual fallback:
-
-1. Create a private GitHub repo named `aippt`.
-2. Create a private SJTU GitLab repo named `aippt`.
-3. Add remotes:
+Local remotes follow the existing `course/aistudy` convention:
 
 ```bash
-git remote add github git@github.com:<owner>/aippt.git
-git remote add sjtu git@git.dev.sjtu.edu.cn:<namespace>/aippt.git
-git push -u github main
-git push -u sjtu main
+git remote -v
+# github-private  https://github.com/zephyr221/aippt.git
+# origin          https://git.dev.sjtu.edu.cn/moran/aippt.git
 ```
 
+`main` currently tracks `github-private/main`. Push to both remotes with:
+
+```bash
+git push github-private main
+git push origin main
+```
+
+When off campus, `origin` needs either the campus VPN or a tunnel through
+`aippt`/`pj2-ext`; otherwise `git.dev.sjtu.edu.cn` may return the SJTU network
+"forbidden" page. The first SJTU push was completed through a local HTTPS
+forward to the campus network.
