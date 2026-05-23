@@ -3,6 +3,7 @@ set -euo pipefail
 
 APP_ROOT="${APP_ROOT:-/srv/aippt}"
 HERMES_DIR="$APP_ROOT/vendor/hermes-agent"
+API_VENV="$APP_ROOT/venvs/api"
 BUILDER_VENV="$APP_ROOT/venvs/ppt-builder"
 HERMES_REPO="${HERMES_REPO:-https://github.com/nousresearch/hermes-agent.git}"
 HERMES_TARBALL="${HERMES_TARBALL:-https://github.com/nousresearch/hermes-agent/archive/refs/heads/main.tar.gz}"
@@ -101,12 +102,24 @@ hermes --help
 ```
 EOF
 
-echo "[7/7] Verifying"
+echo "[7/8] Creating API environment if app/api exists"
+if [ -f "$APP_ROOT/app/api/pyproject.toml" ]; then
+  uv venv "$API_VENV" --python 3.11
+  uv pip install -p "$API_VENV/bin/python" -e "$APP_ROOT/app/api[dev]"
+else
+  echo "Skipping API environment; $APP_ROOT/app/api/pyproject.toml not found yet."
+fi
+
+echo "[8/8] Verifying"
 hermes --help >/tmp/aippt-hermes-help.txt || true
 "$BUILDER_VENV/bin/python" -c "import pptx, pydantic, jsonschema, markdown_it; print('ppt builder deps ok')"
+if [ -x "$API_VENV/bin/python" ]; then
+  "$API_VENV/bin/python" -c "from aippt_api.main import create_app; print(create_app().title)"
+fi
 
 echo
 echo "AIPPT bootstrap complete."
 echo "Root: $APP_ROOT"
 echo "Hermes: $HERMES_DIR"
+echo "API Python: $API_VENV/bin/python"
 echo "Builder Python: $BUILDER_VENV/bin/python"

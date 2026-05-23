@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -71,7 +70,7 @@ class Job(SQLModel, table=True):
     type: JobType = Field(index=True)
     status: JobStatus = Field(default=JobStatus.QUEUED, index=True)
     workspace_path: str | None = None
-    input_snapshot: str = Field(default="", sa_column=Column("input_snapshot"))
+    input_snapshot: str = ""
     error_message: str | None = None
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
@@ -89,4 +88,3 @@ class FileAsset(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
     deck: DeckSession = Relationship(back_populates="files")
-
