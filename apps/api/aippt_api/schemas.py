@@ -56,8 +56,6 @@ class JobRead(BaseModel):
     owner_user_id: UUID
     type: JobType
     status: JobStatus
-    workspace_path: str | None
     error_message: str | None
     created_at: datetime
     updated_at: datetime
-

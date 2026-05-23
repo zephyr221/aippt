@@ -23,6 +23,13 @@ docs/              Product, architecture, deployment, and skill docs
 ops/               Server bootstrap and operational scripts
 ```
 
+Useful starting docs:
+
+- [Architecture](docs/aippt_architecture.md)
+- [Implementation plan](docs/aippt_implementation_plan.md)
+- [Operations playbook](docs/aippt_ops_playbook.md)
+- [Hermes deployment notes](docs/aippt_hermes_deployment.md)
+
 ## Development Priorities
 
 1. Lock down multi-user data ownership in the API.
@@ -52,4 +59,3 @@ Server layout:
   vendor/hermes-agent/
   venvs/ppt-builder/
 ```
-

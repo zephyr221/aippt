@@ -57,3 +57,19 @@ Hermes does not:
 - Install dependencies in job workspaces.
 - Decide final PPTX geometry.
 
+## Job Workspace
+
+Each job gets a private workspace:
+
+```text
+/srv/aippt/jobs/{owner_user_id}/{job_id}/
+  AGENTS.md
+  manifest.json
+  input/outline.md
+  ir/deck.json
+  out/deck.pptx
+  logs/job.log
+```
+
+The raw workspace path is internal worker state. Browser clients receive job
+ids and authenticated artifact endpoints, not filesystem paths.

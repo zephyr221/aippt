@@ -13,7 +13,7 @@ operate on their own decks, jobs, files, and logs.
 - Job workspace manifest convention:
 
 ```text
-/srv/aippt/jobs/{job_id}/
+/srv/aippt/jobs/{owner_user_id}/{job_id}/
   AGENTS.md
   manifest.json
   input/
@@ -24,6 +24,10 @@ operate on their own decks, jobs, files, and logs.
   out/
   logs/
 ```
+
+The API materializes this workspace when a job is created. The database stores
+the raw `workspace_path` for workers, but user-facing API responses do not
+expose that path.
 
 ## Phase 2: Deterministic Builder
 
@@ -63,4 +67,3 @@ operate on their own decks, jobs, files, and logs.
 - Raw file paths are never exposed as public download links.
 - Hermes receives only the files for the active job.
 - Runtime job workspaces cannot install dependencies or access secrets.
-
