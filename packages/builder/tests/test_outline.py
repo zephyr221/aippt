@@ -6,6 +6,7 @@ from pathlib import Path
 from aippt_builder.outline import outline_to_deck
 from aippt_builder.render import build_pptx
 from aippt_builder.validate import validate_deck
+from pptx.enum.text import MSO_ANCHOR
 from pptx import Presentation
 from pptx.util import Inches, Pt
 
@@ -191,6 +192,12 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     )
     assert "▪" in first_body_text
     assert "技术位置" in first_body_text
+    lead_shape = next(
+        shape
+        for shape in prs.slides[1].shapes
+        if shape.has_text_frame and "关键是理解它能做什么" in shape.text_frame.text
+    )
+    assert lead_shape.text_frame.vertical_anchor == MSO_ANCHOR.MIDDLE
     point_sizes = [
         run.font.size
         for shape in prs.slides[1].shapes
@@ -207,6 +214,17 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
         for shape in prs.slides[-1].shapes
         if shape.has_text_frame and shape.text_frame.text.strip() == "谢谢"
     )
+    assert 11 not in {
+        shape.placeholder_format.idx
+        for shape in prs.slides[-1].shapes
+        if shape.is_placeholder
+    }
+    thanks_text = "\n".join(
+        shape.text_frame.text
+        for shape in prs.slides[-1].shapes
+        if shape.has_text_frame and shape.text_frame.text.strip()
+    )
+    assert "单击此处添加文本" not in thanks_text
     assert Inches(3.0) < thanks.left < Inches(3.5)
     assert Inches(2.8) < thanks.top < Inches(3.1)
 

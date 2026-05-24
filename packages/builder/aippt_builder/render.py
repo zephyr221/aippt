@@ -214,7 +214,7 @@ def _render_template_toc(slide, slide_data: Slide) -> None:
 
 
 def _render_template_thanks(slide, slide_data: Slide) -> None:
-    _clear_placeholder(slide, 11)
+    _remove_placeholder(slide, 11)
     box = slide.shapes.add_textbox(Inches(3.22), Inches(2.94), Inches(2.38), Inches(0.85))
     frame = box.text_frame
     frame.clear()
@@ -538,6 +538,7 @@ def _lead_callout(slide, text: str, compact: bool = False) -> None:
     box = slide.shapes.add_textbox(Inches(1.17), Inches(1.28), Inches(10.8), Inches(h - 0.18))
     frame = box.text_frame
     frame.word_wrap = True
+    frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = frame.paragraphs[0]
     p.text = _trim(text, 104)
     _style_paragraph(p, 17 if len(text) < 58 else 14.5, TEXT_PRIMARY, bold=True)
@@ -561,6 +562,7 @@ def _content_card(slide, left: float, top: float, width: float, height: float, i
         body_top = top + 0.56
     body_box = slide.shapes.add_textbox(Inches(left + 0.34), Inches(body_top), Inches(width - 0.62), Inches(height - 0.72))
     body_box.text_frame.word_wrap = True
+    body_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = body_box.text_frame.paragraphs[0]
     body_text = _normalize_formula_text(body_text)
     p.text = _trim(body_text, 96)
@@ -603,6 +605,7 @@ def _fact_card(slide, left: float, top: float, width: float, height: float, labe
     _style_paragraph(p, 10.5, SJTU_RED, bold=True)
     value_box = slide.shapes.add_textbox(Inches(left + 1.45), Inches(top + 0.14), Inches(width - 1.7), Inches(height - 0.2))
     value_box.text_frame.word_wrap = True
+    value_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = value_box.text_frame.paragraphs[0]
     value = _normalize_formula_text(value)
     p.text = _trim(value, 92)
@@ -648,6 +651,7 @@ def _process_card(
     else:
         body_box = slide.shapes.add_textbox(Inches(left + 0.24), Inches(top + 0.82), Inches(width - 0.48), Inches(0.62))
         body_box.text_frame.word_wrap = True
+        body_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
         p = body_box.text_frame.paragraphs[0]
         p.text = _trim(body, 72)
         if _looks_like_formula_text(body):
