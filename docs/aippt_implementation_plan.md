@@ -38,6 +38,9 @@ expose that path.
   horizontal, comparison, table, summary, thanks.
 - Hard text limits before PPTX generation.
 - Minimal python-pptx renderer using SJTU colors and predictable spacing.
+- Markdown parser promotes cover metadata into the cover slide, normalizes
+  `第 N 页 · ...` headings, skips legacy cover placeholder pages, and inserts a
+  TOC when there are at least three sections.
 - QA for page count, readable PPTX, and basic text overflow risks.
 
 ## Phase 3: Planner And Worker

@@ -36,6 +36,10 @@ def render_slide(prs: Presentation, slide_data: Slide, page_num: int) -> None:
         render_cover(slide, slide_data)
     elif slide_data.layout == Layout.THANKS:
         render_thanks(slide, slide_data)
+    elif slide_data.layout == Layout.TOC:
+        render_header(slide, slide_data.title)
+        render_toc(slide, slide_data)
+        render_footer(slide, page_num)
     else:
         render_header(slide, slide_data.title)
         render_body(slide, slide_data)
@@ -54,12 +58,18 @@ def render_cover(slide, slide_data: Slide) -> None:
     p.font.color.rgb = rgb(WHITE)
     p.alignment = PP_ALIGN.CENTER
 
-    subtitle = slide.shapes.add_textbox(Inches(1.3), Inches(3.5), Inches(10.7), Inches(0.7))
-    p = subtitle.text_frame.paragraphs[0]
-    p.text = slide_data.subtitle
-    p.font.size = Pt(18)
-    p.font.color.rgb = rgb(WHITE)
-    p.alignment = PP_ALIGN.CENTER
+    subtitle = slide.shapes.add_textbox(Inches(1.3), Inches(3.35), Inches(10.7), Inches(1.6))
+    frame = subtitle.text_frame
+    frame.word_wrap = True
+    lines = [line.strip() for line in slide_data.subtitle.splitlines() if line.strip()]
+    if not lines:
+        lines = ["AI-generated draft"]
+    for idx, line in enumerate(lines):
+        p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
+        p.text = line
+        p.font.size = Pt(18 if idx == 0 else 15)
+        p.font.color.rgb = rgb(WHITE)
+        p.alignment = PP_ALIGN.CENTER
 
 
 def render_thanks(slide, slide_data: Slide) -> None:
@@ -94,6 +104,19 @@ def render_header(slide, title: str) -> None:
     p.font.color.rgb = rgb(WHITE)
 
 
+def render_toc(slide, slide_data: Slide) -> None:
+    box = slide.shapes.add_textbox(Inches(1.35), Inches(1.45), Inches(10.6), Inches(4.9))
+    frame = box.text_frame
+    frame.word_wrap = True
+    for idx, bullet in enumerate(slide_data.bullets, start=1):
+        p = frame.paragraphs[0] if idx == 1 else frame.add_paragraph()
+        p.text = f"{idx:02d}  {bullet}"
+        p.font.size = Pt(24)
+        p.font.bold = True
+        p.font.color.rgb = rgb(TEXT_MAIN)
+        p.space_after = Pt(16)
+
+
 def render_body(slide, slide_data: Slide) -> None:
     card = slide.shapes.add_shape(
         MSO_SHAPE.ROUNDED_RECTANGLE,
@@ -112,9 +135,9 @@ def render_body(slide, slide_data: Slide) -> None:
     content = slide_data.bullets or [c.heading for c in slide_data.columns if c.heading]
     for idx, bullet in enumerate(content):
         p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
-        p.text = bullet
+        p.text = f"• {bullet}"
         p.level = 0
-        p.font.size = Pt(18)
+        p.font.size = Pt(17)
         p.font.color.rgb = rgb(TEXT_MAIN)
         p.space_after = Pt(10)
 
