@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
 
+from sqlalchemy import update
 from sqlmodel import Session, select
 
 from ..config import Settings
@@ -15,14 +16,16 @@ from .workspaces import materialize_job_workspace, write_job_manifest
 
 
 def run_next_job(session: Session, settings: Settings) -> Job | None:
-    job = session.exec(
-        select(Job)
+    job_ids = session.exec(
+        select(Job.id)
         .where(Job.status == JobStatus.QUEUED)
         .order_by(Job.created_at)
-    ).first()
-    if job is None:
-        return None
-    return run_job(session, settings, job.id)
+        .limit(10)
+    ).all()
+    for job_id in job_ids:
+        if _claim_job(session, job_id):
+            return run_job(session, settings, job_id)
+    return None
 
 
 def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
@@ -33,6 +36,11 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
     deck = session.get(DeckSession, job.deck_session_id)
     if deck is None or deck.owner_user_id != job.owner_user_id:
         raise ValueError(f"Deck not found for job: {job_id}")
+
+    if job.status == JobStatus.QUEUED and not _claim_job(session, job.id):
+        raise RuntimeError(f"Job was already claimed by another worker: {job_id}")
+    if job.status not in {JobStatus.QUEUED, JobStatus.RUNNING}:
+        raise RuntimeError(f"Job is not runnable: {job_id} ({job.status})")
 
     workspace = _workspace_for(settings, deck, job)
     _mark_running(session, deck, job, workspace)
@@ -75,6 +83,18 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
     session.commit()
     session.refresh(job)
     return job
+
+
+def _claim_job(session: Session, job_id: UUID) -> bool:
+    now = datetime.now(timezone.utc)
+    result = session.exec(
+        update(Job)
+        .where(Job.id == job_id, Job.status == JobStatus.QUEUED)
+        .values(status=JobStatus.RUNNING, updated_at=now)
+        .execution_options(synchronize_session=False)
+    )
+    session.commit()
+    return (result.rowcount or 0) == 1
 
 
 def _workspace_for(settings: Settings, deck: DeckSession, job: Job) -> Path:

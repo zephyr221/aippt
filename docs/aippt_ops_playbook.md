@@ -53,9 +53,14 @@ AIPPT_BUILDER_COMMAND=/srv/aippt/venvs/ppt-builder/bin/aippt-build \
   /srv/aippt/venvs/api/bin/aippt-worker run-once
 ```
 
-The worker reads a queued job from the API database, runs the deterministic
-builder inside that job workspace, and records internal file assets for Deck IR,
-PPTX, and logs.
+The worker reads queued jobs from the API database, runs Hermes/MiMo planning
+and the deterministic builder inside job workspaces, and records internal file
+assets for planned outlines, Deck IR, PPTX, and logs.
+
+Worker concurrency is controlled by `AIPPT_WORKER_CONCURRENCY` in
+`/srv/aippt/env/aippt.env`. With SQLite, keep this modest. The production server
+currently uses 4 concurrent worker loops, backed by atomic job claiming so two
+loops do not run the same queued job.
 
 ## Public Route
 
@@ -98,8 +103,9 @@ curl -I https://ai4edu.sjtu.edu.cn/ppt/docs
 The public root `/ppt/` serves the first thin workbench UI. It uses the same
 cookie-authenticated API surface as the docs: jAccount login, deck creation, job
 submission, status polling, and authenticated PPTX downloads. The worker unit
-runs `aippt-worker loop --sleep-seconds 3`, so queued web jobs are picked up
-without a manual `run-once`.
+runs `aippt-worker loop --sleep-seconds 3`; the service reads
+`AIPPT_WORKER_CONCURRENCY` and starts that many concurrent worker loops, so
+queued web jobs are picked up without a manual `run-once`.
 
 ## Git Remotes
 

@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     preview_render_dpi: int = 144
     preview_max_pages: int = 40
     preview_contact_sheet_thumb_width: int = 360
+    worker_concurrency: int = 1
     hermes_planner_enabled: bool = False
     hermes_command: str = "hermes"
     hermes_provider: str = ""

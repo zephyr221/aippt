@@ -16,7 +16,7 @@ from aippt_api.config import get_settings
 from aippt_api.db import get_engine, reset_engine
 from aippt_api.main import create_app
 from aippt_api.models import DeckSession, DeckStatus, FileAsset, FileKind, Job, JobStatus, JobType
-from aippt_api.services.job_runner import run_next_job
+from aippt_api.services.job_runner import _claim_job, run_next_job
 from aippt_api.services.preview import _write_contact_sheet
 
 
@@ -355,6 +355,25 @@ def test_worker_run_once_builds_pptx_and_records_artifacts(app_context) -> None:
     log_text = (job_workspace / "logs" / "job.log").read_text(encoding="utf-8")
     assert "running build_pptx" in log_text
     assert "succeeded build_pptx" in log_text
+
+
+def test_worker_claims_job_only_once(app_context) -> None:
+    app, _tmp_path = app_context
+    with TestClient(app) as alice:
+        register(alice, "alice@example.com")
+        deck_response = alice.post("/api/decks", json={"title": "Claim Test", "outline_md": "# A"})
+        deck_id = deck_response.json()["id"]
+        job_response = alice.post(f"/api/jobs/decks/{deck_id}", json={"type": "build_pptx"})
+        job_id = UUID(job_response.json()["id"])
+
+    with Session(get_engine()) as first, Session(get_engine()) as second:
+        assert _claim_job(first, job_id) is True
+        assert _claim_job(second, job_id) is False
+
+    with Session(get_engine()) as session:
+        job = session.get(Job, job_id)
+        assert job is not None
+        assert job.status == JobStatus.RUNNING
 
 
 def test_worker_expands_brief_prompt_to_intro_deck(app_context) -> None:
