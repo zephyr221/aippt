@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     preview_render_dpi: int = 144
     preview_max_pages: int = 40
     preview_contact_sheet_thumb_width: int = 360
+    hermes_planner_enabled: bool = False
+    hermes_command: str = "hermes"
+    hermes_provider: str = ""
+    hermes_model: str = ""
+    hermes_toolsets: str = "memory"
+    hermes_skills: str = "aippt-sjtu-ppt"
+    hermes_plan_timeout_seconds: int = 300
     jaccount_client_id: str = ""
     jaccount_client_secret: str = ""
     jaccount_redirect_uri: str = "http://127.0.0.1:8000/api/auth/jaccount/callback"

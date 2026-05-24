@@ -61,6 +61,7 @@ def test_root_redirect_respects_proxy_root_path(app_context) -> None:
         assert response.status_code == 200
         assert 'data-root-path="/ppt"' in response.text
         assert "AI PPT 生成工作台" in response.text
+        assert "Hermes 深度规划" in response.text
 
 
 def test_users_only_see_their_own_decks(app_context) -> None:
@@ -384,6 +385,102 @@ def test_worker_expands_brief_prompt_to_intro_deck(app_context) -> None:
         "它如何工作",
         "身边的应用",
     ]
+
+
+def test_worker_hermes_plan_updates_outline_and_records_artifact(
+    app_context,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    app, tmp_path = app_context
+    fake_hermes = tmp_path / "fake-hermes"
+    fake_hermes.write_text(
+        """#!/usr/bin/env bash
+cat <<'EOF'
+# 机器学习科普
+
+> 深度规划版：用 6 页讲清楚机器学习是什么、如何工作、怎样判断边界。
+
+## 第 1 页 · 封面
+主标题：机器学习科普
+副标题：从数据规律到现实应用
+
+## 第 2 页 · 为什么值得了解
+一句话：机器学习已经进入学习、工作和科研工具链，关键是理解它能做什么。
+- 技术位置：它不再只是实验室概念，搜索、推荐、图像识别和语音转写都在使用。
+- 学习价值：它让计算机从历史样本中总结规律，适合处理规则难以手写的问题。
+- 使用边界：结果依赖数据质量和任务定义，上线后仍需要新样本验证和人工反馈。
+
+## 第 3 页 · 它如何工作
+一句话：典型流程是数据准备、模型训练、效果评估和迭代改进。
+- 数据准备：收集样本并清洗异常值，把输入表示为特征 x。
+- 模型训练：用 ŷ=fθ(x) 产生预测，根据误差调整参数 θ。
+- 公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))，训练就是让 J(θ) 变小。
+
+## 第 4 页 · 身边的应用
+一句话：机器学习常嵌入具体流程，帮助人更快发现、判断和生成。
+- 学习场景：根据练习记录推荐下一道题，识别知识薄弱点。
+- 科研场景：从实验和模拟数据中发现模式，辅助筛选候选方案。
+- 办公场景：自动摘要、分类、检索和内容生成降低重复劳动。
+EOF
+""",
+        encoding="utf-8",
+    )
+    fake_hermes.chmod(0o755)
+    monkeypatch.setenv("AIPPT_HERMES_PLANNER_ENABLED", "true")
+    monkeypatch.setenv("AIPPT_HERMES_COMMAND", str(fake_hermes))
+    monkeypatch.setenv("AIPPT_HERMES_PROVIDER", "xiaomi")
+    monkeypatch.setenv("AIPPT_HERMES_MODEL", "mimo-v2.5-pro")
+    get_settings.cache_clear()
+
+    with TestClient(app) as alice:
+        register(alice, "alice@example.com")
+        deck_response = alice.post(
+            "/api/decks",
+            json={
+                "title": "机器学习科普",
+                "outline_md": "请制作五六页 PPT，关于机器学习的科普啊",
+            },
+        )
+        assert deck_response.status_code == 201
+        deck_id = deck_response.json()["id"]
+
+        job_response = alice.post(f"/api/jobs/decks/{deck_id}", json={"type": "plan_outline"})
+        assert job_response.status_code == 201
+        job_id = job_response.json()["id"]
+        assert alice.get(f"/api/decks/{deck_id}").json()["status"] == "generating"
+
+        with Session(get_engine()) as session:
+            job = run_next_job(session, get_settings())
+            assert job is not None
+            assert str(job.id) == job_id
+            assert job.status == JobStatus.SUCCEEDED
+
+            deck = session.get(DeckSession, UUID(deck_id))
+            assert deck is not None
+            assert deck.status == DeckStatus.OUTLINE_READY
+            assert "深度规划版" in deck.outline_md
+            assert "请制作五六页" not in deck.outline_md
+
+            assets = session.exec(
+                select(FileAsset).where(FileAsset.deck_session_id == deck.id)
+            ).all()
+            kinds = {asset.kind for asset in assets}
+            assert FileKind.OUTLINE in kinds
+            assert FileKind.PPTX not in kinds
+
+        files_response = alice.get(f"/api/files/decks/{deck_id}")
+        assert files_response.status_code == 200
+        outline_file = next(file for file in files_response.json() if file["kind"] == "outline")
+        download_response = alice.get(f"/api/files/{outline_file['id']}/download")
+        assert download_response.status_code == 200
+        assert "深度规划版" in download_response.text
+
+    job_workspace = next((tmp_path / "jobs").glob(f"*/{job_id}"))
+    assert (job_workspace / "ir" / "planned_outline.md").is_file()
+    assert (job_workspace / "logs" / "hermes_plan.md").is_file()
+    plan_log = (job_workspace / "logs" / "job.log").read_text(encoding="utf-8")
+    assert "running plan_outline" in plan_log
+    assert "succeeded plan_outline" in plan_log
 
 
 def test_worker_hermes_review_writes_non_destructive_report(app_context) -> None:

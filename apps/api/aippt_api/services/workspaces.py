@@ -52,6 +52,8 @@ def _manifest(deck: DeckSession, job: Job) -> dict[str, str]:
         "qa_report": "qa/qa.json",
         "preview_pdf": "preview/deck.pdf",
         "preview_contact_sheet": "preview/contact-sheet.png",
+        "planned_outline": "ir/planned_outline.md",
+        "hermes_plan": "logs/hermes_plan.md",
         "hermes_review": "logs/hermes_review.md",
         "log_file": "logs/job.log",
     }
@@ -70,6 +72,8 @@ Type: {job.type}
 - Read user input from `input/outline.md`.
 - Write Deck IR to `ir/deck.json`.
 - Write build output to `out/deck.pptx`.
+- Write planned Markdown outline to `ir/planned_outline.md` when planning.
+- Write Hermes planning notes to `logs/hermes_plan.md` when planning.
 - Write QA JSON to `qa/qa.json` when reviewing.
 - Write preview artifacts under `preview/` when rendering.
 - Write Hermes review notes to `logs/hermes_review.md` when reviewing.

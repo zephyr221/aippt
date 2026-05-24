@@ -133,6 +133,18 @@ Output:
 - Editable Markdown using explicit pages when the user asks for a fixed page
   count or provides page headings.
 
+Implemented path:
+
+- Job type: `plan_outline`.
+- Workspace input: `input/outline.md`.
+- Hermes stdout is captured as Markdown and saved to `ir/planned_outline.md`.
+- The deck's editable `outline_md` is updated only after Hermes returns a
+  non-empty Markdown plan.
+- The job records `logs/hermes_plan.md`, provider/model metadata, and
+  `logs/hermes_plan.raw.md` for debugging.
+- The deck status becomes `outline_ready`; the user then chooses when to run the
+  deterministic PPTX build.
+
 Guard:
 
 - Do not include private memory in visible output unless it is a style

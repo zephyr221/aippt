@@ -70,6 +70,10 @@ expose that path.
 - Worker creates isolated job workspaces.
 - Worker loop claims queued jobs, writes Deck IR, builds PPTX, and records
   internal artifacts. `run-once` remains available for debugging.
+- `plan_outline` jobs are the explicit Hermes/MiMo deep-planning path. They read
+  `input/outline.md`, call Hermes in the job workspace, write
+  `ir/planned_outline.md` plus `logs/hermes_plan.md`, then update the deck's
+  editable Markdown outline and mark the deck `outline_ready`.
 - `hermes_review` jobs create non-destructive QA/review artifacts
   (`qa/qa.json`, `logs/hermes_review.md`) without changing ready deck status.
 - The default `build_pptx` job is a deterministic fast path. A large pasted

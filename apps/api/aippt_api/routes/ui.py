@@ -119,6 +119,25 @@ def workbench(request: Request) -> HTMLResponse:
     .pill.ready {{ color: var(--ready); border-color: rgba(18, 106, 58, 0.25); background: #f0f8f3; }}
     .pill.failed {{ color: var(--warn); border-color: rgba(154, 52, 18, 0.25); background: #fff4ed; }}
     .deck-actions {{ display: flex; gap: 8px; flex-wrap: wrap; }}
+    .outline-preview {{
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }}
+    .outline-preview summary {{ cursor: pointer; color: var(--text); font-weight: 650; }}
+    .outline-preview pre {{
+      margin: 8px 0 0;
+      max-height: 240px;
+      overflow: auto;
+      white-space: pre-wrap;
+      color: var(--text);
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }}
     .notice {{
       margin-bottom: 14px;
       border: 1px solid var(--line);
@@ -215,7 +234,7 @@ def workbench(request: Request) -> HTMLResponse:
 
     async function refreshDecksQuietly() {{
       if (busy) return;
-      const hasActive = decks.some((deck) => ["generating", "outline_ready"].includes(deck.status));
+      const hasActive = decks.some((deck) => deck.status === "generating");
       if (!hasActive && decks.length > 0) return;
       try {{
         await loadDecks();
@@ -249,7 +268,8 @@ def workbench(request: Request) -> HTMLResponse:
                 <textarea id="outline" name="outline" required>${{sampleOutline}}</textarea>
               </label>
               <div class="toolbar">
-                <button id="submit" class="btn" type="submit">生成 PPTX</button>
+                <button id="submit" class="btn" type="submit">快速生成 PPTX</button>
+                <button class="btn secondary" type="button" id="deep-plan">Hermes 深度规划</button>
                 <button class="btn secondary" type="button" id="refresh">刷新</button>
               </div>
             </form>
@@ -264,6 +284,7 @@ def workbench(request: Request) -> HTMLResponse:
         </div>
       `;
       document.getElementById("deck-form").addEventListener("submit", createDeck);
+      document.getElementById("deep-plan").addEventListener("click", () => createDeckWithJob("plan_outline"));
       document.getElementById("refresh").addEventListener("click", async () => {{
         await loadDecks();
         renderWorkbench(user);
@@ -280,7 +301,9 @@ def workbench(request: Request) -> HTMLResponse:
       const pptx = files.find((file) => file.kind === "pptx");
       const preview = files.find((file) => file.kind === "preview");
       const review = files.find((file) => file.kind === "review");
+      const plannedOutline = files.find((file) => file.kind === "outline");
       const created = new Date(deck.created_at).toLocaleString();
+      const buildLabel = deck.status === "outline_ready" ? "生成 PPTX" : "重新生成";
       return `
         <article class="deck">
           <div class="deck-title">${{escapeHtml(deck.title)}}</div>
@@ -291,10 +314,13 @@ def workbench(request: Request) -> HTMLResponse:
           <div class="deck-actions">
             ${{pptx ? `<a class="btn" href="${{api}}/files/${{pptx.id}}/download">下载 PPTX</a>` : ""}}
             ${{preview ? `<a class="btn secondary" href="${{api}}/files/${{preview.id}}/download">预览</a>` : ""}}
+            ${{plannedOutline ? `<a class="btn secondary" href="${{api}}/files/${{plannedOutline.id}}/download">规划大纲</a>` : ""}}
             ${{review ? `<a class="btn secondary" href="${{api}}/files/${{review.id}}/download">审稿报告</a>` : ""}}
-            <button class="btn secondary" type="button" data-build="${{deck.id}}">重新生成</button>
+            <button class="btn secondary" type="button" data-build="${{deck.id}}">${{buildLabel}}</button>
+            <button class="btn secondary" type="button" data-plan="${{deck.id}}">Hermes 深度规划</button>
             <button class="btn secondary" type="button" data-review="${{deck.id}}">AI 审稿</button>
           </div>
+          ${{deck.outline_md ? `<details class="outline-preview"><summary>当前大纲</summary><pre>${{escapeHtml(deck.outline_md)}}</pre></details>` : ""}}
         </article>
       `;
     }}
@@ -317,6 +343,10 @@ def workbench(request: Request) -> HTMLResponse:
 
     async function createDeck(event) {{
       event.preventDefault();
+      await createDeckWithJob("build_pptx");
+    }}
+
+    async function createDeckWithJob(jobType) {{
       busy = true;
       setBusy(true);
       try {{
@@ -328,9 +358,9 @@ def workbench(request: Request) -> HTMLResponse:
         }});
         await request(`/jobs/decks/${{deck.id}}`, {{
           method: "POST",
-          body: JSON.stringify({{ type: "build_pptx" }})
+          body: JSON.stringify({{ type: jobType }})
         }});
-        showNotice("任务已创建");
+        showNotice(jobType === "plan_outline" ? "Hermes 深度规划任务已创建" : "任务已创建");
         await loadDecks();
         const me = await request("/auth/me");
         renderWorkbench(me);
@@ -362,6 +392,25 @@ def workbench(request: Request) -> HTMLResponse:
     }});
 
     app.addEventListener("click", async (event) => {{
+      const button = event.target.closest("[data-plan]");
+      if (!button) return;
+      button.disabled = true;
+      try {{
+        await request(`/jobs/decks/${{button.dataset.plan}}`, {{
+          method: "POST",
+          body: JSON.stringify({{ type: "plan_outline" }})
+        }});
+        await loadDecks();
+        const me = await request("/auth/me");
+        renderWorkbench(me);
+      }} catch (error) {{
+        showNotice(error.message || "深度规划失败");
+      }} finally {{
+        button.disabled = false;
+      }}
+    }});
+
+    app.addEventListener("click", async (event) => {{
       const button = event.target.closest("[data-review]");
       if (!button) return;
       button.disabled = true;
@@ -383,6 +432,8 @@ def workbench(request: Request) -> HTMLResponse:
     function setBusy(value) {{
       const submit = document.getElementById("submit");
       if (submit) submit.disabled = value;
+      const deepPlan = document.getElementById("deep-plan");
+      if (deepPlan) deepPlan.disabled = value;
     }}
 
     function showNotice(text) {{

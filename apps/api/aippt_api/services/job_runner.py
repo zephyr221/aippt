@@ -9,6 +9,7 @@ from sqlmodel import Session, select
 
 from ..config import Settings
 from ..models import DeckSession, DeckStatus, FileAsset, FileKind, Job, JobStatus, JobType
+from .hermes_planner import write_hermes_plan
 from .hermes_review import write_hermes_review
 from .workspaces import materialize_job_workspace, write_job_manifest
 
@@ -39,6 +40,8 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
     try:
         if job.type == JobType.BUILD_PPTX:
             _run_build_pptx(session, settings, deck, workspace)
+        elif job.type == JobType.PLAN_OUTLINE:
+            _run_plan_outline(session, settings, deck, workspace)
         elif job.type == JobType.HERMES_REVIEW:
             _run_hermes_review(session, settings, deck, workspace)
         else:
@@ -49,7 +52,11 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
         job.error_message = None
         job.updated_at = now
         if _job_updates_deck_status(job):
-            deck.status = DeckStatus.READY
+            deck.status = (
+                DeckStatus.OUTLINE_READY
+                if job.type == JobType.PLAN_OUTLINE
+                else DeckStatus.READY
+            )
         deck.updated_at = now
         _append_log(workspace, f"{now.isoformat()} succeeded {job.type}")
     except Exception as exc:
@@ -120,6 +127,19 @@ def _run_build_pptx(
     _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
 
 
+def _run_plan_outline(
+    session: Session,
+    settings: Settings,
+    deck: DeckSession,
+    workspace: Path,
+) -> None:
+    artifact = write_hermes_plan(settings, deck, workspace)
+    planned_outline = artifact.outline_path.read_text(encoding="utf-8").strip()
+    deck.outline_md = planned_outline + "\n"
+    _add_file_asset(session, deck, FileKind.OUTLINE, artifact.outline_path, "text/markdown")
+    _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
+
+
 def _run_hermes_review(
     session: Session,
     settings: Settings,
@@ -134,7 +154,7 @@ def _run_hermes_review(
 
 
 def _job_updates_deck_status(job: Job) -> bool:
-    return job.type == JobType.BUILD_PPTX
+    return job.type in {JobType.BUILD_PPTX, JobType.PLAN_OUTLINE}
 
 
 def _run_builder(

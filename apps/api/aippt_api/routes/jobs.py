@@ -40,7 +40,7 @@ def create_job(
     )
     workspace = materialize_job_workspace(settings, deck, job)
     job.workspace_path = str(workspace)
-    if job.type == JobType.BUILD_PPTX:
+    if job.type in {JobType.BUILD_PPTX, JobType.PLAN_OUTLINE}:
         deck.status = DeckStatus.GENERATING
         deck.updated_at = datetime.now(timezone.utc)
 

@@ -190,6 +190,12 @@ and rendered locally, not pre-planned by Hermes. Hermes should enter the
 interactive agent loop through a clearly labeled deep-planning/review mode with
 provider, model, version, and usage-boundary logs.
 
+The first implementation of that loop is `plan_outline`: a user-triggered
+Hermes/MiMo job that reads `input/outline.md`, writes
+`ir/planned_outline.md` and `logs/hermes_plan.md`, then updates the deck's
+editable outline and marks the deck `outline_ready`. The user can inspect the
+planned outline before running the deterministic PPTX build.
+
 ### Milestone 3: Preference Memory
 
 Add explicit feedback controls:
