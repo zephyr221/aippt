@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -76,6 +77,29 @@ def list_deck_jobs(
             .order_by(Job.created_at.desc())
         )
     )
+
+
+@router.get("/{job_id}/log")
+def get_job_log(
+    job_id: UUID,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, str]:
+    job = session.exec(
+        select(Job).where(
+            Job.id == job_id,
+            Job.owner_user_id == current_user.id,
+        )
+    ).first()
+    if job is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    log_text = ""
+    if job.workspace_path:
+        log_path = Path(job.workspace_path) / "logs" / "job.log"
+        if log_path.is_file():
+            log_text = log_path.read_text(encoding="utf-8", errors="replace")[-6000:]
+    return {"log_text": log_text}
 
 
 @router.get("/{job_id}", response_model=JobRead)

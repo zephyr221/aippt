@@ -95,12 +95,13 @@ SJTU PPT 生成器的 Markdown 大纲。
 
 目标：
 - 这是交互式 agent PPT 工作台，不是批量自动化脚本；请认真规划，而不是简单复述。
-- 如果用户只给一句话需求，请扩展成 5-8 页结构；如果用户给了页数或完整大纲，请尊重原页数和主线。
+- 如果用户只给简短需求，请扩展成 5-8 页结构；如果用户给了页数或完整大纲，请尊重原页数和主线。
 - 封面只保留短主标题和短副标题，不要把目录、流程或元说明塞进封面。
 - 内容页要像专业教学/汇报 PPT：每页一个核心判断，下面 2-3 个主题方向，每个方向有 2-4 个具体要点。
 - 避免整页只有稀疏 bullet；优先组织成可被渲染为卡片、流程、事实块、公式块的内容。
 - bullet 尽量具体，说明“为什么/怎么做/注意什么”，不要只写名词。
 - 如需公式，请保留为可编辑文本，例如：公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))。
+- 严禁给核心判断添加固定标签和冒号；核心判断直接写成普通正文或页面标题。
 - 不要输出 JSON、代码块、解释文字或寒暄；只输出 Markdown 大纲。
 
 输出格式：
@@ -113,7 +114,7 @@ SJTU PPT 生成器的 Markdown 大纲。
 副标题：{{短副标题}}
 
 ## 第 2 页 · {{页面标题}}
-一句话：{{本页核心判断}}
+{{本页核心判断，直接写内容，不加标签}}
 - {{主题一}}：{{2-3 句具体展开}}
 - {{主题二}}：{{2-3 句具体展开}}
 - {{主题三}}：{{2-3 句具体展开，可省略}}
@@ -137,7 +138,11 @@ def _clean_markdown(raw: str) -> str:
         lines.pop(0)
     while lines and not lines[-1].strip():
         lines.pop()
-    return "\n".join(lines)
+    return "\n".join(_strip_disallowed_labels(line) for line in lines)
+
+
+def _strip_disallowed_labels(line: str) -> str:
+    return re.sub(r"^(\s*(?:[-*+]\s+|\d+[.)]\s+)?)一句话\s*[：:]\s*", r"\1", line)
 
 
 def _render_report(settings: Settings, deck: DeckSession, planned_outline: str) -> str:

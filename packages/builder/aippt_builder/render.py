@@ -926,10 +926,15 @@ def _clean_items(items: list[str]) -> list[str]:
             continue
         text = re.sub(r"\s+", " ", text)
         text = text.strip(" -•")
+        text = _strip_content_label(text)
         text = _normalize_formula_text(text)
         if text and text not in cleaned:
             cleaned.append(text)
     return cleaned[:6]
+
+
+def _strip_content_label(text: str) -> str:
+    return re.sub(r"^(?:一句话|核心判断|核心结论|本页核心判断)\s*[：:]\s*", "", text).strip()
 
 
 def _looks_like_formula_text(text: str) -> bool:

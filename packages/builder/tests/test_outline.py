@@ -120,7 +120,7 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     assert [slide.title for slide in deck.slides] == [
         "机器学习科普",
         "为什么值得了解",
-        "一句话理解",
+        "核心概念",
         "它如何工作",
         "身边的应用",
         "谢谢",
@@ -184,7 +184,7 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     )
     assert "机器学习科普" in cover_text
     assert "6 页速览" in cover_text
-    assert "一句话需求自动规划" not in cover_text
+    assert "一句话" not in cover_text
     assert len(prs.slides[1].shapes) >= 12
     first_body_text = "\n".join(
         shape.text_frame.text

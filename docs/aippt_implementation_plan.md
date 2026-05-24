@@ -74,6 +74,14 @@ expose that path.
   `input/outline.md`, call Hermes in the job workspace, write
   `ir/planned_outline.md` plus `logs/hermes_plan.md`, then update the deck's
   editable Markdown outline and mark the deck `outline_ready`.
+- The web UI defaults new decks to the deep-planning path. The fast builder is
+  still available as the deterministic rendering step after planning, not as
+  the primary creation mode.
+- The workbench shows recent job stages and `logs/job.log` snippets so users can
+  see what the agent is doing while Hermes/MiMo planning takes longer than PPTX
+  rendering.
+- Planner prompts and parser guards should not surface fixed lead labels such as
+  "一句话：" in generated decks; the claim text should appear directly.
 - `hermes_review` jobs create non-destructive QA/review artifacts
   (`qa/qa.json`, `logs/hermes_review.md`) without changing ready deck status.
 - The default `build_pptx` job is a deterministic fast path. A large pasted

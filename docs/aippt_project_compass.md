@@ -195,6 +195,10 @@ Hermes/MiMo job that reads `input/outline.md`, writes
 `ir/planned_outline.md` and `logs/hermes_plan.md`, then updates the deck's
 editable outline and marks the deck `outline_ready`. The user can inspect the
 planned outline before running the deterministic PPTX build.
+The workbench now treats this as the default creation path: the primary button
+starts deep planning, timestamps render in `Asia/Shanghai`, and each deck card
+shows the latest job stages plus log snippets so the long planning phase feels
+observable rather than stuck.
 
 ### Milestone 3: Preference Memory
 

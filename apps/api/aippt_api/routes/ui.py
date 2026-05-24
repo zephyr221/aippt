@@ -116,6 +116,7 @@ def workbench(request: Request) -> HTMLResponse:
     .deck-title {{ font-weight: 650; overflow-wrap: anywhere; }}
     .meta {{ display: flex; gap: 8px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; }}
     .pill {{ border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; background: #f8fafc; }}
+    .pill.running {{ color: var(--accent-strong); border-color: rgba(23, 107, 91, 0.25); background: #edf7f4; }}
     .pill.ready {{ color: var(--ready); border-color: rgba(18, 106, 58, 0.25); background: #f0f8f3; }}
     .pill.failed {{ color: var(--warn); border-color: rgba(154, 52, 18, 0.25); background: #fff4ed; }}
     .deck-actions {{ display: flex; gap: 8px; flex-wrap: wrap; }}
@@ -137,6 +138,43 @@ def workbench(request: Request) -> HTMLResponse:
       border-radius: 6px;
       padding: 10px;
       font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }}
+    .agent-progress {{
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      display: grid;
+      gap: 9px;
+    }}
+    .agent-head {{ display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 13px; }}
+    .agent-head strong {{ color: var(--text); }}
+    .agent-steps {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }}
+    .agent-step {{
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 7px 8px;
+      min-height: 34px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }}
+    .agent-step.done {{ border-color: rgba(18, 106, 58, 0.25); background: #f0f8f3; color: var(--ready); }}
+    .agent-step.running {{ border-color: rgba(23, 107, 91, 0.35); background: #edf7f4; color: var(--accent-strong); }}
+    .agent-step.failed {{ border-color: rgba(154, 52, 18, 0.25); background: #fff4ed; color: var(--warn); }}
+    .agent-log {{
+      margin: 0;
+      max-height: 150px;
+      overflow: auto;
+      white-space: pre-wrap;
+      color: var(--muted);
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px;
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
     }}
     .notice {{
       margin-bottom: 14px;
@@ -162,6 +200,7 @@ def workbench(request: Request) -> HTMLResponse:
       .brand {{ display: grid; gap: 4px; }}
       .brand span {{ white-space: normal; }}
       .layout {{ grid-template-columns: 1fr; }}
+      .agent-steps {{ grid-template-columns: 1fr 1fr; }}
       textarea {{ min-height: 260px; }}
     }}
   </style>
@@ -175,6 +214,8 @@ def workbench(request: Request) -> HTMLResponse:
     const sampleOutline = "请制作 5-6 页 PPT，关于机器学习的科普。";
     let decks = [];
     let filesByDeck = new Map();
+    let jobsByDeck = new Map();
+    let jobLogs = new Map();
     let busy = false;
 
     function escapeHtml(value) {{
@@ -223,11 +264,23 @@ def workbench(request: Request) -> HTMLResponse:
     async function loadDecks() {{
       decks = await request("/decks");
       filesByDeck = new Map();
+      jobsByDeck = new Map();
+      jobLogs = new Map();
       await Promise.all(decks.map(async (deck) => {{
         try {{
           filesByDeck.set(deck.id, await request(`/files/decks/${{deck.id}}`));
         }} catch (_) {{
           filesByDeck.set(deck.id, []);
+        }}
+        try {{
+          const jobs = await request(`/jobs/decks/${{deck.id}}`);
+          jobsByDeck.set(deck.id, jobs);
+          if (jobs[0]) {{
+            const log = await request(`/jobs/${{jobs[0].id}}/log`);
+            jobLogs.set(jobs[0].id, log.log_text || "");
+          }}
+        }} catch (_) {{
+          jobsByDeck.set(deck.id, []);
         }}
       }}));
     }}
@@ -268,8 +321,7 @@ def workbench(request: Request) -> HTMLResponse:
                 <textarea id="outline" name="outline" required>${{sampleOutline}}</textarea>
               </label>
               <div class="toolbar">
-                <button id="submit" class="btn" type="submit">快速生成 PPTX</button>
-                <button class="btn secondary" type="button" id="deep-plan">Hermes 深度规划</button>
+                <button id="submit" class="btn" type="submit">生成 PPT</button>
                 <button class="btn secondary" type="button" id="refresh">刷新</button>
               </div>
             </form>
@@ -284,7 +336,6 @@ def workbench(request: Request) -> HTMLResponse:
         </div>
       `;
       document.getElementById("deck-form").addEventListener("submit", createDeck);
-      document.getElementById("deep-plan").addEventListener("click", () => createDeckWithJob("plan_outline"));
       document.getElementById("refresh").addEventListener("click", async () => {{
         await loadDecks();
         renderWorkbench(user);
@@ -302,8 +353,11 @@ def workbench(request: Request) -> HTMLResponse:
       const preview = files.find((file) => file.kind === "preview");
       const review = files.find((file) => file.kind === "review");
       const plannedOutline = files.find((file) => file.kind === "outline");
-      const created = new Date(deck.created_at).toLocaleString();
-      const buildLabel = deck.status === "outline_ready" ? "生成 PPTX" : "重新生成";
+      const jobs = jobsByDeck.get(deck.id) || [];
+      const created = formatDate(deck.created_at);
+      const buildLabel = deck.status === "outline_ready" ? "生成 PPTX" : "重新生成 PPTX";
+      const canBuild = deck.status === "outline_ready" || Boolean(pptx);
+      const canPlan = deck.status !== "generating";
       return `
         <article class="deck">
           <div class="deck-title">${{escapeHtml(deck.title)}}</div>
@@ -316,16 +370,54 @@ def workbench(request: Request) -> HTMLResponse:
             ${{preview ? `<a class="btn secondary" href="${{api}}/files/${{preview.id}}/download">预览</a>` : ""}}
             ${{plannedOutline ? `<a class="btn secondary" href="${{api}}/files/${{plannedOutline.id}}/download">规划大纲</a>` : ""}}
             ${{review ? `<a class="btn secondary" href="${{api}}/files/${{review.id}}/download">审稿报告</a>` : ""}}
-            <button class="btn secondary" type="button" data-build="${{deck.id}}">${{buildLabel}}</button>
-            <button class="btn secondary" type="button" data-plan="${{deck.id}}">Hermes 深度规划</button>
+            ${{canBuild ? `<button class="btn secondary" type="button" data-build="${{deck.id}}">${{buildLabel}}</button>` : ""}}
+            ${{canPlan ? `<button class="btn secondary" type="button" data-plan="${{deck.id}}">重新深度规划</button>` : ""}}
             <button class="btn secondary" type="button" data-review="${{deck.id}}">AI 审稿</button>
           </div>
+          ${{renderAgentProgress(deck, jobs)}}
           ${{deck.outline_md ? `<details class="outline-preview"><summary>当前大纲</summary><pre>${{escapeHtml(deck.outline_md)}}</pre></details>` : ""}}
         </article>
       `;
     }}
 
+    function renderAgentProgress(deck, jobs) {{
+      if (!jobs.length) return "";
+      const latest = jobs[0];
+      const labels = latest.type === "plan_outline"
+        ? ["读取需求", "Hermes/MiMo 规划", "整理页面结构", "写入大纲"]
+        : latest.type === "build_pptx"
+          ? ["读取大纲", "生成 Deck IR", "渲染 PPTX", "记录产物"]
+          : ["读取产物", "渲染预览", "生成 QA", "写入报告"];
+      const title = latest.type === "plan_outline"
+        ? "Agent 深度规划"
+        : latest.type === "build_pptx"
+          ? "PPTX 生成"
+          : "AI 审稿";
+      const isDone = latest.status === "succeeded";
+      const isFailed = latest.status === "failed";
+      const activeIndex = latest.status === "queued" ? 0 : latest.status === "running" ? 1 : labels.length - 1;
+      const steps = labels.map((label, index) => {{
+        let cls = "";
+        if (isDone || index < activeIndex) cls = "done";
+        else if (isFailed && index === activeIndex) cls = "failed";
+        else if (index === activeIndex) cls = "running";
+        return `<span class="agent-step ${{cls}}">${{escapeHtml(label)}}</span>`;
+      }}).join("");
+      const log = jobLogs.get(latest.id) || "";
+      return `
+        <div class="agent-progress">
+          <div class="agent-head">
+            <strong>${{escapeHtml(title)}} · ${{escapeHtml(jobStatusLabel(latest.status))}}</strong>
+            <span>${{escapeHtml(formatDate(latest.created_at))}}</span>
+          </div>
+          <div class="agent-steps">${{steps}}</div>
+          ${{log ? `<pre class="agent-log">${{escapeHtml(log)}}</pre>` : ""}}
+        </div>
+      `;
+    }}
+
     function statusClass(status) {{
+      if (status === "generating") return "running";
       if (status === "ready") return "ready";
       if (status === "failed") return "failed";
       return "";
@@ -334,16 +426,26 @@ def workbench(request: Request) -> HTMLResponse:
     function statusLabel(status) {{
       return {{
         draft: "草稿",
-        outline_ready: "大纲完成",
+        outline_ready: "规划完成",
         generating: "生成中",
         ready: "可下载",
         failed: "失败"
       }}[status] || status;
     }}
 
+    function jobStatusLabel(status) {{
+      return {{
+        queued: "排队中",
+        running: "进行中",
+        succeeded: "完成",
+        failed: "失败",
+        canceled: "已取消"
+      }}[status] || status;
+    }}
+
     async function createDeck(event) {{
       event.preventDefault();
-      await createDeckWithJob("build_pptx");
+      await createDeckWithJob("plan_outline");
     }}
 
     async function createDeckWithJob(jobType) {{
@@ -360,7 +462,7 @@ def workbench(request: Request) -> HTMLResponse:
           method: "POST",
           body: JSON.stringify({{ type: jobType }})
         }});
-        showNotice(jobType === "plan_outline" ? "Hermes 深度规划任务已创建" : "任务已创建");
+        showNotice(jobType === "plan_outline" ? "已开始深度规划" : "任务已创建");
         await loadDecks();
         const me = await request("/auth/me");
         renderWorkbench(me);
@@ -432,8 +534,19 @@ def workbench(request: Request) -> HTMLResponse:
     function setBusy(value) {{
       const submit = document.getElementById("submit");
       if (submit) submit.disabled = value;
-      const deepPlan = document.getElementById("deep-plan");
-      if (deepPlan) deepPlan.disabled = value;
+    }}
+
+    function formatDate(value) {{
+      return new Intl.DateTimeFormat("zh-CN", {{
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }}).format(new Date(value));
     }}
 
     function showNotice(text) {{
