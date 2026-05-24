@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 
@@ -54,6 +55,16 @@ LATEX_REPLACEMENTS = {
     r"\times": "×",
     r"\cdot": "·",
 }
+TEMPLATE_CANDIDATES = (
+    "AIPPT_TEMPLATE_PPTX",
+    "AIPPT_TEMPLATE_PPTX_PATH",
+)
+TEMPLATE_LAYOUTS = {
+    Layout.COVER: ("封面-01", 0),
+    Layout.TOC: ("1_目录-1", 3),
+    Layout.THANKS: ("封底01", 12),
+}
+TEMPLATE_CONTENT_LAYOUT = "常规样式（1）"
 
 
 def rgb(hex_color: str) -> RGBColor:
@@ -61,12 +72,10 @@ def rgb(hex_color: str) -> RGBColor:
 
 
 def build_pptx(deck: Deck, output_path: str | Path) -> Path:
-    prs = Presentation()
-    prs.slide_width = Inches(SLIDE_W_IN)
-    prs.slide_height = Inches(SLIDE_H_IN)
+    prs, use_template = _new_presentation()
 
     for idx, slide in enumerate(deck.slides, start=1):
-        render_slide(prs, slide, idx)
+        render_slide(prs, slide, idx, use_template=use_template)
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -74,7 +83,44 @@ def build_pptx(deck: Deck, output_path: str | Path) -> Path:
     return output
 
 
-def render_slide(prs: Presentation, slide_data: Slide, page_num: int) -> None:
+def _new_presentation() -> tuple[Presentation, bool]:
+    template_path = _template_path()
+    if template_path is not None:
+        prs = Presentation(template_path)
+        _remove_existing_slides(prs)
+        return prs, True
+    prs = Presentation()
+    prs.slide_width = Inches(SLIDE_W_IN)
+    prs.slide_height = Inches(SLIDE_H_IN)
+    return prs, False
+
+
+def _template_path() -> Path | None:
+    candidates = [Path(value) for key in TEMPLATE_CANDIDATES if (value := os.getenv(key))]
+    candidates.append(Path.cwd() / "assets" / "SJTU 模板.pptx")
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _remove_existing_slides(prs: Presentation) -> None:
+    slide_id_list = prs.slides._sldIdLst
+    for slide_id in list(slide_id_list):
+        prs.part.drop_rel(slide_id.rId)
+        slide_id_list.remove(slide_id)
+
+
+def render_slide(
+    prs: Presentation,
+    slide_data: Slide,
+    page_num: int,
+    use_template: bool = False,
+) -> None:
+    if use_template:
+        render_template_slide(prs, slide_data, page_num)
+        return
+
     blank = prs.slide_layouts[6]
     slide = prs.slides.add_slide(blank)
 
@@ -90,6 +136,132 @@ def render_slide(prs: Presentation, slide_data: Slide, page_num: int) -> None:
         render_header(slide, slide_data.title)
         render_body(slide, slide_data)
         render_footer(slide, page_num)
+
+
+def render_template_slide(prs: Presentation, slide_data: Slide, page_num: int) -> None:
+    layout = _template_layout(prs, slide_data.layout)
+    slide = prs.slides.add_slide(layout)
+    if slide_data.layout == Layout.COVER:
+        _render_template_cover(slide, slide_data)
+    elif slide_data.layout == Layout.TOC:
+        _render_template_toc(slide, slide_data)
+    elif slide_data.layout == Layout.THANKS:
+        _render_template_thanks(slide, slide_data)
+    else:
+        _render_template_content(slide, slide_data)
+
+
+def _template_layout(prs: Presentation, layout: Layout):
+    if layout in TEMPLATE_LAYOUTS:
+        name, fallback_index = TEMPLATE_LAYOUTS[layout]
+    else:
+        name, fallback_index = TEMPLATE_CONTENT_LAYOUT, 6
+    for candidate in prs.slide_layouts:
+        if candidate.name == name:
+            return candidate
+    return prs.slide_layouts[min(fallback_index, len(prs.slide_layouts) - 1)]
+
+
+def _render_template_cover(slide, slide_data: Slide) -> None:
+    _set_placeholder_lines(
+        slide,
+        0,
+        [slide_data.title or "AIPPT"],
+        size=40,
+        color=WHITE,
+        bold=True,
+    )
+    subtitle_lines = [line.strip() for line in slide_data.subtitle.splitlines() if line.strip()]
+    _set_placeholder_lines(
+        slide,
+        11,
+        subtitle_lines[:3] or ["AI PPT 生成工作台"],
+        size=18,
+        color=WHITE,
+        bold=True,
+    )
+
+
+def _render_template_content(slide, slide_data: Slide) -> None:
+    _set_placeholder_lines(slide, 11, [slide_data.title], size=25, color=WHITE, bold=True)
+    items = _clean_items(slide_data.bullets or [c.heading for c in slide_data.columns if c.heading])
+    if not items:
+        items = ["请补充这一页的核心结论。"]
+    _set_template_body(slide, items[:6])
+
+
+def _render_template_toc(slide, slide_data: Slide) -> None:
+    items = _clean_items(slide_data.bullets)[:8]
+    x0, y0 = 4.35, 1.55
+    for idx, item in enumerate(items, start=1):
+        y = y0 + (idx - 1) * 0.55
+        box = slide.shapes.add_textbox(Inches(x0), Inches(y), Inches(7.1), Inches(0.34))
+        p = box.text_frame.paragraphs[0]
+        p.text = f"{idx:02d}  {item}"
+        _style_paragraph(p, 17, TEXT_BODY, bold=True)
+
+
+def _render_template_thanks(slide, slide_data: Slide) -> None:
+    _set_placeholder_lines(
+        slide,
+        11,
+        [slide_data.title or "谢谢"],
+        size=44,
+        color=WHITE,
+        bold=True,
+    )
+
+
+def _set_placeholder_lines(
+    slide,
+    idx: int,
+    lines: list[str],
+    size: float,
+    color: str,
+    bold: bool = False,
+    font_name: str = FONT,
+) -> None:
+    placeholder = _placeholder(slide, idx)
+    if placeholder is None:
+        return
+    frame = placeholder.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    for line_idx, line in enumerate(lines):
+        p = frame.paragraphs[0] if line_idx == 0 else frame.add_paragraph()
+        p.text = line
+        _style_paragraph(p, size, color, bold=bold, font_name=font_name)
+        p.line_spacing = 1.06
+
+
+def _set_template_body(slide, items: list[str]) -> None:
+    placeholder = _placeholder(slide, 14)
+    if placeholder is None:
+        return
+    frame = placeholder.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    for idx, item in enumerate(items):
+        p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
+        text = _normalize_formula_text(item)
+        p.text = text
+        p.level = 0
+        font_name = MATH_FONT if _looks_like_formula_text(text) else FONT
+        _style_paragraph(
+            p,
+            19 if len(text) <= 44 else 16,
+            TEXT_BODY,
+            bold=True,
+            font_name=font_name,
+        )
+        p.space_after = Pt(10)
+
+
+def _placeholder(slide, idx: int):
+    for placeholder in slide.placeholders:
+        if placeholder.placeholder_format.idx == idx:
+            return placeholder
+    return None
 
 
 def render_cover(slide, slide_data: Slide) -> None:

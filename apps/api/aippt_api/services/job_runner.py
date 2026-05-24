@@ -1,3 +1,4 @@
+import os
 import shlex
 import subprocess
 from datetime import datetime, timezone
@@ -143,9 +144,13 @@ def _run_builder(
     *args: Path | str,
 ) -> None:
     command = [*shlex.split(settings.builder_command), subcommand, *[str(arg) for arg in args]]
+    env = os.environ.copy()
+    if settings.template_pptx_path:
+        env["AIPPT_TEMPLATE_PPTX"] = settings.template_pptx_path
     result = subprocess.run(
         command,
         cwd=workspace,
+        env=env,
         capture_output=True,
         text=True,
         timeout=settings.worker_command_timeout_seconds,

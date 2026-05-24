@@ -1,9 +1,28 @@
 import json
+import os
 import zipfile
+from pathlib import Path
 
 from aippt_builder.outline import outline_to_deck
 from aippt_builder.render import build_pptx
 from aippt_builder.validate import validate_deck
+from pptx import Presentation
+
+
+def _sjtu_template_path() -> Path:
+    candidates = [
+        Path(value)
+        for key in ("AIPPT_TEMPLATE_PPTX", "AIPPT_TEMPLATE_PPTX_PATH")
+        if (value := os.getenv(key))
+    ]
+    candidates.extend(
+        parent / "docs" / "SJTU PPT 模板" / "SJTU 模板.pptx"
+        for parent in Path(__file__).resolve().parents
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise AssertionError("SJTU template fixture is missing")
 
 
 def test_outline_to_deck_creates_valid_buildable_ir() -> None:
@@ -123,6 +142,19 @@ def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:
 
     assert "J(θ)=1/m" in slide_xml
     assert "Cambria Math" in slide_xml
+
+
+def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> None:
+    template = _sjtu_template_path()
+    monkeypatch.setenv("AIPPT_TEMPLATE_PPTX", str(template))
+    deck = outline_to_deck("请制作五六页 PPT，关于机器学习的科普啊")
+    output = build_pptx(deck, tmp_path / "template-backed.pptx")
+
+    prs = Presentation(output)
+
+    assert prs.slides[0].slide_layout.name == "封面-01"
+    assert prs.slides[1].slide_layout.name == "常规样式（1）"
+    assert prs.slides[-1].slide_layout.name == "封底01"
 
 
 def test_explicit_page_outline_prefers_document_title_over_job_label() -> None:

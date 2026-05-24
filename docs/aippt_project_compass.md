@@ -27,7 +27,9 @@ Implemented and verified:
 - Deck/session/job/file entities with `owner_user_id`.
 - Worker loop for queued `build_pptx` jobs.
 - Isolated job workspace layout under `/srv/aippt/jobs/{owner}/{job}`.
-- Deterministic Markdown -> Deck IR -> PPTX builder.
+- Deterministic Markdown -> Deck IR -> PPTX builder, now using
+  `docs/SJTU PPT 模板/SJTU 模板.pptx` as the default template source when
+  available.
 - Short prompt expansion for simple requests such as "做 5-6 页机器学习科普 PPT".
 - Editable text-formula rendering for simple math expressions such as
   `J(theta)=1/m sum_i L(y_i, f_theta(x_i))`; these are PPT text boxes, not
@@ -109,6 +111,11 @@ MiMo/Hermes are useful for:
 
 They should not freely calculate all PPT coordinates or modify production
 authorization/storage logic.
+
+The visual chrome should come from the SJTU template deck first. The builder now
+loads the template PPTX when `AIPPT_TEMPLATE_PPTX` or
+`AIPPT_TEMPLATE_PPTX_PATH` points to it, using the template cover, red-header
+content layout, and closing page before falling back to hand-drawn shapes.
 
 They also should not be treated as the visual QA engine unless the configured
 provider explicitly supports image input. A text-only model can still improve

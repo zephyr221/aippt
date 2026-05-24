@@ -167,6 +167,16 @@ Operational rules:
 - Hermes receives only the active job workspace.
 - Secrets belong in `/srv/aippt/env/aippt.env`, never in Git.
 
+The deterministic builder receives the SJTU PPTX template path from
+`AIPPT_TEMPLATE_PPTX_PATH` / `AIPPT_TEMPLATE_PPTX`. The current server default is:
+
+```text
+/srv/aippt/docs/SJTU PPT 模板/SJTU 模板.pptx
+```
+
+If that file is missing, the builder falls back to its older hand-drawn red/gold
+layout, but production should keep the template present.
+
 ## Next Engineering Direction
 
 The next stable milestone is an end-to-end local job loop:

@@ -38,6 +38,8 @@ expose that path.
   horizontal, comparison, table, summary, thanks.
 - Hard text limits before PPTX generation.
 - Minimal python-pptx renderer using SJTU colors and predictable spacing.
+- The renderer should use `SJTU 模板.pptx` as the first-choice visual source:
+  cover layout, red-header content layout, and closing layout.
 - Markdown parser promotes cover metadata into the cover slide, normalizes
   `第 N 页 · ...` headings, skips legacy cover placeholder pages, and inserts a
   TOC when there are at least three sections.

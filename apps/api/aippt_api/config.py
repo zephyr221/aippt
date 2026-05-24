@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     secure_cookies: bool = False
     jobs_root: str = "/srv/aippt/jobs"
     builder_command: str = "aippt-build"
+    template_pptx_path: str = "/srv/aippt/docs/SJTU PPT 模板/SJTU 模板.pptx"
     worker_command_timeout_seconds: int = 120
     preview_render_enabled: bool = True
     preview_soffice_command: str = "soffice"

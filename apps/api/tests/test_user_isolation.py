@@ -24,6 +24,10 @@ from aippt_api.services.preview import _write_contact_sheet
 def app_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AIPPT_DATABASE_URL", f"sqlite:///{tmp_path / 'aippt-test.db'}")
     monkeypatch.setenv("AIPPT_JOBS_ROOT", str(tmp_path / "jobs"))
+    monkeypatch.setenv(
+        "AIPPT_TEMPLATE_PPTX_PATH",
+        str(Path(__file__).resolve().parents[3] / "docs" / "SJTU PPT 模板" / "SJTU 模板.pptx"),
+    )
     monkeypatch.setenv("AIPPT_JACCOUNT_CLIENT_ID", "test-client")
     monkeypatch.setenv("AIPPT_JACCOUNT_CLIENT_SECRET", "test-secret")
     monkeypatch.setenv(
