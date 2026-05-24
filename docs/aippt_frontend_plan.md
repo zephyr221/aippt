@@ -18,6 +18,7 @@ login should help a user continue or create PPT work quickly:
 - Deck list scoped to the current user.
 - Recent job status and generated artifacts.
 - Clear entry point for a new PPT request.
+- Creation accepts either a one-sentence request or a Markdown outline.
 - No public filesystem paths or unauthenticated artifact links.
 
 ## Route Map
@@ -91,18 +92,19 @@ Expected controls:
 
 ### Deck Workspace
 
-Purpose: edit outline and trigger generation.
+Purpose: edit a request/outline and trigger generation.
 
 Expected regions:
 
-- Markdown outline editor.
+- Request/Markdown outline editor.
 - Preview/read-only outline pane.
 - Generation controls.
 - Job status panel.
 - Artifact panel for authenticated downloads.
 
-The Markdown editor should be the primary authoring path at first. Avoid a
-Word/Notion-style editor until the PPT generation contract is stable.
+The first editor can be plain text, but it must tolerate short requests like
+"做 5-6 页机器学习科普 PPT". Avoid a Word/Notion-style editor until the PPT
+generation contract is stable.
 
 ### Job Detail
 

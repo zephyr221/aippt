@@ -13,6 +13,19 @@ HORIZONTAL_RULE_RE = re.compile(r"^(?:-{3,}|\*{3,}|_{3,})$")
 TABLE_SEPARATOR_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
 SPEAKER_NOTES_RE = re.compile(r"^(?:\*\*)?\s*(?:讲者备注|演讲者备注|备注)\s*(?:\*\*)?\s*[：:]")
 COVER_HEADINGS = {"封面", "首页", "标题页"}
+CHINESE_NUMBERS = {
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+}
 
 
 @dataclass
@@ -64,9 +77,177 @@ def outline_to_deck(markdown: str, title: str | None = None, author: str = "") -
 
 
 def _parse_sections(markdown: str) -> ParsedOutline:
+    if _looks_like_brief_prompt(markdown):
+        return _parse_brief_prompt(markdown)
     if _has_explicit_page_headings(markdown):
         return _parse_explicit_pages(markdown)
     return _parse_standard_sections(markdown)
+
+
+def _looks_like_brief_prompt(markdown: str) -> bool:
+    lines = [line.strip() for line in markdown.splitlines() if line.strip()]
+    if not lines or len(lines) > 2:
+        return False
+    joined = " ".join(lines)
+    if HEADING_RE.search(joined) or BULLET_RE.search(joined) or "|" in joined:
+        return False
+    return len(joined) <= 120 and bool(
+        re.search(r"(PPT|ppt|幻灯片|页|关于|科普|介绍|分享|报告|讲讲|做|制作|生成)", joined)
+    )
+
+
+def _parse_brief_prompt(prompt: str) -> ParsedOutline:
+    cleaned_prompt = _clean_inline(
+        " ".join(line.strip() for line in prompt.splitlines() if line.strip())
+    )
+    total_pages = _requested_page_count(cleaned_prompt)
+    topic = _prompt_topic(cleaned_prompt)
+    deck_title = _prompt_deck_title(topic, cleaned_prompt)
+    body_pages = max(2, total_pages - 2)
+    sections = _prompt_sections(topic, body_pages)
+    return ParsedOutline(
+        deck_title=deck_title,
+        cover_notes=[
+            f"用 {total_pages} 页讲清楚：是什么、怎么工作、有什么用、边界在哪里。",
+            "由一句话需求自动规划，可继续编辑大纲。",
+        ],
+        sections=sections,
+        explicit_pages=True,
+    )
+
+
+def _requested_page_count(prompt: str) -> int:
+    digit_range = re.search(r"(\d{1,2})\s*(?:[-~到至]|—)\s*(\d{1,2})\s*页", prompt)
+    if digit_range:
+        return _clamp_page_count(int(digit_range.group(2)))
+
+    digit_single = re.search(r"(\d{1,2})\s*页", prompt)
+    if digit_single:
+        return _clamp_page_count(int(digit_single.group(1)))
+
+    zh_range = re.search(
+        r"([一二两三四五六七八九十]{1,3})\s*(?:到|至|[-~—])\s*"
+        r"([一二两三四五六七八九十]{1,3})\s*页",
+        prompt,
+    )
+    if zh_range:
+        return _clamp_page_count(_chinese_number(zh_range.group(2)) or 6)
+
+    zh_pair = re.search(r"([一二两三四五六七八九])([一二两三四五六七八九])\s*页", prompt)
+    if zh_pair:
+        return _clamp_page_count(CHINESE_NUMBERS[zh_pair.group(2)])
+
+    zh_single = re.search(r"([一二两三四五六七八九十]{1,3})\s*页", prompt)
+    if zh_single:
+        return _clamp_page_count(_chinese_number(zh_single.group(1)) or 6)
+
+    return 6
+
+
+def _clamp_page_count(value: int) -> int:
+    return min(12, max(4, value))
+
+
+def _chinese_number(value: str) -> int | None:
+    if value in CHINESE_NUMBERS:
+        return CHINESE_NUMBERS[value]
+    if value.startswith("十") and len(value) == 2:
+        return 10 + CHINESE_NUMBERS.get(value[1], 0)
+    if value.endswith("十") and len(value) == 2:
+        return CHINESE_NUMBERS.get(value[0], 0) * 10
+    if "十" in value and len(value) == 3:
+        return CHINESE_NUMBERS.get(value[0], 0) * 10 + CHINESE_NUMBERS.get(value[2], 0)
+    return None
+
+
+def _prompt_topic(prompt: str) -> str:
+    topic_match = re.search(
+        r"关于\s*(.+?)(?:的)?(?:科普|介绍|分享|报告|PPT|ppt|幻灯片|$)",
+        prompt,
+    )
+    if topic_match:
+        return _clean_prompt_topic(topic_match.group(1))
+
+    topic = re.sub(r"\d{1,2}\s*(?:[-~到至]|—)?\s*\d{0,2}\s*页", " ", prompt)
+    topic = re.sub(
+        r"[一二两三四五六七八九十]{1,3}\s*(?:到|至|[-~—])?"
+        r"\s*[一二两三四五六七八九十]{0,3}\s*页",
+        " ",
+        topic,
+    )
+    topic = re.sub(
+        r"(请|帮我|可否|能否|可以|课否|做|制作|生成|写|来|一个|一份|左右|"
+        r"大概|大约|PPT|ppt|幻灯片|页面|关于|科普|介绍|分享|报告|啊|吧|呢)",
+        " ",
+        topic,
+    )
+    return _clean_prompt_topic(topic)
+
+
+def _clean_prompt_topic(topic: str) -> str:
+    topic = re.sub(r"[，,。.!！?？:：；;、]+", " ", topic)
+    topic = re.sub(r"\s+", " ", topic).strip(" 的")
+    return _clip(topic or "主题演示", 30)
+
+
+def _prompt_deck_title(topic: str, prompt: str) -> str:
+    if "科普" in prompt and not topic.endswith("科普"):
+        return _clip(f"{topic}科普", 60)
+    return _clip(topic, 60)
+
+
+def _prompt_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]]:
+    candidates = [
+        (
+            "为什么值得了解",
+            [
+                f"{topic}已经进入学习、工作和科研工具链。",
+                "先建立直觉，再理解术语和边界。",
+                "这份演示用生活化例子解释核心概念。",
+            ],
+        ),
+        (
+            "一句话理解",
+            [
+                f"{topic}让计算机从数据中发现规律。",
+                "不是把所有规则手写进去，而是用样本训练模型。",
+                "模型输出的是概率判断，需要验证和迭代。",
+            ],
+        ),
+        (
+            "它如何工作",
+            [
+                "收集数据，并清洗成可学习的样本。",
+                "选择模型，让模型在训练中减少预测错误。",
+                "用新数据测试泛化能力，而不只看训练成绩。",
+            ],
+        ),
+        (
+            "身边的应用",
+            [
+                "搜索、推荐、语音识别和图像分类。",
+                "医学、教育、科研中的辅助分析。",
+                "真正价值来自与具体场景和数据结合。",
+            ],
+        ),
+        (
+            "常见误区",
+            [
+                "模型不是万能答案机，数据偏差会影响结果。",
+                "准确率之外还要看可解释性、成本和风险。",
+                "越复杂的模型越需要清晰验证。",
+            ],
+        ),
+        (
+            "如何继续学习",
+            [
+                "先掌握数据、特征、训练、测试这四个关键词。",
+                "用一个小数据集跑通完整流程。",
+                "关注模型能否解决真实问题，而不只追逐名词。",
+            ],
+        ),
+    ]
+    return candidates[:body_pages]
 
 
 def _parse_standard_sections(markdown: str) -> ParsedOutline:

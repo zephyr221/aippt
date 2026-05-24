@@ -67,6 +67,7 @@ reproducibly.
 When PNG rendering is available, create:
 
 ```text
+preview/deck.pdf
 preview/pages/slide-01.png
 preview/pages/slide-02.png
 preview/contact-sheet.png
@@ -83,6 +84,10 @@ The contact sheet is useful for:
 Recommended settings:
 
 ```text
+AIPPT_PREVIEW_RENDER_ENABLED=true
+AIPPT_PREVIEW_SOFFICE_COMMAND=soffice
+AIPPT_PREVIEW_PDFTOPPM_COMMAND=pdftoppm
+AIPPT_PREVIEW_RENDER_DPI=144
 AIPPT_VISUAL_QA_ENABLED=false
 AIPPT_VISUAL_QA_PROVIDER=none
 AIPPT_VISUAL_QA_MODEL=

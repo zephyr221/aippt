@@ -153,7 +153,7 @@ def workbench(request: Request) -> HTMLResponse:
     const rootPath = document.documentElement.dataset.rootPath || "";
     const api = rootPath + "/api";
     const app = document.getElementById("app");
-    const sampleOutline = "# AI PPT 演示\\n\\n## 目标\\n\\n- 多用户隔离\\n- 自动生成 PPTX\\n- 可下载产物";
+    const sampleOutline = "请制作 5-6 页 PPT，关于机器学习的科普。";
     let decks = [];
     let filesByDeck = new Map();
     let busy = false;
@@ -243,9 +243,9 @@ def workbench(request: Request) -> HTMLResponse:
             <header><h2>新建 PPT</h2></header>
             <form id="deck-form" class="form">
               <label>标题
-                <input id="title" name="title" maxlength="160" value="AIPPT Demo" required>
+                <input id="title" name="title" maxlength="160" value="机器学习科普" required>
               </label>
-              <label>大纲
+              <label>需求或大纲
                 <textarea id="outline" name="outline" required>${{sampleOutline}}</textarea>
               </label>
               <div class="toolbar">
@@ -278,6 +278,7 @@ def workbench(request: Request) -> HTMLResponse:
     function renderDeck(deck) {{
       const files = filesByDeck.get(deck.id) || [];
       const pptx = files.find((file) => file.kind === "pptx");
+      const preview = files.find((file) => file.kind === "preview");
       const review = files.find((file) => file.kind === "review");
       const created = new Date(deck.created_at).toLocaleString();
       return `
@@ -289,6 +290,7 @@ def workbench(request: Request) -> HTMLResponse:
           </div>
           <div class="deck-actions">
             ${{pptx ? `<a class="btn" href="${{api}}/files/${{pptx.id}}/download">下载 PPTX</a>` : ""}}
+            ${{preview ? `<a class="btn secondary" href="${{api}}/files/${{preview.id}}/download">预览</a>` : ""}}
             ${{review ? `<a class="btn secondary" href="${{api}}/files/${{review.id}}/download">审稿报告</a>` : ""}}
             <button class="btn secondary" type="button" data-build="${{deck.id}}">重新生成</button>
             <button class="btn secondary" type="button" data-review="${{deck.id}}">AI 审稿</button>

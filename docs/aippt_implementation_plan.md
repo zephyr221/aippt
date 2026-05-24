@@ -41,6 +41,8 @@ expose that path.
 - Markdown parser promotes cover metadata into the cover slide, normalizes
   `第 N 页 · ...` headings, skips legacy cover placeholder pages, and inserts a
   TOC when there are at least three sections.
+- Short one-line requests can be expanded into a simple 5-6 page starter deck
+  before the deterministic builder runs.
 - QA for page count, readable PPTX, and basic text overflow risks.
 
 ## Phase 3: Planner And Worker
@@ -53,6 +55,9 @@ expose that path.
   internal artifacts. `run-once` remains available for debugging.
 - `hermes_review` jobs create non-destructive QA/review artifacts
   (`qa/qa.json`, `logs/hermes_review.md`) without changing ready deck status.
+- Review jobs render deterministic preview artifacts when tools are available:
+  `preview/deck.pdf`, `preview/pages/slide-*.png`, and
+  `preview/contact-sheet.png`.
 - Hermes operates only inside the current job workspace.
 - Worker can repair IR and rerun builder on validation/build failures.
 - Experimental path: Hermes/MiMo can generate a constrained SJTU-template

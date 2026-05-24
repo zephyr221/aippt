@@ -88,6 +88,25 @@ def test_outline_limits_toc_to_valid_bullet_count() -> None:
     assert validate_deck(deck) == []
 
 
+def test_brief_prompt_expands_to_requested_intro_deck() -> None:
+    deck = outline_to_deck("请制作五六页 PPT，关于机器学习的科普啊")
+
+    assert deck.title == "机器学习科普"
+    assert len(deck.slides) == 6
+    assert [slide.title for slide in deck.slides] == [
+        "机器学习科普",
+        "为什么值得了解",
+        "一句话理解",
+        "它如何工作",
+        "身边的应用",
+        "谢谢",
+    ]
+    body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
+    assert "从数据中发现规律" in body_text
+    assert "数据结合" in body_text
+    assert validate_deck(deck) == []
+
+
 def test_explicit_page_outline_prefers_document_title_over_job_label() -> None:
     deck = outline_to_deck(
         """# 正式报告标题

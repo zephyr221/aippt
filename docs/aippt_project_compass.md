@@ -28,8 +28,11 @@ Implemented and verified:
 - Worker loop for queued `build_pptx` jobs.
 - Isolated job workspace layout under `/srv/aippt/jobs/{owner}/{job}`.
 - Deterministic Markdown -> Deck IR -> PPTX builder.
+- Short prompt expansion for simple requests such as "做 5-6 页机器学习科普 PPT".
 - Non-destructive `hermes_review` job path that writes `qa/qa.json` and a
   downloadable `logs/hermes_review.md` report.
+- Deterministic preview rendering for review jobs: PDF, page PNGs, and contact
+  sheet when LibreOffice/Poppler/Pillow are available.
 - Explicit `第 N 页` Markdown mode: one authored page maps to one slide.
 - SJTU Wine Red + Gold renderer with timeline, fact-card, card-grid, process,
   cover, thanks, and TOC rhythms.
@@ -125,11 +128,10 @@ one module per slide is better than one giant script:
 ### Milestone 1: Better Default PPTs
 
 - Keep improving the deterministic renderer in `packages/builder`.
-- Add preview rendering to job artifacts.
-- Add a lightweight visual QA report: page count, long text, likely overflow,
-  repeated layout, and missing claims.
-- Produce a contact sheet when render tools are available, but keep deterministic
-  QA useful even without a multimodal model.
+- Continue improving preview rendering and visual QA artifacts.
+- Extend the lightweight visual QA report beyond page count, long text, likely
+  overflow, repeated layout, and missing claims.
+- Keep deterministic QA useful even without a multimodal model.
 - Add a "regenerate with same outline" path in the UI.
 
 ### Milestone 2: Hermes As Shadow Reviewer
@@ -144,11 +146,12 @@ outline.md -> deck.json -> deck.pptx -> qa.json
                       Hermes-ready review report
 ```
 
-The current `hermes_review` job writes deterministic `qa/qa.json` and
-`logs/hermes_review.md` without modifying the deck. The next step is to let
-Hermes read only those workspace files and write either an improved
-`logs/hermes_review.md` or a proposed `ir/deck.repaired.json`. The worker should
-decide whether to accept any repair after validation.
+The current `hermes_review` job writes deterministic `qa/qa.json`,
+`logs/hermes_review.md`, and optional preview artifacts without modifying the
+deck. The next step is to let Hermes read only those workspace files and write
+either an improved `logs/hermes_review.md` or a proposed
+`ir/deck.repaired.json`. The worker should decide whether to accept any repair
+after validation.
 
 ### Milestone 3: Preference Memory
 

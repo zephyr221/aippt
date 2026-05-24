@@ -5,7 +5,8 @@ AIPPT is a multi-user AI PPT generation platform for SJTU-style presentations.
 The product flow is intentionally conservative:
 
 1. A user logs in and creates a private deck session.
-2. The planner turns the user's request into an editable Markdown outline.
+2. The planner turns either a one-sentence request or Markdown outline into a
+   usable deck structure.
 3. The outline is converted into a constrained Deck IR.
 4. A deterministic builder generates an SJTU-style PPTX.
 5. A worker runs QA and writes job logs and artifacts.

@@ -187,8 +187,13 @@ and write:
 ```text
 qa/qa.json
 logs/hermes_review.md
+preview/deck.pdf
+preview/pages/slide-*.png
+preview/contact-sheet.png
 ```
 
-The review report is exposed as an authenticated `review` file asset. Review
-jobs do not change an already ready deck back to `generating`, so they can be
-run after PPTX generation without disrupting downloads.
+The review report is exposed as an authenticated `review` file asset. When the
+rendering toolchain is available, a PDF or contact sheet is exposed as an
+authenticated `preview` file asset. Review jobs do not change an already ready
+deck back to `generating`, so they can be run after PPTX generation without
+disrupting downloads.

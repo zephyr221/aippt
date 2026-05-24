@@ -19,6 +19,7 @@ apt-get install -y \
   fonts-noto-cjk \
   git \
   libreoffice \
+  poppler-utils \
   pkg-config \
   python3 \
   python3-pip \

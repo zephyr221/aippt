@@ -39,7 +39,7 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
         if job.type == JobType.BUILD_PPTX:
             _run_build_pptx(session, settings, deck, workspace)
         elif job.type == JobType.HERMES_REVIEW:
-            _run_hermes_review(session, deck, workspace)
+            _run_hermes_review(session, settings, deck, workspace)
         else:
             raise RuntimeError(f"Unsupported job type: {job.type}")
 
@@ -119,9 +119,16 @@ def _run_build_pptx(
     _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
 
 
-def _run_hermes_review(session: Session, deck: DeckSession, workspace: Path) -> None:
-    artifact = write_hermes_review(session, deck, workspace)
+def _run_hermes_review(
+    session: Session,
+    settings: Settings,
+    deck: DeckSession,
+    workspace: Path,
+) -> None:
+    artifact = write_hermes_review(settings, session, deck, workspace)
     _add_file_asset(session, deck, FileKind.REVIEW, artifact.report_path, "text/markdown")
+    if artifact.preview_path is not None and artifact.preview_content_type is not None:
+        _add_file_asset(session, deck, FileKind.PREVIEW, artifact.preview_path, artifact.preview_content_type)
     _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
 
 

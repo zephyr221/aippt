@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     jobs_root: str = "/srv/aippt/jobs"
     builder_command: str = "aippt-build"
     worker_command_timeout_seconds: int = 120
+    preview_render_enabled: bool = True
+    preview_soffice_command: str = "soffice"
+    preview_pdftoppm_command: str = "pdftoppm"
+    preview_render_dpi: int = 144
+    preview_max_pages: int = 40
+    preview_contact_sheet_thumb_width: int = 360
     jaccount_client_id: str = ""
     jaccount_client_secret: str = ""
     jaccount_redirect_uri: str = "http://127.0.0.1:8000/api/auth/jaccount/callback"

@@ -8,6 +8,7 @@ from uuid import UUID
 import pytest
 import httpx
 from fastapi.testclient import TestClient
+from PIL import Image
 from sqlalchemy import create_engine, text
 from sqlmodel import Session, select
 
@@ -16,6 +17,7 @@ from aippt_api.db import get_engine, reset_engine
 from aippt_api.main import create_app
 from aippt_api.models import DeckSession, DeckStatus, FileAsset, FileKind, JobStatus
 from aippt_api.services.job_runner import run_next_job
+from aippt_api.services.preview import _write_contact_sheet
 
 
 @pytest.fixture()
@@ -345,6 +347,41 @@ def test_worker_run_once_builds_pptx_and_records_artifacts(app_context) -> None:
     assert "succeeded build_pptx" in log_text
 
 
+def test_worker_expands_brief_prompt_to_intro_deck(app_context) -> None:
+    app, tmp_path = app_context
+    with TestClient(app) as alice:
+        register(alice, "alice@example.com")
+        deck_response = alice.post(
+            "/api/decks",
+            json={
+                "title": "机器学习科普",
+                "outline_md": "请制作五六页 PPT，关于机器学习的科普啊",
+            },
+        )
+        assert deck_response.status_code == 201
+        deck_id = deck_response.json()["id"]
+
+        job_response = alice.post(f"/api/jobs/decks/{deck_id}", json={"type": "build_pptx"})
+        assert job_response.status_code == 201
+        job_id = job_response.json()["id"]
+
+        with Session(get_engine()) as session:
+            job = run_next_job(session, get_settings())
+            assert job is not None
+            assert job.status == JobStatus.SUCCEEDED
+
+    job_workspace = next((tmp_path / "jobs").glob(f"*/{job_id}"))
+    deck_ir = json.loads((job_workspace / "ir" / "deck.json").read_text(encoding="utf-8"))
+    assert deck_ir["title"] == "机器学习科普"
+    assert len(deck_ir["slides"]) == 6
+    assert [slide["title"] for slide in deck_ir["slides"][1:5]] == [
+        "为什么值得了解",
+        "一句话理解",
+        "它如何工作",
+        "身边的应用",
+    ]
+
+
 def test_worker_hermes_review_writes_non_destructive_report(app_context) -> None:
     app, tmp_path = app_context
     with TestClient(app) as alice, TestClient(app) as bob:
@@ -410,7 +447,29 @@ def test_worker_hermes_review_writes_non_destructive_report(app_context) -> None
 
     review_workspace = next((tmp_path / "jobs").glob(f"*/{review_job_id}"))
     assert (review_workspace / "qa" / "qa.json").is_file()
+    qa = json.loads((review_workspace / "qa" / "qa.json").read_text(encoding="utf-8"))
+    assert qa["preview"]["enabled"] is True
+    assert "contact_sheet_rendered" in qa["preview"]
     assert (review_workspace / "logs" / "hermes_review.md").is_file()
+    assert "## Preview QA" in (review_workspace / "logs" / "hermes_review.md").read_text(
+        encoding="utf-8"
+    )
     review_log = (review_workspace / "logs" / "job.log").read_text(encoding="utf-8")
     assert "running hermes_review" in review_log
     assert "succeeded hermes_review" in review_log
+
+
+def test_contact_sheet_renderer_creates_png(tmp_path: Path) -> None:
+    page_paths: list[Path] = []
+    for index, color in enumerate(((166, 32, 56), (197, 164, 108), (40, 48, 64)), start=1):
+        path = tmp_path / f"slide-{index:02d}.png"
+        Image.new("RGB", (640, 360), color).save(path)
+        page_paths.append(path)
+
+    output_path = tmp_path / "contact-sheet.png"
+    _write_contact_sheet(tuple(page_paths), output_path, 240)
+
+    assert output_path.is_file()
+    with Image.open(output_path) as image:
+        assert image.width > 240
+        assert image.height > 180

@@ -5,16 +5,21 @@ from typing import Any
 
 from sqlmodel import Session, select
 
+from ..config import Settings
 from ..models import DeckSession, FileAsset, FileKind
+from .preview import PreviewArtifacts, build_preview_artifacts
 
 
 @dataclass(frozen=True)
 class ReviewArtifact:
     report_path: Path
     qa_path: Path
+    preview_path: Path | None
+    preview_content_type: str | None
 
 
 def write_hermes_review(
+    settings: Settings,
     session: Session,
     deck: DeckSession,
     workspace: Path,
@@ -27,9 +32,11 @@ def write_hermes_review(
     outline_path = workspace / "input" / "outline.md"
     deck_ir_asset = _latest_asset(session, deck, FileKind.DECK_IR)
     pptx_asset = _latest_asset(session, deck, FileKind.PPTX)
+    pptx_path = Path(pptx_asset.storage_path) if pptx_asset else None
 
     deck_payload = _read_json_asset(deck_ir_asset)
-    qa = _build_qa(deck, outline_path, deck_payload, deck_ir_asset, pptx_asset)
+    preview = build_preview_artifacts(settings, pptx_path, workspace)
+    qa = _build_qa(deck, outline_path, deck_payload, deck_ir_asset, pptx_asset, preview, workspace)
 
     qa_path = workspace / "qa" / "qa.json"
     qa_path.parent.mkdir(parents=True, exist_ok=True)
@@ -37,7 +44,13 @@ def write_hermes_review(
 
     report_path = workspace / "logs" / "hermes_review.md"
     report_path.write_text(_render_report(deck, qa), encoding="utf-8")
-    return ReviewArtifact(report_path=report_path, qa_path=qa_path)
+    preview_download = preview.best_download()
+    return ReviewArtifact(
+        report_path=report_path,
+        qa_path=qa_path,
+        preview_path=preview_download[0] if preview_download else None,
+        preview_content_type=preview_download[1] if preview_download else None,
+    )
 
 
 def _latest_asset(session: Session, deck: DeckSession, kind: FileKind) -> FileAsset | None:
@@ -71,6 +84,8 @@ def _build_qa(
     deck_payload: dict[str, Any] | None,
     deck_ir_asset: FileAsset | None,
     pptx_asset: FileAsset | None,
+    preview: PreviewArtifacts,
+    workspace: Path,
 ) -> dict[str, Any]:
     slides = _slides(deck_payload)
     issues: list[dict[str, str]] = []
@@ -95,6 +110,8 @@ def _build_qa(
     else:
         issues.append(_issue("medium", "deck_ir", "Deck IR 中没有可审阅的 slides。"))
 
+    _check_preview(preview, workspace, suggestions)
+
     if not suggestions:
         suggestions.append("当前结构可以作为初稿；下一步建议加入预览图渲染 QA。")
 
@@ -107,6 +124,7 @@ def _build_qa(
             "deck_ir": deck_ir_asset.storage_path if deck_ir_asset else None,
             "pptx": pptx_asset.storage_path if pptx_asset else None,
         },
+        "preview": preview.qa_payload(workspace),
         "issues": issues,
         "suggestions": suggestions,
         "memory_signals": _memory_signals(slides),
@@ -153,6 +171,22 @@ def _check_layout_rhythm(slides: list[dict[str, Any]], suggestions: list[str]) -
         suggestions.append("版式节奏偏单一，建议加入 timeline、process cards 或 fact cards。")
 
 
+def _check_preview(
+    preview: PreviewArtifacts,
+    workspace: Path,
+    suggestions: list[str],
+) -> None:
+    payload = preview.qa_payload(workspace)
+    if payload["contact_sheet_rendered"]:
+        suggestions.append(f"已生成 contact sheet：{payload['contact_sheet']}，可用于人工或视觉模型审查。")
+        return
+    if payload["pdf_rendered"]:
+        suggestions.append("已生成 PDF 预览；缺少 PNG/contact sheet 时仍可进行人工快速检查。")
+        return
+    if payload["warnings"]:
+        suggestions.append("未生成可视化预览；请检查渲染工具链或在服务器安装 poppler-utils/Pillow。")
+
+
 def _memory_signals(slides: list[dict[str, Any]]) -> list[str]:
     joined = "\n".join(
         str(slide.get("title") or "") + "\n" + "\n".join(str(item) for item in slide.get("bullets") or [])
@@ -172,6 +206,7 @@ def _render_report(deck: DeckSession, qa: dict[str, Any]) -> str:
     issues = qa["issues"]
     suggestions = qa["suggestions"]
     memory_signals = qa["memory_signals"]
+    preview = qa["preview"]
     status = "需要处理" if issues else "结构可用"
     lines = [
         "# Hermes PPT Review",
@@ -192,6 +227,18 @@ def _render_report(deck: DeckSession, qa: dict[str, Any]) -> str:
         lines.append("- No blocking issue found by deterministic QA.")
     lines.extend(["", "## Suggested Repairs", ""])
     lines.extend(f"- {item}" for item in suggestions)
+    lines.extend(
+        [
+            "",
+            "## Preview QA",
+            "",
+            f"- PDF rendered: {preview['pdf_rendered']}",
+            f"- Page images: {preview['page_images_count']}",
+            f"- Contact sheet: {preview['contact_sheet'] or 'not available'}",
+        ]
+    )
+    if preview["warnings"]:
+        lines.append(f"- Warnings: {'; '.join(preview['warnings'])}")
     lines.extend(["", "## Memory Signals", ""])
     lines.extend(f"- {item}" for item in memory_signals)
     lines.extend(

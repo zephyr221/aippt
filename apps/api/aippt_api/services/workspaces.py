@@ -50,6 +50,8 @@ def _manifest(deck: DeckSession, job: Job) -> dict[str, str]:
         "deck_ir": "ir/deck.json",
         "pptx_output": "out/deck.pptx",
         "qa_report": "qa/qa.json",
+        "preview_pdf": "preview/deck.pdf",
+        "preview_contact_sheet": "preview/contact-sheet.png",
         "hermes_review": "logs/hermes_review.md",
         "log_file": "logs/job.log",
     }
@@ -69,6 +71,7 @@ Type: {job.type}
 - Write Deck IR to `ir/deck.json`.
 - Write build output to `out/deck.pptx`.
 - Write QA JSON to `qa/qa.json` when reviewing.
+- Write preview artifacts under `preview/` when rendering.
 - Write Hermes review notes to `logs/hermes_review.md` when reviewing.
 - Write diagnostics to `logs/job.log`.
 - Do not read secrets, global app state, or other job directories.

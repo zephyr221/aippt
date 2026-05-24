@@ -98,10 +98,13 @@ writes:
 ```text
 qa/qa.json
 logs/hermes_review.md
+preview/deck.pdf
+preview/pages/slide-*.png
+preview/contact-sheet.png
 ```
 
-The report is recorded as a `review` file asset and can be downloaded by the
-deck owner. A review job does not move a ready deck back to `generating`, and a
-review failure does not mark the PPTX artifact as failed. This keeps Hermes'
-review path safe while the production builder remains the source of accepted
-PPTX output.
+The report is recorded as a `review` file asset. When rendering succeeds, the
+best preview artifact is recorded as a `preview` file asset. A review job does
+not move a ready deck back to `generating`, and a review failure does not mark
+the PPTX artifact as failed. This keeps Hermes' review path safe while the
+production builder remains the source of accepted PPTX output.
