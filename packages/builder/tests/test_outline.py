@@ -223,7 +223,7 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
             process_arrow_types.append(shape.auto_shape_type)
         except ValueError:
             continue
-    assert process_arrow_types.count(MSO_SHAPE.RIGHT_ARROW) >= 2
+    assert MSO_SHAPE.RIGHT_ARROW not in process_arrow_types
     assert MSO_SHAPE.RIGHT_TRIANGLE not in process_arrow_types
     thanks = next(
         shape

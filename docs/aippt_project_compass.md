@@ -127,6 +127,8 @@ each card carries 2-4 concrete sub-points rather than a single sentence.
 When using the SJTU content template, remove the inherited body placeholder from
 generated slides so PowerPoint does not show the dashed editing frame over the
 custom cards. Keep card sub-bullets at projection-readable sizes.
+For numbered process cards, prefer the 1/2/3 badges as the progression signal;
+avoid extra arrows unless the slide has a real causal flow that needs emphasis.
 
 They also should not be treated as the visual QA engine unless the configured
 provider explicitly supports image input. A text-only model can still improve
@@ -181,6 +183,12 @@ deck. The next step is to let Hermes read only those workspace files and write
 either an improved `logs/hermes_review.md` or a proposed
 `ir/deck.repaired.json`. The worker should decide whether to accept any repair
 after validation.
+
+The normal "生成 PPTX" path is intentionally fast and deterministic today. If a
+large pasted outline finishes in about a second, that is expected: it was parsed
+and rendered locally, not pre-planned by Hermes. Hermes should enter the
+production loop only through a clearly labeled deep-planning/review mode with
+provider, model, version, and licensing logs.
 
 ### Milestone 3: Preference Memory
 

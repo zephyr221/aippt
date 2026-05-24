@@ -514,17 +514,11 @@ def _render_process(slide, items: list[str]) -> None:
     width = 11.55
     gap = width / max(len(process), 1)
     colors = [SJTU_RED, GOLD, BROWN, TEXT_PRIMARY]
-    arrow_specs: list[tuple[float, float, float]] = []
     for idx, item in enumerate(process, start=1):
         x = left + (idx - 1) * gap
         card_w = max(gap - 0.22, 2.25)
         accent = colors[(idx - 1) % len(colors)]
         _process_card(slide, x, top, card_w, 2.18, idx, item, accent)
-        if idx < len(process):
-            arrow_specs.append((x + card_w - 0.02, top + 1.0, 0.2))
-
-    for arrow_left, arrow_top, arrow_size in arrow_specs:
-        _arrow(slide, arrow_left, arrow_top, arrow_size)
 
     if formula_items:
         _formula_panel(slide, _normalize_formula_text(formula_items[0]), top=5.08)
@@ -829,20 +823,6 @@ def _number_badge(
     shape.shadow.inherit = False
     _shape_text(shape, text, 10, WHITE, bold=True, align=PP_ALIGN.CENTER)
     return shape
-
-
-def _arrow(slide, left: float, top: float, size: float) -> None:
-    shape = slide.shapes.add_shape(
-        MSO_SHAPE.RIGHT_ARROW,
-        Inches(left - size * 0.18),
-        Inches(top + size * 0.14),
-        Inches(size * 2.35),
-        Inches(size * 0.72),
-    )
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = rgb(GOLD)
-    shape.line.fill.background()
-    shape.shadow.inherit = False
 
 
 def _decorative_rule(slide, left: float, top: float, width: float) -> None:

@@ -50,6 +50,9 @@ expose that path.
 - Template content slides should remove the original body placeholder frame
   after inheriting the header chrome. Card sub-bullets should stay readable for
   classroom projection; avoid font sizes below roughly 10.5 pt.
+- Numbered process cards should usually rely on their badges for sequencing;
+  omit decorative arrows unless the information architecture requires an
+  explicit causal flow.
 - Markdown parser promotes cover metadata into the cover slide, normalizes
   `第 N 页 · ...` headings, skips legacy cover placeholder pages, and inserts a
   TOC when there are at least three sections.
@@ -69,6 +72,10 @@ expose that path.
   internal artifacts. `run-once` remains available for debugging.
 - `hermes_review` jobs create non-destructive QA/review artifacts
   (`qa/qa.json`, `logs/hermes_review.md`) without changing ready deck status.
+- The default `build_pptx` job is a deterministic fast path. A large pasted
+  outline may complete in about a second because it is parsed and rendered
+  locally; Hermes planning should be exposed as a separate deep-planning or
+  review mode, not silently hidden inside the fast button.
 - Review jobs render deterministic preview artifacts when tools are available:
   `preview/deck.pdf`, `preview/pages/slide-*.png`, and
   `preview/contact-sheet.png`.
