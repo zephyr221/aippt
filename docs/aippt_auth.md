@@ -55,6 +55,20 @@ AIPPT_JACCOUNT_REDIRECT_URI=https://your-domain.example/api/auth/jaccount/callba
 AIPPT_JACCOUNT_SCOPE=basic
 ```
 
+For the first campus deployment, AIPPT intentionally reuses the same jAccount
+OAuth client as `/opt/aistudy/.env` on `pj2-ext`. Copy the values without
+committing secrets:
+
+```text
+JACCOUNT_CLIENT_ID        -> AIPPT_JACCOUNT_CLIENT_ID
+JACCOUNT_CLIENT_SECRET    -> AIPPT_JACCOUNT_CLIENT_SECRET
+JACCOUNT_REDIRECT_URI     -> AIPPT_JACCOUNT_REDIRECT_URI
+JACCOUNT_SCOPE            -> AIPPT_JACCOUNT_SCOPE
+```
+
+The live AIPPT server keeps these mapped values in `/srv/aippt/env/aippt.env`.
+That file is local runtime state and must not be committed.
+
 For local development, `AIPPT_APP_ENV=development` enables fake jAccount login:
 
 ```text

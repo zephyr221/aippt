@@ -108,6 +108,10 @@ Operational rules:
 - Every resource query filters by both id and `owner_user_id`.
 - Production authentication uses SJTU jAccount; keep
   `AIPPT_DEV_ALLOW_FAKE_LOGIN=false` and `AIPPT_APP_ENV=production` on servers.
+- The current campus setup reuses the jAccount OAuth client from
+  `/opt/aistudy/.env` on `pj2-ext`. Map `JACCOUNT_*` into
+  `/srv/aippt/env/aippt.env` as `AIPPT_JACCOUNT_*`; never commit the copied
+  client secret.
 - Job workspaces live under `/srv/aippt/jobs` and are addressed through the API,
   not by exposing raw paths to the browser.
 - Hermes receives only the active job workspace.
