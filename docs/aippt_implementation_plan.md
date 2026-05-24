@@ -51,6 +51,8 @@ expose that path.
 - Worker creates isolated job workspaces.
 - Worker loop claims queued jobs, writes Deck IR, builds PPTX, and records
   internal artifacts. `run-once` remains available for debugging.
+- `hermes_review` jobs create non-destructive QA/review artifacts
+  (`qa/qa.json`, `logs/hermes_review.md`) without changing ready deck status.
 - Hermes operates only inside the current job workspace.
 - Worker can repair IR and rerun builder on validation/build failures.
 - Experimental path: Hermes/MiMo can generate a constrained SJTU-template

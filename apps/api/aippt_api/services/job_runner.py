@@ -8,6 +8,7 @@ from sqlmodel import Session, select
 
 from ..config import Settings
 from ..models import DeckSession, DeckStatus, FileAsset, FileKind, Job, JobStatus, JobType
+from .hermes_review import write_hermes_review
 from .workspaces import materialize_job_workspace, write_job_manifest
 
 
@@ -35,31 +36,19 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
     _mark_running(session, deck, job, workspace)
 
     try:
-        if job.type != JobType.BUILD_PPTX:
+        if job.type == JobType.BUILD_PPTX:
+            _run_build_pptx(session, settings, deck, workspace)
+        elif job.type == JobType.HERMES_REVIEW:
+            _run_hermes_review(session, deck, workspace)
+        else:
             raise RuntimeError(f"Unsupported job type: {job.type}")
-
-        outline_path = workspace / "input" / "outline.md"
-        deck_ir_path = workspace / "ir" / "deck.json"
-        pptx_path = workspace / "out" / "deck.pptx"
-
-        _run_builder(settings, workspace, "outline", outline_path, deck_ir_path, "--title", deck.title)
-        _run_builder(settings, workspace, "build", deck_ir_path, pptx_path)
-
-        _add_file_asset(session, deck, FileKind.DECK_IR, deck_ir_path, "application/json")
-        _add_file_asset(
-            session,
-            deck,
-            FileKind.PPTX,
-            pptx_path,
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        )
-        _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
 
         now = datetime.now(timezone.utc)
         job.status = JobStatus.SUCCEEDED
         job.error_message = None
         job.updated_at = now
-        deck.status = DeckStatus.READY
+        if _job_updates_deck_status(job):
+            deck.status = DeckStatus.READY
         deck.updated_at = now
         _append_log(workspace, f"{now.isoformat()} succeeded {job.type}")
     except Exception as exc:
@@ -67,7 +56,8 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
         job.status = JobStatus.FAILED
         job.error_message = str(exc)
         job.updated_at = now
-        deck.status = DeckStatus.FAILED
+        if _job_updates_deck_status(job):
+            deck.status = DeckStatus.FAILED
         deck.updated_at = now
         _append_log(workspace, f"{now.isoformat()} failed {job.type}: {exc}")
 
@@ -94,7 +84,8 @@ def _mark_running(session: Session, deck: DeckSession, job: Job, workspace: Path
     now = datetime.now(timezone.utc)
     job.status = JobStatus.RUNNING
     job.updated_at = now
-    deck.status = DeckStatus.GENERATING
+    if _job_updates_deck_status(job):
+        deck.status = DeckStatus.GENERATING
     deck.updated_at = now
     _append_log(workspace, f"{now.isoformat()} running {job.type}")
     write_job_manifest(workspace, deck, job)
@@ -102,6 +93,40 @@ def _mark_running(session: Session, deck: DeckSession, job: Job, workspace: Path
     session.add(job)
     session.commit()
     session.refresh(job)
+
+
+def _run_build_pptx(
+    session: Session,
+    settings: Settings,
+    deck: DeckSession,
+    workspace: Path,
+) -> None:
+    outline_path = workspace / "input" / "outline.md"
+    deck_ir_path = workspace / "ir" / "deck.json"
+    pptx_path = workspace / "out" / "deck.pptx"
+
+    _run_builder(settings, workspace, "outline", outline_path, deck_ir_path, "--title", deck.title)
+    _run_builder(settings, workspace, "build", deck_ir_path, pptx_path)
+
+    _add_file_asset(session, deck, FileKind.DECK_IR, deck_ir_path, "application/json")
+    _add_file_asset(
+        session,
+        deck,
+        FileKind.PPTX,
+        pptx_path,
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    )
+    _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
+
+
+def _run_hermes_review(session: Session, deck: DeckSession, workspace: Path) -> None:
+    artifact = write_hermes_review(session, deck, workspace)
+    _add_file_asset(session, deck, FileKind.REVIEW, artifact.report_path, "text/markdown")
+    _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
+
+
+def _job_updates_deck_status(job: Job) -> bool:
+    return job.type == JobType.BUILD_PPTX
 
 
 def _run_builder(

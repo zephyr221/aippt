@@ -28,6 +28,8 @@ Implemented and verified:
 - Worker loop for queued `build_pptx` jobs.
 - Isolated job workspace layout under `/srv/aippt/jobs/{owner}/{job}`.
 - Deterministic Markdown -> Deck IR -> PPTX builder.
+- Non-destructive `hermes_review` job path that writes `qa/qa.json` and a
+  downloadable `logs/hermes_review.md` report.
 - Explicit `第 N 页` Markdown mode: one authored page maps to one slide.
 - SJTU Wine Red + Gold renderer with timeline, fact-card, card-grid, process,
   cover, thanks, and TOC rhythms.
@@ -120,18 +122,21 @@ one module per slide is better than one giant script:
 
 ### Milestone 2: Hermes As Shadow Reviewer
 
-Run Hermes after deterministic generation in a non-blocking or manually triggered
-mode:
+Run review after deterministic generation in a non-blocking or manually
+triggered mode:
 
 ```text
 outline.md -> deck.json -> deck.pptx -> qa.json
                               |
                               v
-                      Hermes review report
+                      Hermes-ready review report
 ```
 
-Hermes should read only the job workspace and write `logs/hermes_review.md` or a
-proposed `ir/deck.repaired.json`. The worker should decide whether to accept it.
+The current `hermes_review` job writes deterministic `qa/qa.json` and
+`logs/hermes_review.md` without modifying the deck. The next step is to let
+Hermes read only those workspace files and write either an improved
+`logs/hermes_review.md` or a proposed `ir/deck.repaired.json`. The worker should
+decide whether to accept any repair after validation.
 
 ### Milestone 3: Preference Memory
 

@@ -29,6 +29,7 @@ class JobType(StrEnum):
     PLAN_OUTLINE = "plan_outline"
     BUILD_PPTX = "build_pptx"
     REPAIR_IR = "repair_ir"
+    HERMES_REVIEW = "hermes_review"
 
 
 class FileKind(StrEnum):
@@ -36,6 +37,7 @@ class FileKind(StrEnum):
     DECK_IR = "deck_ir"
     PPTX = "pptx"
     PREVIEW = "preview"
+    REVIEW = "review"
     LOG = "log"
 
 

@@ -179,3 +179,16 @@ The next stable milestone is an end-to-end local job loop:
 
 The deterministic worker loop and authenticated artifact download endpoints now
 cover this path for `build_pptx` jobs.
+
+`hermes_review` jobs are also available as a safe review path. They create a
+fresh owner-scoped workspace, read the latest Deck IR/PPTX assets for the deck,
+and write:
+
+```text
+qa/qa.json
+logs/hermes_review.md
+```
+
+The review report is exposed as an authenticated `review` file asset. Review
+jobs do not change an already ready deck back to `generating`, so they can be
+run after PPTX generation without disrupting downloads.

@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from ..auth import get_current_user
 from ..config import Settings, get_settings
 from ..db import get_session
-from ..models import DeckSession, DeckStatus, Job, User
+from ..models import DeckSession, DeckStatus, Job, JobType, User
 from ..schemas import JobCreate, JobRead
 from ..services.workspaces import materialize_job_workspace
 
@@ -40,8 +40,9 @@ def create_job(
     )
     workspace = materialize_job_workspace(settings, deck, job)
     job.workspace_path = str(workspace)
-    deck.status = DeckStatus.GENERATING
-    deck.updated_at = datetime.now(timezone.utc)
+    if job.type == JobType.BUILD_PPTX:
+        deck.status = DeckStatus.GENERATING
+        deck.updated_at = datetime.now(timezone.utc)
 
     session.add(job)
     session.add(deck)

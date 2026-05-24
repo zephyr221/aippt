@@ -343,3 +343,74 @@ def test_worker_run_once_builds_pptx_and_records_artifacts(app_context) -> None:
     log_text = (job_workspace / "logs" / "job.log").read_text(encoding="utf-8")
     assert "running build_pptx" in log_text
     assert "succeeded build_pptx" in log_text
+
+
+def test_worker_hermes_review_writes_non_destructive_report(app_context) -> None:
+    app, tmp_path = app_context
+    with TestClient(app) as alice, TestClient(app) as bob:
+        register(alice, "alice@example.com")
+        register(bob, "bob@example.com")
+        deck_response = alice.post(
+            "/api/decks",
+            json={
+                "title": "AI × 计算材料科研",
+                "outline_md": (
+                    "# AI × 计算材料科研\n\n"
+                    "## 第 1 页 · 封面\n\n"
+                    "**AI × 计算材料科研**\n\n"
+                    "## 第 2 页 · 开场：一个事实\n\n"
+                    "- 2026.03.23 — Claude 自主完成 Boltzmann solver\n"
+                    "- Agent 工作流需要记忆和验证闭环\n"
+                ),
+            },
+        )
+        assert deck_response.status_code == 201
+        deck_id = deck_response.json()["id"]
+
+        build_response = alice.post(f"/api/jobs/decks/{deck_id}", json={"type": "build_pptx"})
+        assert build_response.status_code == 201
+        with Session(get_engine()) as session:
+            build_job = run_next_job(session, get_settings())
+            assert build_job is not None
+            assert build_job.status == JobStatus.SUCCEEDED
+
+        review_response = alice.post(f"/api/jobs/decks/{deck_id}", json={"type": "hermes_review"})
+        assert review_response.status_code == 201
+        review_job_id = review_response.json()["id"]
+
+        deck_after_review_create = alice.get(f"/api/decks/{deck_id}")
+        assert deck_after_review_create.status_code == 200
+        assert deck_after_review_create.json()["status"] == "ready"
+
+        with Session(get_engine()) as session:
+            review_job = run_next_job(session, get_settings())
+            assert review_job is not None
+            assert str(review_job.id) == review_job_id
+            assert review_job.status == JobStatus.SUCCEEDED
+
+            deck = session.get(DeckSession, UUID(deck_id))
+            assert deck is not None
+            assert deck.status == DeckStatus.READY
+
+            assets = session.exec(
+                select(FileAsset).where(FileAsset.deck_session_id == deck.id)
+            ).all()
+            kinds = {asset.kind for asset in assets}
+            assert FileKind.REVIEW in kinds
+
+        files_response = alice.get(f"/api/files/decks/{deck_id}")
+        assert files_response.status_code == 200
+        review_file = next(file for file in files_response.json() if file["kind"] == "review")
+        download_response = alice.get(f"/api/files/{review_file['id']}/download")
+        assert download_response.status_code == 200
+        assert b"Hermes PPT Review" in download_response.content
+        assert "Agent" in download_response.text
+
+        assert bob.get(f"/api/files/{review_file['id']}/download").status_code == 404
+
+    review_workspace = next((tmp_path / "jobs").glob(f"*/{review_job_id}"))
+    assert (review_workspace / "qa" / "qa.json").is_file()
+    assert (review_workspace / "logs" / "hermes_review.md").is_file()
+    review_log = (review_workspace / "logs" / "job.log").read_text(encoding="utf-8")
+    assert "running hermes_review" in review_log
+    assert "succeeded hermes_review" in review_log

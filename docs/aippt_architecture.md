@@ -7,11 +7,12 @@ flowchart TD
     API --> FS["Protected File Storage"]
     API --> Planner["Planner"]
     API --> Worker["Job Worker"]
-    Worker --> Workspace["Isolated Job Workspace"]
-    Workspace --> Hermes["Hermes Agent"]
-    Workspace --> Builder["Deterministic PPTX Builder"]
-    Builder --> QA["QA Scripts"]
-    QA --> FS
+Worker --> Workspace["Isolated Job Workspace"]
+Workspace --> Hermes["Hermes Agent"]
+Workspace --> Builder["Deterministic PPTX Builder"]
+Builder --> QA["QA Scripts"]
+QA --> FS
+QA --> Review["Hermes Review Report"]
 ```
 
 ## Ownership Boundary
@@ -87,3 +88,20 @@ The first worker loop is deterministic:
 
 Hermes should enter this loop later as a repair/planning component, not as the
 owner of authorization, artifact storage, or final filesystem layout.
+
+## Review Loop
+
+`hermes_review` is a non-destructive job type. It creates a fresh workspace,
+reads the current outline plus latest Deck IR/PPTX file assets for the deck, and
+writes:
+
+```text
+qa/qa.json
+logs/hermes_review.md
+```
+
+The report is recorded as a `review` file asset and can be downloaded by the
+deck owner. A review job does not move a ready deck back to `generating`, and a
+review failure does not mark the PPTX artifact as failed. This keeps Hermes'
+review path safe while the production builder remains the source of accepted
+PPTX output.

@@ -278,6 +278,7 @@ def workbench(request: Request) -> HTMLResponse:
     function renderDeck(deck) {{
       const files = filesByDeck.get(deck.id) || [];
       const pptx = files.find((file) => file.kind === "pptx");
+      const review = files.find((file) => file.kind === "review");
       const created = new Date(deck.created_at).toLocaleString();
       return `
         <article class="deck">
@@ -288,7 +289,9 @@ def workbench(request: Request) -> HTMLResponse:
           </div>
           <div class="deck-actions">
             ${{pptx ? `<a class="btn" href="${{api}}/files/${{pptx.id}}/download">下载 PPTX</a>` : ""}}
+            ${{review ? `<a class="btn secondary" href="${{api}}/files/${{review.id}}/download">审稿报告</a>` : ""}}
             <button class="btn secondary" type="button" data-build="${{deck.id}}">重新生成</button>
+            <button class="btn secondary" type="button" data-review="${{deck.id}}">AI 审稿</button>
           </div>
         </article>
       `;
@@ -351,6 +354,25 @@ def workbench(request: Request) -> HTMLResponse:
         renderWorkbench(me);
       }} catch (error) {{
         showNotice(error.message || "提交失败");
+      }} finally {{
+        button.disabled = false;
+      }}
+    }});
+
+    app.addEventListener("click", async (event) => {{
+      const button = event.target.closest("[data-review]");
+      if (!button) return;
+      button.disabled = true;
+      try {{
+        await request(`/jobs/decks/${{button.dataset.review}}`, {{
+          method: "POST",
+          body: JSON.stringify({{ type: "hermes_review" }})
+        }});
+        await loadDecks();
+        const me = await request("/auth/me");
+        renderWorkbench(me);
+      }} catch (error) {{
+        showNotice(error.message || "审稿失败");
       }} finally {{
         button.disabled = false;
       }}

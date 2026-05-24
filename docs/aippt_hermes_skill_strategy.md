@@ -230,9 +230,37 @@ Hermes can block or repair production jobs only after:
 
 ## Recommended Next Implementation
 
-1. Install `aippt-sjtu-ppt` on the server Hermes profile.
-2. Add a manually triggered `hermes_review` job type.
-3. Materialize `qa.json` and preview PNG/PDF in workspaces.
-4. Let Hermes write `logs/hermes_review.md` only.
-5. Add UI feedback buttons and store derived preference events.
-6. Promote Hermes to `ir_repair` after review quality is consistent.
+1. Install `aippt-sjtu-ppt` on the server Hermes profile. Done.
+2. Add a manually triggered `hermes_review` job type. Done as a
+   non-destructive deterministic preflight.
+3. Materialize `qa/qa.json` and `logs/hermes_review.md` in review workspaces.
+   Done for text/IR/artifact QA.
+4. Add rendered preview PNG/PDF inputs to the review workspace.
+5. Replace or augment deterministic preflight with a Hermes call that preloads
+   `--skills aippt-sjtu-ppt`.
+6. Add UI feedback buttons and store derived preference events.
+7. Promote Hermes to `ir_repair` only after review quality is consistent.
+
+## Current `hermes_review` Job
+
+The first implementation is deliberately conservative:
+
+- It is manually triggered from the workbench.
+- It does not call a production model yet.
+- It reads the current outline and latest Deck IR/PPTX file assets.
+- It writes `qa/qa.json` and `logs/hermes_review.md`.
+- It records the review report as a downloadable `review` file asset.
+- It does not change a deck from `ready` to `generating`, and review failure
+  does not mark an already generated deck as failed.
+
+This gives us the stable artifact and UI path that Hermes can later occupy.
+When model review is enabled, the worker should keep the same output contract:
+
+```text
+input/outline.md
+ir/deck.json
+qa/qa.json
+logs/hermes_review.md
+```
+
+The model step should be an internal implementation detail behind that contract.

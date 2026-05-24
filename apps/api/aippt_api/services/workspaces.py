@@ -5,7 +5,7 @@ from ..config import Settings
 from ..models import DeckSession, Job
 
 
-WORKSPACE_DIRS = ("input", "ir", "skill", "assets", "scripts", "out", "logs")
+WORKSPACE_DIRS = ("input", "ir", "skill", "assets", "scripts", "out", "logs", "qa", "preview")
 
 
 def job_workspace_path(settings: Settings, job: Job) -> Path:
@@ -49,6 +49,8 @@ def _manifest(deck: DeckSession, job: Job) -> dict[str, str]:
         "input_outline": "input/outline.md",
         "deck_ir": "ir/deck.json",
         "pptx_output": "out/deck.pptx",
+        "qa_report": "qa/qa.json",
+        "hermes_review": "logs/hermes_review.md",
         "log_file": "logs/job.log",
     }
 
@@ -66,6 +68,8 @@ Type: {job.type}
 - Read user input from `input/outline.md`.
 - Write Deck IR to `ir/deck.json`.
 - Write build output to `out/deck.pptx`.
+- Write QA JSON to `qa/qa.json` when reviewing.
+- Write Hermes review notes to `logs/hermes_review.md` when reviewing.
 - Write diagnostics to `logs/job.log`.
 - Do not read secrets, global app state, or other job directories.
 - Do not install dependencies at runtime.
