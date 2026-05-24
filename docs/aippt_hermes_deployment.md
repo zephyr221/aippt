@@ -96,6 +96,7 @@ ssh aippt 'soffice --headless --version'
 
 - `hermes --help` 可用，服务器安装版本为 `hermes-agent==0.14.0`。
 - `/srv/aippt/venvs/ppt-builder/bin/aippt-build --help` 可用。
+- `/srv/aippt/venvs/api/bin/aippt-worker run-once` 可用。
 - 示例 Deck IR 已在服务器上成功构建为 PPTX。
 - API venv 已安装并通过双用户隔离冒烟测试。
 - 本地代码已同步到 `/srv/aippt/app/api` 和 `/srv/aippt/builder`。

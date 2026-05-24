@@ -1,18 +1,28 @@
 import json
+import os
+import sys
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session, select
 
 from aippt_api.config import get_settings
-from aippt_api.db import reset_engine
+from aippt_api.db import get_engine, reset_engine
 from aippt_api.main import create_app
+from aippt_api.models import DeckSession, DeckStatus, FileAsset, FileKind, JobStatus
+from aippt_api.services.job_runner import run_next_job
 
 
 @pytest.fixture()
 def app_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AIPPT_DATABASE_URL", f"sqlite:///{tmp_path / 'aippt-test.db'}")
     monkeypatch.setenv("AIPPT_JOBS_ROOT", str(tmp_path / "jobs"))
+    monkeypatch.setenv(
+        "AIPPT_BUILDER_COMMAND",
+        os.environ.get("AIPPT_BUILDER_COMMAND", f"{sys.executable} -m aippt_builder.cli"),
+    )
     get_settings.cache_clear()
     reset_engine()
     yield create_app(), tmp_path
@@ -94,3 +104,45 @@ def test_job_creation_materializes_owner_scoped_workspace(app_context) -> None:
         deck_after_job = alice.get(f"/api/decks/{deck_id}")
         assert deck_after_job.status_code == 200
         assert deck_after_job.json()["status"] == "generating"
+
+
+def test_worker_run_once_builds_pptx_and_records_artifacts(app_context) -> None:
+    app, tmp_path = app_context
+    with TestClient(app) as alice:
+        register(alice, "alice@example.com")
+        deck_response = alice.post(
+            "/api/decks",
+            json={
+                "title": "AIPPT Demo",
+                "outline_md": "# AIPPT Demo\n\n## 目标\n\n- 多用户隔离\n- 自动生成 PPTX",
+            },
+        )
+        assert deck_response.status_code == 201
+        deck_id = deck_response.json()["id"]
+
+        job_response = alice.post(f"/api/jobs/decks/{deck_id}", json={"type": "build_pptx"})
+        assert job_response.status_code == 201
+        job_id = job_response.json()["id"]
+
+    with Session(get_engine()) as session:
+        job = run_next_job(session, get_settings())
+        assert job is not None
+        assert str(job.id) == job_id
+        assert job.status == JobStatus.SUCCEEDED
+
+        deck = session.get(DeckSession, UUID(deck_id))
+        assert deck is not None
+        assert deck.status == DeckStatus.READY
+
+        assets = session.exec(
+            select(FileAsset).where(FileAsset.deck_session_id == deck.id)
+        ).all()
+        kinds = {asset.kind for asset in assets}
+        assert {FileKind.DECK_IR, FileKind.PPTX, FileKind.LOG}.issubset(kinds)
+
+    job_workspace = next((tmp_path / "jobs").glob(f"*/{job_id}"))
+    assert (job_workspace / "ir" / "deck.json").is_file()
+    assert (job_workspace / "out" / "deck.pptx").stat().st_size > 0
+    log_text = (job_workspace / "logs" / "job.log").read_text(encoding="utf-8")
+    assert "running build_pptx" in log_text
+    assert "succeeded build_pptx" in log_text

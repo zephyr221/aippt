@@ -73,3 +73,17 @@ Each job gets a private workspace:
 
 The raw workspace path is internal worker state. Browser clients receive job
 ids and authenticated artifact endpoints, not filesystem paths.
+
+## Worker Loop
+
+The first worker loop is deterministic:
+
+1. Claim one queued `build_pptx` job.
+2. Read `input/outline.md`.
+3. Generate constrained Deck IR at `ir/deck.json`.
+4. Run the PPTX builder and write `out/deck.pptx`.
+5. Record internal `FileAsset` rows for IR, PPTX, and logs.
+6. Mark the job and deck `ready` or `failed`.
+
+Hermes should enter this loop later as a repair/planning component, not as the
+owner of authorization, artifact storage, or final filesystem layout.

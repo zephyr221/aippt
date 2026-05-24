@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     session_cookie_name: str = "aippt_session"
     secure_cookies: bool = False
     jobs_root: str = "/srv/aippt/jobs"
+    builder_command: str = "aippt-build"
+    worker_command_timeout_seconds: int = 120
 
     model_config = SettingsConfigDict(env_prefix="AIPPT_", env_file=".env")
 
@@ -17,4 +19,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

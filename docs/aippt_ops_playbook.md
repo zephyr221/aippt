@@ -45,6 +45,17 @@ ssh aippt '/srv/aippt/venvs/ppt-builder/bin/aippt-build --help'
 ssh aippt 'soffice --headless --version'
 ```
 
+Worker command shape:
+
+```bash
+AIPPT_BUILDER_COMMAND=/srv/aippt/venvs/ppt-builder/bin/aippt-build \
+  /srv/aippt/venvs/api/bin/aippt-worker run-once
+```
+
+The worker reads a queued job from the API database, runs the deterministic
+builder inside that job workspace, and records internal file assets for Deck IR,
+PPTX, and logs.
+
 ## Git Remotes
 
 The project has two private remotes:
@@ -109,3 +120,6 @@ The next stable milestone is an end-to-end local job loop:
 3. Materialize an isolated job workspace with `manifest.json`, input snapshot,
    logs, and worker instructions.
 4. Let the worker build or repair Deck IR and write authenticated artifacts.
+
+The deterministic `run-once` loop now covers this path for `build_pptx` jobs.
+The next backend step is authenticated artifact download endpoints.

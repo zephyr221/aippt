@@ -42,6 +42,8 @@ expose that path.
 
 - Planner creates Markdown outline and Deck IR.
 - Worker creates isolated job workspaces.
+- Worker run-once loop claims one queued job, writes Deck IR, builds PPTX, and
+  records internal artifacts.
 - Hermes operates only inside the current job workspace.
 - Worker can repair IR and rerun builder on validation/build failures.
 
@@ -52,6 +54,8 @@ expose that path.
 - Markdown outline editor.
 - Generate PPTX button and job progress view.
 - Download through authenticated API only.
+- Follow the owner map in `docs/aippt_frontend_plan.md` before adding shared
+  components or page CSS.
 
 ## Phase 5: Deployment
 

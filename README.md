@@ -27,6 +27,7 @@ Useful starting docs:
 
 - [Architecture](docs/aippt_architecture.md)
 - [Implementation plan](docs/aippt_implementation_plan.md)
+- [Frontend plan](docs/aippt_frontend_plan.md)
 - [Operations playbook](docs/aippt_ops_playbook.md)
 - [Hermes deployment notes](docs/aippt_hermes_deployment.md)
 

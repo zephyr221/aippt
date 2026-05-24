@@ -20,16 +20,20 @@ def materialize_job_workspace(settings: Settings, deck: DeckSession, job: Job) -
 
     outline = job.input_snapshot or deck.outline_md or ""
     (workspace / "input" / "outline.md").write_text(_normalize_text(outline), encoding="utf-8")
-    (workspace / "manifest.json").write_text(
-        json.dumps(_manifest(deck, job), ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    write_job_manifest(workspace, deck, job)
     (workspace / "AGENTS.md").write_text(_agent_instructions(deck, job), encoding="utf-8")
     (workspace / "logs" / "job.log").write_text(
         f"{job.created_at.isoformat()} queued {job.type}\n",
         encoding="utf-8",
     )
     return workspace
+
+
+def write_job_manifest(workspace: Path, deck: DeckSession, job: Job) -> None:
+    (workspace / "manifest.json").write_text(
+        json.dumps(_manifest(deck, job), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _manifest(deck: DeckSession, job: Job) -> dict[str, str]:
