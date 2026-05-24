@@ -1,0 +1,24 @@
+[Unit]
+Description=AIPPT API (FastAPI/Uvicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/srv/aippt/app/api
+EnvironmentFile=/srv/aippt/env/aippt.env
+ExecStart=/srv/aippt/venvs/api/bin/uvicorn aippt_api.main:app \
+    --host 0.0.0.0 \
+    --port 18080 \
+    --root-path /ppt \
+    --proxy-headers \
+    --forwarded-allow-ips='*'
+Restart=always
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=10
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

@@ -42,6 +42,12 @@ Useful starting docs:
 
 ## Server
 
+Public campus route:
+
+```text
+https://ai4edu.sjtu.edu.cn/ppt/
+```
+
 The current development server is available through:
 
 ```bash

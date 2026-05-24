@@ -1,0 +1,21 @@
+[Unit]
+Description=AIPPT API SSH tunnel to aippt2026
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/ssh -N -T \
+    -o ExitOnForwardFailure=yes \
+    -o ServerAliveInterval=30 \
+    -o ServerAliveCountMax=3 \
+    -o StrictHostKeyChecking=accept-new \
+    -i /root/.ssh/id_ed25519 \
+    -L 127.0.0.1:18080:127.0.0.1:18080 \
+    root@192.168.1.17
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

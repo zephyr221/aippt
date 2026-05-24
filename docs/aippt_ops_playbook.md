@@ -11,6 +11,7 @@ server and repository bootstrap on 2026-05-23.
 - Server LAN address from `pj2-ext`: `192.168.1.17`
 - Jump path from off campus: local machine -> `pj2-ext` -> `aippt`
 - App root on the server: `/srv/aippt`
+- Public path: `https://ai4edu.sjtu.edu.cn/ppt/`
 
 Local SSH config uses `HostName 192.168.1.17`, `ProxyJump pj2-ext`, and
 `HostKeyAlias 10.119.5.70`. The alias keeps host-key continuity with the IP
@@ -55,6 +56,42 @@ AIPPT_BUILDER_COMMAND=/srv/aippt/venvs/ppt-builder/bin/aippt-build \
 The worker reads a queued job from the API database, runs the deterministic
 builder inside that job workspace, and records internal file assets for Deck IR,
 PPTX, and logs.
+
+## Public Route
+
+The public route is hosted by Nginx on `pj2-ext`:
+
+```text
+https://ai4edu.sjtu.edu.cn/ppt/ -> pj2-ext:127.0.0.1:18080 -> aippt:127.0.0.1:18080
+```
+
+The direct `pj2-ext -> aippt:192.168.1.17:18080` path timed out, so the stable
+setup uses a systemd-managed SSH tunnel instead of opening another cloud
+security-group port.
+
+Runtime units:
+
+```bash
+ssh aippt 'systemctl status aippt-api'
+ssh pj2-ext 'systemctl status aippt-pj2-tunnel'
+ssh pj2-ext 'nginx -t'
+```
+
+Config files:
+
+```text
+aippt:/etc/systemd/system/aippt-api.service
+pj2-ext:/etc/systemd/system/aippt-pj2-tunnel.service
+pj2-ext:/etc/nginx/snippets/aippt-ppt-location.conf
+pj2-ext:/etc/nginx/sites-enabled/ai4edu
+```
+
+Health checks:
+
+```bash
+curl -sS https://ai4edu.sjtu.edu.cn/ppt/health
+curl -I https://ai4edu.sjtu.edu.cn/ppt/docs
+```
 
 ## Git Remotes
 
@@ -109,9 +146,10 @@ Operational rules:
 - Production authentication uses SJTU jAccount; keep
   `AIPPT_DEV_ALLOW_FAKE_LOGIN=false` and `AIPPT_APP_ENV=production` on servers.
 - The current campus setup reuses the jAccount OAuth client from
-  `/opt/aistudy/.env` on `pj2-ext`. Map `JACCOUNT_*` into
-  `/srv/aippt/env/aippt.env` as `AIPPT_JACCOUNT_*`; never commit the copied
-  client secret.
+  `/opt/aistudy/.env` on `pj2-ext`. Map its client id/secret/scope into
+  `/srv/aippt/env/aippt.env` as `AIPPT_JACCOUNT_*`; set the redirect URI to
+  `https://ai4edu.sjtu.edu.cn/ppt/api/auth/jaccount/callback`; never commit
+  the copied client secret.
 - Job workspaces live under `/srv/aippt/jobs` and are addressed through the API,
   not by exposing raw paths to the browser.
 - Hermes receives only the active job workspace.
