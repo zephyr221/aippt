@@ -6,6 +6,7 @@ from pathlib import Path
 from aippt_builder.outline import outline_to_deck
 from aippt_builder.render import build_pptx
 from aippt_builder.validate import validate_deck
+from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -198,6 +199,7 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
         if shape.has_text_frame and "关键是理解它能做什么" in shape.text_frame.text
     )
     assert lead_shape.text_frame.vertical_anchor == MSO_ANCHOR.MIDDLE
+    assert Inches(1.12) < lead_shape.top < Inches(1.2)
     point_sizes = [
         run.font.size
         for shape in prs.slides[1].shapes
@@ -209,6 +211,20 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     ]
     assert point_sizes
     assert min(point_sizes) >= Pt(10.5)
+    process_title = next(
+        shape
+        for shape in prs.slides[3].shapes
+        if shape.has_text_frame and shape.text_frame.text.strip() == "模型训练"
+    )
+    assert process_title.text_frame.vertical_anchor == MSO_ANCHOR.MIDDLE
+    process_arrow_types = []
+    for shape in prs.slides[3].shapes:
+        try:
+            process_arrow_types.append(shape.auto_shape_type)
+        except ValueError:
+            continue
+    assert process_arrow_types.count(MSO_SHAPE.RIGHT_ARROW) >= 2
+    assert MSO_SHAPE.RIGHT_TRIANGLE not in process_arrow_types
     thanks = next(
         shape
         for shape in prs.slides[-1].shapes

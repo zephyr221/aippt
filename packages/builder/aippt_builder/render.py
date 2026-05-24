@@ -514,13 +514,17 @@ def _render_process(slide, items: list[str]) -> None:
     width = 11.55
     gap = width / max(len(process), 1)
     colors = [SJTU_RED, GOLD, BROWN, TEXT_PRIMARY]
+    arrow_specs: list[tuple[float, float, float]] = []
     for idx, item in enumerate(process, start=1):
         x = left + (idx - 1) * gap
         card_w = max(gap - 0.22, 2.25)
         accent = colors[(idx - 1) % len(colors)]
         _process_card(slide, x, top, card_w, 2.18, idx, item, accent)
         if idx < len(process):
-            _arrow(slide, x + card_w + 0.03, top + 1.0, 0.18)
+            arrow_specs.append((x + card_w - 0.02, top + 1.0, 0.2))
+
+    for arrow_left, arrow_top, arrow_size in arrow_specs:
+        _arrow(slide, arrow_left, arrow_top, arrow_size)
 
     if formula_items:
         _formula_panel(slide, _normalize_formula_text(formula_items[0]), top=5.08)
@@ -533,12 +537,15 @@ def _render_process(slide, items: list[str]) -> None:
 def _lead_callout(slide, text: str, compact: bool = False) -> None:
     text = text or "核心结论"
     h = 0.88 if compact else 1.05
-    _round_rect(slide, 0.9, 1.16, 11.55, h, WHITE, border=WARM_GRAY_2, radius=0.04, shadow=True)
-    _rect(slide, 0.9, 1.16, 0.06, h, GOLD)
-    box = slide.shapes.add_textbox(Inches(1.17), Inches(1.28), Inches(10.8), Inches(h - 0.18))
+    card_left, card_top, card_width = 0.9, 1.16, 11.55
+    _round_rect(slide, card_left, card_top, card_width, h, WHITE, border=WARM_GRAY_2, radius=0.04, shadow=True)
+    _rect(slide, card_left, card_top, 0.06, h, GOLD)
+    box = slide.shapes.add_textbox(Inches(1.17), Inches(card_top), Inches(10.8), Inches(h))
     frame = box.text_frame
     frame.word_wrap = True
     frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    frame.margin_top = Pt(0)
+    frame.margin_bottom = Pt(0)
     p = frame.paragraphs[0]
     p.text = _trim(text, 104)
     _style_paragraph(p, 17 if len(text) < 58 else 14.5, TEXT_PRIMARY, bold=True)
@@ -551,6 +558,7 @@ def _content_card(slide, left: float, top: float, width: float, height: float, i
     _number_badge(slide, left + 0.24, top + 0.23, str(idx), size=0.38, color=SJTU_RED if idx % 2 else GOLD)
     title, body = _split_key_value(text)
     title_box = slide.shapes.add_textbox(Inches(left + 0.78), Inches(top + 0.18), Inches(width - 1.08), Inches(0.32))
+    title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = title_box.text_frame.paragraphs[0]
     p.text = title if body else _trim(text, 36)
     _style_paragraph(p, 13.5, TEXT_PRIMARY, bold=True)
@@ -582,6 +590,7 @@ def _rich_content_card(slide, left: float, top: float, width: float, height: flo
         title, body = _trim(text, 22), text
     label_box = slide.shapes.add_textbox(Inches(left + 0.28), Inches(top + 0.25), Inches(width - 0.56), Inches(0.42))
     label_box.text_frame.word_wrap = True
+    label_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = label_box.text_frame.paragraphs[0]
     p.text = _trim(title, 18 if width < 4 else 24)
     _style_paragraph(p, 13 if width >= 5 else 12.2, TEXT_PRIMARY, bold=True)
@@ -600,6 +609,7 @@ def _fact_card(slide, left: float, top: float, width: float, height: float, labe
     _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
     _rect(slide, left, top, 0.05, height, GOLD)
     label_box = slide.shapes.add_textbox(Inches(left + 0.23), Inches(top + 0.16), Inches(1.32), Inches(0.26))
+    label_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = label_box.text_frame.paragraphs[0]
     p.text = _trim(label, 10)
     _style_paragraph(p, 10.5, SJTU_RED, bold=True)
@@ -632,6 +642,7 @@ def _process_card(
     title, body = _split_process_text(text)
     title_box = slide.shapes.add_textbox(Inches(left + 0.65), Inches(top + 0.18), Inches(width - 0.85), Inches(0.48))
     title_box.text_frame.word_wrap = True
+    title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = title_box.text_frame.paragraphs[0]
     p.text = _trim(title, 20)
     _style_paragraph(p, 11.5 if len(title) > 12 else 12.5, TEXT_PRIMARY, bold=True)
@@ -821,7 +832,13 @@ def _number_badge(
 
 
 def _arrow(slide, left: float, top: float, size: float) -> None:
-    shape = slide.shapes.add_shape(MSO_SHAPE.RIGHT_TRIANGLE, Inches(left), Inches(top), Inches(size), Inches(size))
+    shape = slide.shapes.add_shape(
+        MSO_SHAPE.RIGHT_ARROW,
+        Inches(left - size * 0.18),
+        Inches(top + size * 0.14),
+        Inches(size * 2.35),
+        Inches(size * 0.72),
+    )
     shape.fill.solid()
     shape.fill.fore_color.rgb = rgb(GOLD)
     shape.line.fill.background()
