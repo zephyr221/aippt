@@ -187,8 +187,8 @@ after validation.
 The normal "生成 PPTX" path is intentionally fast and deterministic today. If a
 large pasted outline finishes in about a second, that is expected: it was parsed
 and rendered locally, not pre-planned by Hermes. Hermes should enter the
-production loop only through a clearly labeled deep-planning/review mode with
-provider, model, version, and licensing logs.
+interactive agent loop through a clearly labeled deep-planning/review mode with
+provider, model, version, and usage-boundary logs.
 
 ### Milestone 3: Preference Memory
 

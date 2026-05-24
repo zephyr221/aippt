@@ -75,7 +75,9 @@ expose that path.
 - The default `build_pptx` job is a deterministic fast path. A large pasted
   outline may complete in about a second because it is parsed and rendered
   locally; Hermes planning should be exposed as a separate deep-planning or
-  review mode, not silently hidden inside the fast button.
+  review mode, not silently hidden inside the fast button. The product goal is
+  still agent-generated PPT: the deterministic path is the quick baseline, and
+  the Hermes/MiMo path should become the explicit interactive agent experience.
 - Review jobs render deterministic preview artifacts when tools are available:
   `preview/deck.pdf`, `preview/pages/slide-*.png`, and
   `preview/contact-sheet.png`.

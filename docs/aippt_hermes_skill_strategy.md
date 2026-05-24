@@ -201,10 +201,24 @@ Guard:
 ## Provider Policy
 
 The Xiaomi MiMo token-plan key used in the research probe is currently treated
-as a development/interactive agent key. Do not wire that specific key directly
-into automated production backend jobs unless the license permits it.
+as a development/interactive agent key. AIPPT's intended product shape is an
+interactive agent workspace for PPT planning and editing, not an unattended
+batch-production backend. In the current R&D/dogfood phase, it is appropriate to
+use MiMo through Hermes for explicit user-triggered agent actions such as deep
+planning, outline rewriting, review, and page-level repair.
 
-Production provider integration should be abstracted:
+Keep the boundary clear:
+
+- Store provider keys only on the server; never expose them to browser code,
+  API responses, logs, or repository files.
+- Do not run hidden background bulk generation or unattended batch jobs with
+  this key.
+- Record provider/model/prompt version for each interactive Hermes run so users
+  can see when the agent path was used.
+- If AIPPT later becomes a public high-volume service, re-check the provider
+  terms or switch to a key/service intended for that deployment shape.
+
+Provider integration should be abstracted:
 
 ```text
 AIPPT_PLANNER_PROVIDER=deterministic|hermes
