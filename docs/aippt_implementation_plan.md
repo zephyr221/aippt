@@ -47,6 +47,9 @@ expose that path.
   grammar: one claim per page, followed by 2-3 titled cards; each card has
   several compact sub-bullets so the result reads like a professional lecture
   slide instead of a sparse outline.
+- Template content slides should remove the original body placeholder frame
+  after inheriting the header chrome. Card sub-bullets should stay readable for
+  classroom projection; avoid font sizes below roughly 10.5 pt.
 - Markdown parser promotes cover metadata into the cover slide, normalizes
   `第 N 页 · ...` headings, skips legacy cover placeholder pages, and inserts a
   TOC when there are at least three sections.

@@ -186,7 +186,7 @@ def _render_template_cover(slide, slide_data: Slide) -> None:
 
 def _render_template_content(slide, slide_data: Slide) -> None:
     _set_placeholder_lines(slide, 11, [slide_data.title], size=25, color=WHITE, bold=True)
-    _clear_placeholder(slide, 14)
+    _remove_placeholder(slide, 14)
     items = _clean_items(slide_data.bullets or [c.heading for c in slide_data.columns if c.heading])
     if not items:
         items = ["请补充这一页的核心结论。"]
@@ -297,6 +297,13 @@ def _clear_placeholder(slide, idx: int) -> None:
     placeholder = _placeholder(slide, idx)
     if placeholder is not None and placeholder.has_text_frame:
         placeholder.text_frame.clear()
+
+
+def _remove_placeholder(slide, idx: int) -> None:
+    placeholder = _placeholder(slide, idx)
+    if placeholder is None:
+        return
+    placeholder._element.getparent().remove(placeholder._element)
 
 
 def render_cover(slide, slide_data: Slide) -> None:
@@ -675,7 +682,7 @@ def _draw_card_points(
         font_name = MATH_FONT if _looks_like_formula_text(text) else FONT
         _style_paragraph(
             p,
-            9.2 if compact else 10.3,
+            10.8 if compact else 11.2,
             TEXT_BODY,
             font_name=font_name,
         )

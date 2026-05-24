@@ -7,7 +7,7 @@ from aippt_builder.outline import outline_to_deck
 from aippt_builder.render import build_pptx
 from aippt_builder.validate import validate_deck
 from pptx import Presentation
-from pptx.util import Inches
+from pptx.util import Inches, Pt
 
 
 def _sjtu_template_path() -> Path:
@@ -170,6 +170,11 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     assert prs.slides[0].slide_layout.name == "封面-01"
     assert prs.slides[1].slide_layout.name == "常规样式（1）"
     assert prs.slides[-1].slide_layout.name == "封底01"
+    assert 14 not in {
+        shape.placeholder_format.idx
+        for shape in prs.slides[1].shapes
+        if shape.is_placeholder
+    }
     cover_text = "\n".join(
         shape.text_frame.text
         for shape in prs.slides[0].shapes
@@ -186,6 +191,17 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     )
     assert "▪" in first_body_text
     assert "技术位置" in first_body_text
+    point_sizes = [
+        run.font.size
+        for shape in prs.slides[1].shapes
+        if shape.has_text_frame
+        for paragraph in shape.text_frame.paragraphs
+        if paragraph.text.startswith("▪")
+        for run in paragraph.runs
+        if run.font.size is not None
+    ]
+    assert point_sizes
+    assert min(point_sizes) >= Pt(10.5)
     thanks = next(
         shape
         for shape in prs.slides[-1].shapes

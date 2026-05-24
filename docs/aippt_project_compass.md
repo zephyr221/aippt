@@ -124,6 +124,9 @@ For common teaching prompts such as "machine learning introduction" or
 "artificial intelligence primer", brief-prompt expansion should create a richer
 slide spine: each body page starts with one claim, then 2-3 theme cards, and
 each card carries 2-4 concrete sub-points rather than a single sentence.
+When using the SJTU content template, remove the inherited body placeholder from
+generated slides so PowerPoint does not show the dashed editing frame over the
+custom cards. Keep card sub-bullets at projection-readable sizes.
 
 They also should not be treated as the visual QA engine unless the configured
 provider explicitly supports image input. A text-only model can still improve
