@@ -381,6 +381,8 @@ def render_body(slide, slide_data: Slide) -> None:
         _render_timeline(slide, items)
     elif _looks_like_process(slide_data.title, items):
         _render_process(slide, items)
+    elif _looks_like_rich_cards(items):
+        _render_rich_card_grid(slide, items)
     elif _looks_like_fact_grid(items):
         _render_fact_grid(slide, items)
     else:
@@ -405,6 +407,36 @@ def _render_card_grid(slide, items: list[str]) -> None:
     for idx, item in enumerate(cards[:4], start=1):
         left, top = positions[idx - 1]
         _content_card(slide, left, top, 5.55, 1.55, idx, item)
+
+
+def _render_rich_card_grid(slide, items: list[str]) -> None:
+    lead, cards = _split_lead(items)
+    if not lead and items:
+        lead, cards = items[0], items[1:]
+    _lead_callout(slide, lead, compact=True)
+    cards = cards[:4] or items[:4]
+    count = len(cards)
+    if count <= 2:
+        positions = [
+            (0.92, 2.26, 5.55, 3.28),
+            (6.82, 2.26, 5.55, 3.28),
+        ]
+    elif count == 3:
+        positions = [
+            (0.92, 2.16, 3.64, 3.74),
+            (4.84, 2.16, 3.64, 3.74),
+            (8.76, 2.16, 3.64, 3.74),
+        ]
+    else:
+        positions = [
+            (0.92, 2.16, 5.55, 1.86),
+            (6.82, 2.16, 5.55, 1.86),
+            (0.92, 4.36, 5.55, 1.86),
+            (6.82, 4.36, 5.55, 1.86),
+        ]
+    for idx, item in enumerate(cards, start=1):
+        left, top, width, height = positions[idx - 1]
+        _rich_content_card(slide, left, top, width, height, idx, item)
 
 
 def _render_fact_grid(slide, items: list[str]) -> None:
@@ -471,7 +503,7 @@ def _render_process(slide, items: list[str]) -> None:
     process = non_formula_items[:3] if formula_items else non_formula_items[:4]
     process = process or items[:4]
     left = 0.9
-    top = 2.42
+    top = 2.38
     width = 11.55
     gap = width / max(len(process), 1)
     colors = [SJTU_RED, GOLD, BROWN, TEXT_PRIMARY]
@@ -479,12 +511,12 @@ def _render_process(slide, items: list[str]) -> None:
         x = left + (idx - 1) * gap
         card_w = max(gap - 0.22, 2.25)
         accent = colors[(idx - 1) % len(colors)]
-        _process_card(slide, x, top, card_w, 1.72, idx, item, accent)
+        _process_card(slide, x, top, card_w, 2.18, idx, item, accent)
         if idx < len(process):
-            _arrow(slide, x + card_w + 0.03, top + 0.83, 0.18)
+            _arrow(slide, x + card_w + 0.03, top + 1.0, 0.18)
 
     if formula_items:
-        _formula_panel(slide, _normalize_formula_text(formula_items[0]), top=4.72)
+        _formula_panel(slide, _normalize_formula_text(formula_items[0]), top=5.08)
         return
 
     if len(items) > len(process) + 1:
@@ -532,6 +564,29 @@ def _content_card(slide, left: float, top: float, width: float, height: float, i
     p.line_spacing = 1.15
 
 
+def _rich_content_card(slide, left: float, top: float, width: float, height: float, idx: int, text: str) -> None:
+    accent = SJTU_RED if idx % 2 else GOLD
+    _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, accent)
+    title, body = _split_key_value(text)
+    if not body:
+        title, body = _trim(text, 22), text
+    label_box = slide.shapes.add_textbox(Inches(left + 0.28), Inches(top + 0.25), Inches(width - 0.56), Inches(0.42))
+    label_box.text_frame.word_wrap = True
+    p = label_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 18 if width < 4 else 24)
+    _style_paragraph(p, 13 if width >= 5 else 12.2, TEXT_PRIMARY, bold=True)
+    _draw_card_points(
+        slide,
+        left + 0.3,
+        top + 0.86,
+        width - 0.6,
+        height - 1.08,
+        _split_card_points(body),
+        compact=width < 4.2,
+    )
+
+
 def _fact_card(slide, left: float, top: float, width: float, height: float, label: str, value: str) -> None:
     _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
     _rect(slide, left, top, 0.05, height, GOLD)
@@ -571,16 +626,61 @@ def _process_card(
     p.text = _trim(title, 20)
     _style_paragraph(p, 11.5 if len(title) > 12 else 12.5, TEXT_PRIMARY, bold=True)
     p.line_spacing = 1.0
-    body_box = slide.shapes.add_textbox(Inches(left + 0.24), Inches(top + 0.82), Inches(width - 0.48), Inches(0.62))
-    body_box.text_frame.word_wrap = True
-    p = body_box.text_frame.paragraphs[0]
     body = _normalize_formula_text(body)
-    p.text = _trim(body, 68)
-    if _looks_like_formula_text(body):
-        _style_paragraph(p, 11.4 if len(body) <= 44 else 9.8, TEXT_BODY, font_name=MATH_FONT)
+    points = _split_card_points(body)
+    if len(points) > 1:
+        _draw_card_points(
+            slide,
+            left + 0.24,
+            top + 0.8,
+            width - 0.48,
+            height - 0.94,
+            points,
+            compact=True,
+        )
     else:
-        _style_paragraph(p, 9.6 if len(body) > 34 else 10.4, TEXT_BODY)
-    p.alignment = PP_ALIGN.CENTER
+        body_box = slide.shapes.add_textbox(Inches(left + 0.24), Inches(top + 0.82), Inches(width - 0.48), Inches(0.62))
+        body_box.text_frame.word_wrap = True
+        p = body_box.text_frame.paragraphs[0]
+        p.text = _trim(body, 72)
+        if _looks_like_formula_text(body):
+            _style_paragraph(p, 11.4 if len(body) <= 44 else 9.8, TEXT_BODY, font_name=MATH_FONT)
+        else:
+            _style_paragraph(p, 9.6 if len(body) > 34 else 10.4, TEXT_BODY)
+        p.alignment = PP_ALIGN.CENTER
+
+
+def _draw_card_points(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    points: list[str],
+    compact: bool = False,
+) -> None:
+    box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
+    frame = box.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    frame.margin_left = Pt(0)
+    frame.margin_right = Pt(0)
+    frame.margin_top = Pt(0)
+    frame.margin_bottom = Pt(0)
+    max_points = 3 if compact else 4
+    for idx, point in enumerate(points[:max_points]):
+        p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
+        text = _normalize_formula_text(point)
+        p.text = f"▪ {_trim(text, 42 if compact else 58)}"
+        font_name = MATH_FONT if _looks_like_formula_text(text) else FONT
+        _style_paragraph(
+            p,
+            9.2 if compact else 10.3,
+            TEXT_BODY,
+            font_name=font_name,
+        )
+        p.line_spacing = 1.08
+        p.space_after = Pt(5 if compact else 7)
 
 
 def _quote_panel(slide, left: float, top: float, width: float, height: float, title: str, body: str) -> None:
@@ -895,6 +995,16 @@ def _looks_like_fact_grid(items: list[str]) -> bool:
     return sum(1 for item in candidates if _split_key_value(item)[1]) >= 3
 
 
+def _looks_like_rich_cards(items: list[str]) -> bool:
+    _lead, rest = _split_lead(items)
+    pairs = [_split_key_value(item) for item in rest]
+    bodies = [value for _label, value in pairs if value]
+    if len(bodies) < 2:
+        return False
+    rich_bodies = [body for body in bodies if len(_split_card_points(body)) >= 2 or len(body) >= 54]
+    return len(rich_bodies) >= 2
+
+
 def _looks_like_process(title: str, items: list[str]) -> bool:
     joined = " ".join(items[:5])
     return (
@@ -917,6 +1027,16 @@ def _split_process_text(text: str) -> tuple[str, str]:
         if len(parts) >= 2:
             return parts[0], " → ".join(parts[1:])
     return _trim(text, 20), text
+
+
+def _split_card_points(text: str) -> list[str]:
+    text = _normalize_formula_text(text)
+    if not text:
+        return []
+    parts = [part.strip(" 。；;") for part in re.split(r"\s*[；;]\s*", text) if part.strip(" 。；;")]
+    if len(parts) == 1 and "。" in text:
+        parts = [part.strip(" 。") for part in re.split(r"\s*。\s*", text) if part.strip(" 。")]
+    return parts or [text]
 
 
 def _title_size(title: str) -> float:

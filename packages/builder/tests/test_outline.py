@@ -127,6 +127,20 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     assert "从数据中发现规律" in body_text
     assert "J(θ)=1/m" in body_text
     assert "反馈闭环" in body_text
+    assert len(deck.slides[1].bullets) == 4
+    assert all("：" in bullet for bullet in deck.slides[1].bullets[1:])
+    assert all("；" in bullet for bullet in deck.slides[1].bullets[1:])
+    assert validate_deck(deck) == []
+
+
+def test_brief_prompt_handles_intro_deck_for_enterprise_audience() -> None:
+    deck = outline_to_deck("为企业生成一份人工智能导论介绍 PPT")
+
+    assert deck.title == "人工智能导论"
+    assert len(deck.slides) == 6
+    body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
+    assert "人工智能导论已经进入学习、工作和科研工具链" in body_text
+    assert "；" in body_text
     assert validate_deck(deck) == []
 
 
@@ -165,6 +179,13 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     assert "6 页速览" in cover_text
     assert "一句话需求自动规划" not in cover_text
     assert len(prs.slides[1].shapes) >= 12
+    first_body_text = "\n".join(
+        shape.text_frame.text
+        for shape in prs.slides[1].shapes
+        if shape.has_text_frame and shape.text_frame.text.strip()
+    )
+    assert "▪" in first_body_text
+    assert "技术位置" in first_body_text
     thanks = next(
         shape
         for shape in prs.slides[-1].shapes

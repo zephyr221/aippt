@@ -120,6 +120,10 @@ Template-backed decks keep the cover concise: one short title and one short
 subtitle line. Body pages should not degrade into plain bullet lists; the
 renderer turns structured points into lead callouts, two-column/fact cards,
 process cards, and formula panels where possible.
+For common teaching prompts such as "machine learning introduction" or
+"artificial intelligence primer", brief-prompt expansion should create a richer
+slide spine: each body page starts with one claim, then 2-3 theme cards, and
+each card carries 2-4 concrete sub-points rather than a single sentence.
 
 They also should not be treated as the visual QA engine unless the configured
 provider explicitly supports image input. A text-only model can still improve

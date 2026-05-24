@@ -43,6 +43,10 @@ expose that path.
 - Cover generation must keep the template's role clear: short title, one short
   subtitle, no workflow/meta copy. Content pages should prefer cards, process
   lanes, fact grids, and formula panels over full-slide bullet lists.
+- Brief prompts for standard teaching decks should expand into a denser card
+  grammar: one claim per page, followed by 2-3 titled cards; each card has
+  several compact sub-bullets so the result reads like a professional lecture
+  slide instead of a sparse outline.
 - Markdown parser promotes cover metadata into the cover slide, normalizes
   `第 N 页 · ...` headings, skips legacy cover placeholder pages, and inserts a
   TOC when there are at least three sections.
