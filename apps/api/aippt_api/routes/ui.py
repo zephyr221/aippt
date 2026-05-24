@@ -488,7 +488,13 @@ def workbench(request: Request) -> HTMLResponse:
         hour: "2-digit",
         minute: "2-digit",
         hour12: false
-      }}).format(new Date(value));
+      }}).format(parseApiTime(value));
+    }}
+
+    function parseApiTime(value) {{
+      const text = String(value || "");
+      if (/[zZ]$|[+-]\\d{{2}}:?\\d{{2}}$/.test(text)) return new Date(text);
+      return new Date(text + "Z");
     }}
 
     function formatAgentLog(logText) {{

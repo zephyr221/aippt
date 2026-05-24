@@ -261,10 +261,11 @@ Read in this order:
 2. `docs/aippt_architecture.md`
 3. `docs/aippt_auth.md`
 4. `docs/aippt_ops_playbook.md`
-5. `docs/aippt_hermes_memory_and_sjtu_template.md`
-6. `docs/aippt_hermes_skill_strategy.md`
-7. `docs/aippt_visual_qa_strategy.md`
-8. `docs/aippt_frontend_plan.md`
+5. `docs/aippt_ppt_generation_method.md`
+6. `docs/aippt_hermes_memory_and_sjtu_template.md`
+7. `docs/aippt_hermes_skill_strategy.md`
+8. `docs/aippt_visual_qa_strategy.md`
+9. `docs/aippt_frontend_plan.md`
 
 Then inspect:
 

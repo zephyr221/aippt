@@ -65,6 +65,8 @@ def test_root_redirect_respects_proxy_root_path(app_context) -> None:
         assert "快速生成 PPTX" not in response.text
         assert "AI 审稿" not in response.text
         assert "当前大纲" not in response.text
+        assert "parseApiTime" in response.text
+        assert 'timeZone: "Asia/Shanghai"' in response.text
 
 
 def test_users_only_see_their_own_decks(app_context) -> None:
