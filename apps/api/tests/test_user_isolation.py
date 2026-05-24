@@ -48,6 +48,14 @@ def register(client: TestClient, email: str) -> dict:
     return response.json()
 
 
+def test_root_redirect_respects_proxy_root_path(app_context) -> None:
+    app, _tmp_path = app_context
+    with TestClient(app, root_path="/ppt") as client:
+        response = client.get("/", follow_redirects=False)
+        assert response.status_code == 307
+        assert response.headers["location"] == "/ppt/docs"
+
+
 def test_users_only_see_their_own_decks(app_context) -> None:
     app, _tmp_path = app_context
     with TestClient(app) as alice, TestClient(app) as bob:

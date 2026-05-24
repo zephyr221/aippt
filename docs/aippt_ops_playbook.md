@@ -146,10 +146,12 @@ Operational rules:
 - Production authentication uses SJTU jAccount; keep
   `AIPPT_DEV_ALLOW_FAKE_LOGIN=false` and `AIPPT_APP_ENV=production` on servers.
 - The current campus setup reuses the jAccount OAuth client from
-  `/opt/aistudy/.env` on `pj2-ext`. Map its client id/secret/scope into
-  `/srv/aippt/env/aippt.env` as `AIPPT_JACCOUNT_*`; set the redirect URI to
-  `https://ai4edu.sjtu.edu.cn/ppt/api/auth/jaccount/callback`; never commit
-  the copied client secret.
+  `/opt/aistudy/.env` on `pj2-ext`. Map its client id/secret/redirect URI/scope
+  into `/srv/aippt/env/aippt.env` as `AIPPT_JACCOUNT_*`; never commit the copied
+  client secret. Since the shared redirect URI is
+  `https://ai4edu.sjtu.edu.cn/aistudy/auth/callback`, Nginx must keep an exact
+  `/aistudy/auth/callback` proxy to AIPPT before the old `/aistudy/ -> /notes/`
+  rewrite.
 - Job workspaces live under `/srv/aippt/jobs` and are addressed through the API,
   not by exposing raw paths to the browser.
 - Hermes receives only the active job workspace.

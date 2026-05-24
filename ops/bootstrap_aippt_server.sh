@@ -86,7 +86,7 @@ AIPPT_JOBS_ROOT=/srv/aippt/jobs
 AIPPT_BUILDER_COMMAND=/srv/aippt/venvs/ppt-builder/bin/aippt-build
 AIPPT_JACCOUNT_CLIENT_ID=
 AIPPT_JACCOUNT_CLIENT_SECRET=
-AIPPT_JACCOUNT_REDIRECT_URI=https://ai4edu.sjtu.edu.cn/ppt/api/auth/jaccount/callback
+AIPPT_JACCOUNT_REDIRECT_URI=https://ai4edu.sjtu.edu.cn/aistudy/auth/callback
 AIPPT_JACCOUNT_SCOPE=basic
 HERMES_AGENT_DIR=/srv/aippt/vendor/hermes-agent
 EOF

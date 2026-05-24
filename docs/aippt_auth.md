@@ -58,7 +58,7 @@ AIPPT_SESSION_SECRET=...
 AIPPT_SECURE_COOKIES=true
 AIPPT_JACCOUNT_CLIENT_ID=...
 AIPPT_JACCOUNT_CLIENT_SECRET=...
-AIPPT_JACCOUNT_REDIRECT_URI=https://ai4edu.sjtu.edu.cn/ppt/api/auth/jaccount/callback
+AIPPT_JACCOUNT_REDIRECT_URI=https://ai4edu.sjtu.edu.cn/aistudy/auth/callback
 AIPPT_JACCOUNT_SCOPE=basic
 ```
 
@@ -69,17 +69,15 @@ without committing secrets:
 ```text
 JACCOUNT_CLIENT_ID        -> AIPPT_JACCOUNT_CLIENT_ID
 JACCOUNT_CLIENT_SECRET    -> AIPPT_JACCOUNT_CLIENT_SECRET
+JACCOUNT_REDIRECT_URI     -> AIPPT_JACCOUNT_REDIRECT_URI
 JACCOUNT_SCOPE            -> AIPPT_JACCOUNT_SCOPE
 ```
 
-Set `AIPPT_JACCOUNT_REDIRECT_URI` to AIPPT's public callback path:
-
-```text
-https://ai4edu.sjtu.edu.cn/ppt/api/auth/jaccount/callback
-```
-
-The live AIPPT server keeps these values in `/srv/aippt/env/aippt.env`. That
-file is local runtime state and must not be committed.
+Because that shared client redirects to `/aistudy/auth/callback`, `pj2-ext`
+Nginx has an exact callback location that proxies this one path to AIPPT's
+`/api/auth/jaccount/callback` before the legacy `/aistudy/ -> /notes/` rewrite.
+The live AIPPT server keeps these values in `/srv/aippt/env/aippt.env`. That file
+is local runtime state and must not be committed.
 
 For local development, `AIPPT_APP_ENV=development` enables fake jAccount login:
 
