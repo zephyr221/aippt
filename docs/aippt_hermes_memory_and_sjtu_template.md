@@ -168,6 +168,30 @@ BuilderProvider
 
 这样既能吃到 Hermes 记忆的长期收益，也能保留线上服务的稳定性。
 
+## Skill 沉淀
+
+本轮探索已经沉淀为项目内 Hermes skill：
+
+```text
+docs/hermes_skills/aippt-sjtu-ppt/
+```
+
+它把 AIPPT 的 job workspace 约束、Markdown/Deck IR 合同、PPT 质量检查和
+记忆写入规则拆成 `SKILL.md` + `references/`。安装到 Hermes profile 后，
+Hermes 在处理 AIPPT PPT 任务时应先加载该 skill，再读取当前 job workspace。
+
+安装脚本：
+
+```bash
+ops/install_hermes_aippt_skill.sh
+```
+
+配套策略见：
+
+```text
+docs/aippt_hermes_skill_strategy.md
+```
+
 ## 已验证探针
 
 2026-05-24 模块化探针已在 `aippt` 服务器跑通：

@@ -28,10 +28,12 @@ Useful starting docs:
 - [Architecture](docs/aippt_architecture.md)
 - [Authentication](docs/aippt_auth.md)
 - [Implementation plan](docs/aippt_implementation_plan.md)
+- [Project compass](docs/aippt_project_compass.md)
 - [Frontend plan](docs/aippt_frontend_plan.md)
 - [Operations playbook](docs/aippt_ops_playbook.md)
 - [Hermes deployment notes](docs/aippt_hermes_deployment.md)
 - [Hermes memory and SJTU template experiment](docs/aippt_hermes_memory_and_sjtu_template.md)
+- [Hermes skill strategy](docs/aippt_hermes_skill_strategy.md)
 
 ## Development Priorities
 
