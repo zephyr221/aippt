@@ -101,6 +101,65 @@ ssh aippt 'soffice --headless --version'
 - API venv 已安装并通过双用户隔离冒烟测试。
 - 本地代码已同步到 `/srv/aippt/app/api` 和 `/srv/aippt/builder`。
 
+2026-05-24 已完成 Hermes + Xiaomi MiMo 研发验证：
+
+- Hermes 内置 `xiaomi` provider 可用。
+- 服务器 `/root/.hermes/.env` 已配置 `XIAOMI_API_KEY` 和
+  `XIAOMI_BASE_URL=https://token-plan-cn.xiaomimimo.com/v1`。
+- `/root/.hermes/config.yaml` 默认模型设为 `provider: xiaomi`、
+  `default: mimo-v2.5-pro`、`api_mode: chat_completions`。
+- 使用 `/models` 验证 endpoint 返回 `mimo-v2.5-pro`、`mimo-v2.5`、
+  `mimo-v2-pro`、`mimo-v2-omni` 等模型。
+- `hermes --ignore-rules -z ... --provider xiaomi --model mimo-v2.5-pro`
+  一次性调用验证成功。
+- 研发探针路径：
+  `/srv/aippt/hermes_probe/ppt_mimo_20260524124409/`。
+- 探针流程：Hermes/MiMo 将原始需求整理为 Markdown 大纲，builder 生成
+  Deck IR，再生成 PPTX。
+- 探针产物：
+  `out/hermes-mimo-aippt-probe.pptx`，Deck IR 与 PPTX 均为 10 页。
+- LibreOffice 已能把探针 PPTX 转为 PDF：
+  `preview/hermes-mimo-aippt-probe.pdf`。
+
+本次验证暴露并修复了一个 builder 边界 bug：当 Hermes 生成 6 个以上章节时，
+目录页会超过 validator 的 bullet 上限。`outline_to_deck` 现在使用统一的
+`MAX_BULLETS` 限制目录项数量，并添加了覆盖测试。
+
+## Hermes + MiMo 在 AIPPT 中的建议位置
+
+短期内把 Hermes/MiMo 放在「Planner / Reviewer」层，而不是直接接管 PPTX
+生成：
+
+1. Planner：把用户的一段自然语言需求整理成可编辑 Markdown 大纲。
+2. IR reviewer：在 Deck IR 校验失败时，读取错误信息并给出修正后的 IR 或
+   Markdown。
+3. Content reviewer：检查标题长度、bullet 密度、章节顺序和学术表达是否合适。
+4. Research assistant：后续可在受控联网和引用记录下做资料搜集，但必须保留
+   来源和人工确认。
+
+PPTX 最终生成继续由 `packages/builder` 的确定性代码完成。这样可以保持：
+
+- 用户身份、文件归属、下载权限仍由 AIPPT API 控制。
+- 版式坐标、SJTU 视觉规范、文件写入路径可测试、可复现。
+- Hermes 的输出可以被用户编辑，也可以被 validator 拦截。
+- 多用户场景下每个 job 仍限制在自己的 workspace 内。
+
+## Xiaomi MiMo Key 的合规边界
+
+当前 MiMo key 的套餐说明写明：仅限在兼容的 AI 编程和智能体工具中交互式使用，
+不可用于自动化脚本或应用后端。基于这个限制：
+
+- 可以用于服务器上的人工研发、调试和一次性 agent 实验。
+- 不应把该 key 写入仓库、浏览器代码、API 响应或前端环境变量。
+- 不应直接把该 token-plan key 接入 `aippt-worker` 的生产自动任务。
+- 如果要上线自动 PPT 生成，需要更换允许应用后端调用的生产模型服务 key，或
+  获得明确授权。
+
+因此，当前生产 worker 仍保持 deterministic builder 路径；Hermes/MiMo 作为
+研发验证通道存在。未来接入生产时，应先抽象 `PlannerProvider`，并通过环境变量
+显式启用，同时在 job 日志中记录 planner model、provider、prompt version 和
+输入输出摘要。
+
 ## 需要手动填写的内容
 
 复制 `/srv/aippt/env/aippt.env.example` 为 `/srv/aippt/env/aippt.env`，在服务器本地填写真实密钥：

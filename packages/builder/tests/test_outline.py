@@ -75,3 +75,15 @@ SJTU · 计算材料课程组 组会分享
     assert all("第 " not in slide.title for slide in deck.slides[1:-1])
     assert all("封面" not in slide.title for slide in deck.slides[1:-1])
     assert validate_deck(deck) == []
+
+
+def test_outline_limits_toc_to_valid_bullet_count() -> None:
+    markdown = "# Long Deck\n\n" + "\n\n".join(
+        f"## Section {idx}\n\n- Point {idx}" for idx in range(1, 8)
+    )
+
+    deck = outline_to_deck(markdown)
+
+    assert deck.slides[1].layout == "toc"
+    assert len(deck.slides[1].bullets) == 5
+    assert validate_deck(deck) == []

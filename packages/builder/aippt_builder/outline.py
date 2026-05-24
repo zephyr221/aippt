@@ -23,7 +23,7 @@ def outline_to_deck(markdown: str, title: str | None = None, author: str = "") -
             Slide(
                 layout=Layout.TOC,
                 title="目录",
-                bullets=[_clip(section_title, MAX_BULLET_CHARS) for section_title, _ in sections[:6]],
+                bullets=[_clip(section_title, MAX_BULLET_CHARS) for section_title, _ in sections[:MAX_BULLETS]],
             )
         )
     for section_title, bullets in sections:
