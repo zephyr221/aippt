@@ -155,7 +155,8 @@ BuilderProvider
 - per-user memory namespace。
 - 生成脚本沙箱。
 - 代码审查/AST guard。
-- PPTX 预览图和文字溢出 QA。
+- PPTX 预览图和文字溢出 QA；MiMo 不应被假设具备视觉能力，视觉检查应由
+  确定性渲染检查和可选视觉模型单独承担。
 - 用户反馈回写 memory 的显式入口。
 
 ## 当前建议

@@ -41,6 +41,7 @@ Optional files:
 ir/deck.repaired.json
 logs/hermes_review.md
 logs/hermes_repair.md
+logs/vision_review.md
 qa/qa.json
 preview/
 ```
@@ -62,7 +63,9 @@ anything. If references are needed, load:
 5. Keep content within the builder contract: short titles, limited bullets,
    whitelisted layouts, no free-form coordinates.
 6. Prefer concrete fixes over advice.
-7. Write results to the job workspace:
+7. If you do not have image input, do not claim direct visual inspection.
+   Reason from `qa/qa.json`, Deck IR, and any text visual review report instead.
+8. Write results to the job workspace:
    - `ir/deck.repaired.json` for machine-readable IR repair.
    - `logs/hermes_review.md` for human-readable findings.
    - `logs/hermes_repair.md` for repair rationale.
@@ -126,6 +129,7 @@ Never:
 - Change the SJTU template file.
 - Write unreviewed generated PPTX scripts for production.
 - Expose raw filesystem paths to the user.
+- Pretend to see rendered slides when the active model run is text-only.
 
 ## Output Expectations
 

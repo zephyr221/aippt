@@ -32,6 +32,10 @@ At thumbnail size, the deck should show:
 - No repeated "large rounded rectangle full of bullets" pattern.
 - Distinct cover and thanks pages.
 
+If the active model run has no image input, do not present these as direct
+visual observations. Use deterministic preview checks, Deck IR structure, and
+`logs/vision_review.md` if a separate vision provider produced one.
+
 ## Layout Suggestions
 
 Use these repairs:

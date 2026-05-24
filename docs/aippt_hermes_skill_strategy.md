@@ -39,7 +39,7 @@ Deterministic builder creates deck.json and deck.pptx
 QA creates qa.json + preview images
   |
   v
-Hermes reads workspace skill + memory + qa.json
+Hermes reads workspace skill + memory + qa.json + optional vision text report
   |
   v
 Hermes writes review.md or deck.repaired.json
@@ -157,12 +157,13 @@ Guard:
 - Do not increase page count without explaining why.
 - Preserve user-authored explicit page titles.
 
-### 3. Visual QA Reviewer
+### 3. QA Reviewer
 
 Input:
 
 - `qa.json`
-- Rendered preview PNG/PDF when available.
+- Rendered preview PNG/PDF paths when available.
+- Optional `logs/vision_review.md` from a separate vision-capable provider.
 - Current PPTX style rules.
 
 Output:
@@ -172,6 +173,10 @@ Output:
 
 Guard:
 
+- Do not claim to have inspected preview images unless the configured model run
+  actually has image input.
+- If the active Hermes/MiMo model is text-only, review `qa.json` and
+  `logs/vision_review.md` as text.
 - Prefer concrete repairs: reduce bullet length, choose process layout, split a
   dense page, add a claim line.
 - Do not ask the worker to use unapproved assets or network search.
@@ -206,7 +211,13 @@ AIPPT_PLANNER_PROVIDER=deterministic|hermes
 AIPPT_HERMES_PROVIDER=...
 AIPPT_HERMES_MODEL=...
 AIPPT_HERMES_ENABLED=false
+AIPPT_VISUAL_QA_PROVIDER=none|deterministic|openai|gemini|claude|qwen_vl
+AIPPT_VISUAL_QA_MODEL=
 ```
+
+MiMo can remain the planner/reviewer even if it has no vision capability.
+Visual QA should be a separate provider slot. By default, use deterministic
+render checks and feed their text output back to Hermes.
 
 Every model run should record:
 
@@ -225,7 +236,8 @@ Hermes can block or repair production jobs only after:
 - Toolsets are restricted for worker runs.
 - Generated script paths are sandboxed or disabled.
 - Builder validation is mandatory after Hermes output.
-- PPTX open/render QA is mandatory.
+- PPTX open/render QA is mandatory and must not depend on a text-only model
+  seeing images.
 - Failure fallback returns the deterministic deck instead of no deck.
 
 ## Recommended Next Implementation
@@ -235,11 +247,13 @@ Hermes can block or repair production jobs only after:
    non-destructive deterministic preflight.
 3. Materialize `qa/qa.json` and `logs/hermes_review.md` in review workspaces.
    Done for text/IR/artifact QA.
-4. Add rendered preview PNG/PDF inputs to the review workspace.
-5. Replace or augment deterministic preflight with a Hermes call that preloads
+4. Add rendered preview PNG/PDF inputs and a `preview/contact-sheet.png`
+   artifact to the review workspace.
+5. Add deterministic visual checks before introducing any multimodal reviewer.
+6. Replace or augment deterministic preflight with a Hermes call that preloads
    `--skills aippt-sjtu-ppt`.
-6. Add UI feedback buttons and store derived preference events.
-7. Promote Hermes to `ir_repair` only after review quality is consistent.
+7. Add UI feedback buttons and store derived preference events.
+8. Promote Hermes to `ir_repair` only after review quality is consistent.
 
 ## Current `hermes_review` Job
 

@@ -34,6 +34,7 @@ Useful starting docs:
 - [Hermes deployment notes](docs/aippt_hermes_deployment.md)
 - [Hermes memory and SJTU template experiment](docs/aippt_hermes_memory_and_sjtu_template.md)
 - [Hermes skill strategy](docs/aippt_hermes_skill_strategy.md)
+- [Visual QA strategy](docs/aippt_visual_qa_strategy.md)
 
 ## Development Priorities
 

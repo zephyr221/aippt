@@ -53,6 +53,11 @@ Hermes should not become the authority for user access or raw artifact serving.
 The builder should not learn user preferences by itself. The API should not
 embed model-specific prompt logic directly into routes.
 
+Visual review is also its own layer. MiMo may be text-only, so AIPPT should not
+assume the Hermes planning model can inspect images. The safe contract is:
+render PPTX previews, run deterministic checks, optionally ask a separate
+vision-capable provider, then feed the text findings back to Hermes.
+
 ## Important Lessons So Far
 
 ### Markdown Needs Two Modes
@@ -99,6 +104,11 @@ MiMo/Hermes are useful for:
 They should not freely calculate all PPT coordinates or modify production
 authorization/storage logic.
 
+They also should not be treated as the visual QA engine unless the configured
+provider explicitly supports image input. A text-only model can still improve
+slides by reading `qa/qa.json`, `logs/hermes_review.md`, and any optional
+`logs/vision_review.md`.
+
 ### Modular Slide Scripts Are Worth Keeping
 
 The Hermes/MiMo SJTU-template probe showed that splitting generated PPT code into
@@ -118,6 +128,8 @@ one module per slide is better than one giant script:
 - Add preview rendering to job artifacts.
 - Add a lightweight visual QA report: page count, long text, likely overflow,
   repeated layout, and missing claims.
+- Produce a contact sheet when render tools are available, but keep deterministic
+  QA useful even without a multimodal model.
 - Add a "regenerate with same outline" path in the UI.
 
 ### Milestone 2: Hermes As Shadow Reviewer
@@ -198,7 +210,8 @@ Read in this order:
 4. `docs/aippt_ops_playbook.md`
 5. `docs/aippt_hermes_memory_and_sjtu_template.md`
 6. `docs/aippt_hermes_skill_strategy.md`
-7. `docs/aippt_frontend_plan.md`
+7. `docs/aippt_visual_qa_strategy.md`
+8. `docs/aippt_frontend_plan.md`
 
 Then inspect:
 
