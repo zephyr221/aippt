@@ -36,12 +36,13 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
 
     workspace = _workspace_for(settings, deck, job)
     _mark_running(session, deck, job, workspace)
+    enqueued_followup = False
 
     try:
         if job.type == JobType.BUILD_PPTX:
             _run_build_pptx(session, settings, deck, workspace)
         elif job.type == JobType.PLAN_OUTLINE:
-            _run_plan_outline(session, settings, deck, workspace)
+            enqueued_followup = _run_plan_outline(session, settings, deck, job, workspace)
         elif job.type == JobType.HERMES_REVIEW:
             _run_hermes_review(session, settings, deck, workspace)
         else:
@@ -52,11 +53,10 @@ def run_job(session: Session, settings: Settings, job_id: UUID) -> Job:
         job.error_message = None
         job.updated_at = now
         if _job_updates_deck_status(job):
-            deck.status = (
-                DeckStatus.OUTLINE_READY
-                if job.type == JobType.PLAN_OUTLINE
-                else DeckStatus.READY
-            )
+            if job.type == JobType.PLAN_OUTLINE:
+                deck.status = DeckStatus.GENERATING if enqueued_followup else DeckStatus.OUTLINE_READY
+            else:
+                deck.status = DeckStatus.READY
         deck.updated_at = now
         _append_log(workspace, f"{now.isoformat()} succeeded {job.type}")
     except Exception as exc:
@@ -113,8 +113,11 @@ def _run_build_pptx(
     deck_ir_path = workspace / "ir" / "deck.json"
     pptx_path = workspace / "out" / "deck.pptx"
 
+    _append_agent_log(workspace, "读取规划大纲，转换为 Deck IR。")
     _run_builder(settings, workspace, "outline", outline_path, deck_ir_path, "--title", deck.title)
+    _append_agent_log(workspace, "Deck IR 已生成，开始渲染可编辑 PPTX。")
     _run_builder(settings, workspace, "build", deck_ir_path, pptx_path)
+    _append_agent_log(workspace, "PPTX 生成完成，可以下载。")
 
     _add_file_asset(session, deck, FileKind.DECK_IR, deck_ir_path, "application/json")
     _add_file_asset(
@@ -131,13 +134,29 @@ def _run_plan_outline(
     session: Session,
     settings: Settings,
     deck: DeckSession,
+    plan_job: Job,
     workspace: Path,
-) -> None:
+) -> bool:
     artifact = write_hermes_plan(settings, deck, workspace)
     planned_outline = artifact.outline_path.read_text(encoding="utf-8").strip()
     deck.outline_md = planned_outline + "\n"
     _add_file_asset(session, deck, FileKind.OUTLINE, artifact.outline_path, "text/markdown")
     _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
+    if not settings.hermes_auto_build_after_plan:
+        return False
+
+    build_job = Job(
+        deck_session_id=deck.id,
+        owner_user_id=deck.owner_user_id,
+        type=JobType.BUILD_PPTX,
+        input_snapshot=deck.outline_md,
+    )
+    build_workspace = materialize_job_workspace(settings, deck, build_job)
+    build_job.workspace_path = str(build_workspace)
+    session.add(build_job)
+    _append_agent_log(workspace, "已自动创建 PPTX 生成任务。")
+    write_job_manifest(workspace, deck, plan_job)
+    return True
 
 
 def _run_hermes_review(
@@ -205,3 +224,7 @@ def _append_log(workspace: Path, line: str) -> None:
     log_path = workspace / "logs" / "job.log"
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(line.rstrip() + "\n")
+
+
+def _append_agent_log(workspace: Path, line: str) -> None:
+    _append_log(workspace, f"AIPPT_AGENT: {line}")

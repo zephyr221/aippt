@@ -193,12 +193,15 @@ provider, model, version, and usage-boundary logs.
 The first implementation of that loop is `plan_outline`: a user-triggered
 Hermes/MiMo job that reads `input/outline.md`, writes
 `ir/planned_outline.md` and `logs/hermes_plan.md`, then updates the deck's
-editable outline and marks the deck `outline_ready`. The user can inspect the
-planned outline before running the deterministic PPTX build.
+editable outline. In the default product flow, successful planning immediately
+queues the deterministic `build_pptx` job so the user does not need to press a
+second button. The deck stays `generating` until the PPTX is ready.
 The workbench now treats this as the default creation path: the primary button
-starts deep planning, timestamps render in `Asia/Shanghai`, and each deck card
-shows the latest job stages plus log snippets so the long planning phase feels
-observable rather than stuck.
+starts deep planning and then auto-builds the deck. Deck cards hide raw worker
+timestamps and expose only short China-time metadata, a 1/2/3/4 generation
+progress strip, and curated `AIPPT_AGENT:` notes such as demand recognition,
+planning strategy, outline summary, and PPTX rendering status. After completion,
+the only action shown is `下载 PPTX`.
 
 ### Milestone 3: Preference Memory
 

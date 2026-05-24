@@ -159,11 +159,27 @@ def workbench(request: Request) -> HTMLResponse:
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
       text-align: center;
+    }}
+    .agent-step strong {{
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e8edf3;
+      color: var(--muted);
+      font-size: 11px;
+      flex: 0 0 auto;
     }}
     .agent-step.done {{ border-color: rgba(18, 106, 58, 0.25); background: #f0f8f3; color: var(--ready); }}
     .agent-step.running {{ border-color: rgba(23, 107, 91, 0.35); background: #edf7f4; color: var(--accent-strong); }}
     .agent-step.failed {{ border-color: rgba(154, 52, 18, 0.25); background: #fff4ed; color: var(--warn); }}
+    .agent-step.done strong {{ background: var(--ready); color: #fff; }}
+    .agent-step.running strong {{ background: var(--accent); color: #fff; }}
+    .agent-step.failed strong {{ background: var(--warn); color: #fff; }}
     .agent-log {{
       margin: 0;
       max-height: 150px;
@@ -275,10 +291,10 @@ def workbench(request: Request) -> HTMLResponse:
         try {{
           const jobs = await request(`/jobs/decks/${{deck.id}}`);
           jobsByDeck.set(deck.id, jobs);
-          if (jobs[0]) {{
-            const log = await request(`/jobs/${{jobs[0].id}}/log`);
-            jobLogs.set(jobs[0].id, log.log_text || "");
-          }}
+          await Promise.all(jobs.slice(0, 3).map(async (job) => {{
+            const log = await request(`/jobs/${{job.id}}/log`);
+            jobLogs.set(job.id, log.log_text || "");
+          }}));
         }} catch (_) {{
           jobsByDeck.set(deck.id, []);
         }}
@@ -350,14 +366,8 @@ def workbench(request: Request) -> HTMLResponse:
     function renderDeck(deck) {{
       const files = filesByDeck.get(deck.id) || [];
       const pptx = files.find((file) => file.kind === "pptx");
-      const preview = files.find((file) => file.kind === "preview");
-      const review = files.find((file) => file.kind === "review");
-      const plannedOutline = files.find((file) => file.kind === "outline");
       const jobs = jobsByDeck.get(deck.id) || [];
-      const created = formatDate(deck.created_at);
-      const buildLabel = deck.status === "outline_ready" ? "生成 PPTX" : "重新生成 PPTX";
-      const canBuild = deck.status === "outline_ready" || Boolean(pptx);
-      const canPlan = deck.status !== "generating";
+      const created = formatTime(deck.created_at);
       return `
         <article class="deck">
           <div class="deck-title">${{escapeHtml(deck.title)}}</div>
@@ -365,50 +375,43 @@ def workbench(request: Request) -> HTMLResponse:
             <span class="pill ${{statusClass(deck.status)}}">${{statusLabel(deck.status)}}</span>
             <span>${{escapeHtml(created)}}</span>
           </div>
-          <div class="deck-actions">
-            ${{pptx ? `<a class="btn" href="${{api}}/files/${{pptx.id}}/download">下载 PPTX</a>` : ""}}
-            ${{preview ? `<a class="btn secondary" href="${{api}}/files/${{preview.id}}/download">预览</a>` : ""}}
-            ${{plannedOutline ? `<a class="btn secondary" href="${{api}}/files/${{plannedOutline.id}}/download">规划大纲</a>` : ""}}
-            ${{review ? `<a class="btn secondary" href="${{api}}/files/${{review.id}}/download">审稿报告</a>` : ""}}
-            ${{canBuild ? `<button class="btn secondary" type="button" data-build="${{deck.id}}">${{buildLabel}}</button>` : ""}}
-            ${{canPlan ? `<button class="btn secondary" type="button" data-plan="${{deck.id}}">重新深度规划</button>` : ""}}
-            <button class="btn secondary" type="button" data-review="${{deck.id}}">AI 审稿</button>
-          </div>
+          ${{pptx ? `<div class="deck-actions"><a class="btn" href="${{api}}/files/${{pptx.id}}/download">下载 PPTX</a></div>` : ""}}
           ${{renderAgentProgress(deck, jobs)}}
-          ${{deck.outline_md ? `<details class="outline-preview"><summary>当前大纲</summary><pre>${{escapeHtml(deck.outline_md)}}</pre></details>` : ""}}
         </article>
       `;
     }}
 
     function renderAgentProgress(deck, jobs) {{
       if (!jobs.length) return "";
-      const latest = jobs[0];
-      const labels = latest.type === "plan_outline"
-        ? ["读取需求", "Hermes/MiMo 规划", "整理页面结构", "写入大纲"]
-        : latest.type === "build_pptx"
-          ? ["读取大纲", "生成 Deck IR", "渲染 PPTX", "记录产物"]
-          : ["读取产物", "渲染预览", "生成 QA", "写入报告"];
-      const title = latest.type === "plan_outline"
-        ? "Agent 深度规划"
-        : latest.type === "build_pptx"
-          ? "PPTX 生成"
-          : "AI 审稿";
-      const isDone = latest.status === "succeeded";
-      const isFailed = latest.status === "failed";
-      const activeIndex = latest.status === "queued" ? 0 : latest.status === "running" ? 1 : labels.length - 1;
+      const plan = jobs.find((job) => job.type === "plan_outline");
+      const build = jobs.find((job) => job.type === "build_pptx");
+      if (!plan && !build) return "";
+      const labels = ["理解需求", "Hermes/MiMo 规划", "PPTX 渲染", "完成下载"];
+      const failedJob = [plan, build].find((job) => job && job.status === "failed");
+      const isDone = Boolean(build && build.status === "succeeded");
+      const isFailed = Boolean(failedJob);
+      let activeIndex = 0;
+      if (plan && plan.status === "running") activeIndex = 1;
+      if (plan && plan.status === "succeeded") activeIndex = 2;
+      if (build && ["queued", "running"].includes(build.status)) activeIndex = 2;
+      if (isDone) activeIndex = 3;
+      if (isFailed && failedJob.type === "build_pptx") activeIndex = 2;
+      const statusText = isDone ? "完成" : isFailed ? "失败" : "进行中";
+      const title = "Agent 生成流程";
+      const displayJob = build || plan;
       const steps = labels.map((label, index) => {{
         let cls = "";
         if (isDone || index < activeIndex) cls = "done";
         else if (isFailed && index === activeIndex) cls = "failed";
         else if (index === activeIndex) cls = "running";
-        return `<span class="agent-step ${{cls}}">${{escapeHtml(label)}}</span>`;
+        return `<span class="agent-step ${{cls}}"><strong>${{index + 1}}</strong>${{escapeHtml(label)}}</span>`;
       }}).join("");
-      const log = jobLogs.get(latest.id) || "";
+      const log = formatAgentLog([plan, build].map((job) => job ? jobLogs.get(job.id) || "" : "").join("\\n"));
       return `
         <div class="agent-progress">
           <div class="agent-head">
-            <strong>${{escapeHtml(title)}} · ${{escapeHtml(jobStatusLabel(latest.status))}}</strong>
-            <span>${{escapeHtml(formatDate(latest.created_at))}}</span>
+            <strong>${{escapeHtml(title)}} · ${{escapeHtml(statusText)}}</strong>
+            <span>${{escapeHtml(formatTime(displayJob.created_at))}}</span>
           </div>
           <div class="agent-steps">${{steps}}</div>
           ${{log ? `<pre class="agent-log">${{escapeHtml(log)}}</pre>` : ""}}
@@ -474,79 +477,28 @@ def workbench(request: Request) -> HTMLResponse:
       }}
     }}
 
-    app.addEventListener("click", async (event) => {{
-      const button = event.target.closest("[data-build]");
-      if (!button) return;
-      button.disabled = true;
-      try {{
-        await request(`/jobs/decks/${{button.dataset.build}}`, {{
-          method: "POST",
-          body: JSON.stringify({{ type: "build_pptx" }})
-        }});
-        await loadDecks();
-        const me = await request("/auth/me");
-        renderWorkbench(me);
-      }} catch (error) {{
-        showNotice(error.message || "提交失败");
-      }} finally {{
-        button.disabled = false;
-      }}
-    }});
-
-    app.addEventListener("click", async (event) => {{
-      const button = event.target.closest("[data-plan]");
-      if (!button) return;
-      button.disabled = true;
-      try {{
-        await request(`/jobs/decks/${{button.dataset.plan}}`, {{
-          method: "POST",
-          body: JSON.stringify({{ type: "plan_outline" }})
-        }});
-        await loadDecks();
-        const me = await request("/auth/me");
-        renderWorkbench(me);
-      }} catch (error) {{
-        showNotice(error.message || "深度规划失败");
-      }} finally {{
-        button.disabled = false;
-      }}
-    }});
-
-    app.addEventListener("click", async (event) => {{
-      const button = event.target.closest("[data-review]");
-      if (!button) return;
-      button.disabled = true;
-      try {{
-        await request(`/jobs/decks/${{button.dataset.review}}`, {{
-          method: "POST",
-          body: JSON.stringify({{ type: "hermes_review" }})
-        }});
-        await loadDecks();
-        const me = await request("/auth/me");
-        renderWorkbench(me);
-      }} catch (error) {{
-        showNotice(error.message || "审稿失败");
-      }} finally {{
-        button.disabled = false;
-      }}
-    }});
-
     function setBusy(value) {{
       const submit = document.getElementById("submit");
       if (submit) submit.disabled = value;
     }}
 
-    function formatDate(value) {{
+    function formatTime(value) {{
       return new Intl.DateTimeFormat("zh-CN", {{
         timeZone: "Asia/Shanghai",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",
         hour12: false
       }}).format(new Date(value));
+    }}
+
+    function formatAgentLog(logText) {{
+      const lines = String(logText || "")
+        .split("\\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.startsWith("AIPPT_AGENT:") ? line.slice("AIPPT_AGENT:".length).trim() : "")
+        .filter(Boolean);
+      return lines.slice(-8).join("\\n");
     }}
 
     function showNotice(text) {{

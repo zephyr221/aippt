@@ -15,7 +15,7 @@ from sqlmodel import Session, select
 from aippt_api.config import get_settings
 from aippt_api.db import get_engine, reset_engine
 from aippt_api.main import create_app
-from aippt_api.models import DeckSession, DeckStatus, FileAsset, FileKind, JobStatus
+from aippt_api.models import DeckSession, DeckStatus, FileAsset, FileKind, Job, JobStatus, JobType
 from aippt_api.services.job_runner import run_next_job
 from aippt_api.services.preview import _write_contact_sheet
 
@@ -63,6 +63,8 @@ def test_root_redirect_respects_proxy_root_path(app_context) -> None:
         assert "AI PPT 生成工作台" in response.text
         assert "生成 PPT" in response.text
         assert "快速生成 PPTX" not in response.text
+        assert "AI 审稿" not in response.text
+        assert "当前大纲" not in response.text
 
 
 def test_users_only_see_their_own_decks(app_context) -> None:
@@ -458,10 +460,17 @@ EOF
 
             deck = session.get(DeckSession, UUID(deck_id))
             assert deck is not None
-            assert deck.status == DeckStatus.OUTLINE_READY
+            assert deck.status == DeckStatus.GENERATING
             assert "深度规划版" in deck.outline_md
             assert "一句话" not in deck.outline_md
             assert "请制作五六页" not in deck.outline_md
+            build_job = session.exec(
+                select(Job).where(
+                    Job.deck_session_id == deck.id,
+                    Job.type == JobType.BUILD_PPTX,
+                )
+            ).one()
+            assert build_job.status == JobStatus.QUEUED
 
             assets = session.exec(
                 select(FileAsset).where(FileAsset.deck_session_id == deck.id)
@@ -469,6 +478,20 @@ EOF
             kinds = {asset.kind for asset in assets}
             assert FileKind.OUTLINE in kinds
             assert FileKind.PPTX not in kinds
+
+            next_job = run_next_job(session, get_settings())
+            assert next_job is not None
+            assert next_job.type == JobType.BUILD_PPTX
+            assert next_job.status == JobStatus.SUCCEEDED
+
+            deck = session.get(DeckSession, UUID(deck_id))
+            assert deck is not None
+            assert deck.status == DeckStatus.READY
+            assets = session.exec(
+                select(FileAsset).where(FileAsset.deck_session_id == deck.id)
+            ).all()
+            kinds = {asset.kind for asset in assets}
+            assert FileKind.PPTX in kinds
 
         files_response = alice.get(f"/api/files/decks/{deck_id}")
         assert files_response.status_code == 200
@@ -479,7 +502,10 @@ EOF
         assert "一句话" not in download_response.text
         log_response = alice.get(f"/api/jobs/{job_id}/log")
         assert log_response.status_code == 200
-        assert "succeeded plan_outline" in log_response.json()["log_text"]
+        assert "AIPPT_AGENT: 识别需求" in log_response.json()["log_text"]
+        assert "AIPPT_AGENT: 确定主题：机器学习科普" in log_response.json()["log_text"]
+        assert "AIPPT_AGENT: 正在规划页面：为什么值得了解" in log_response.json()["log_text"]
+        assert "AIPPT_AGENT: 已自动创建 PPTX 生成任务" in log_response.json()["log_text"]
 
     job_workspace = next((tmp_path / "jobs").glob(f"*/{job_id}"))
     assert (job_workspace / "ir" / "planned_outline.md").is_file()
@@ -487,6 +513,7 @@ EOF
     plan_log = (job_workspace / "logs" / "job.log").read_text(encoding="utf-8")
     assert "running plan_outline" in plan_log
     assert "succeeded plan_outline" in plan_log
+    assert "AIPPT_AGENT: 规划策略" in plan_log
 
 
 def test_worker_hermes_review_writes_non_destructive_report(app_context) -> None:

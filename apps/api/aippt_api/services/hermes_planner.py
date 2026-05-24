@@ -1,7 +1,9 @@
+import codecs
 import os
 import re
 import shlex
 import subprocess
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +29,10 @@ def write_hermes_plan(settings: Settings, deck: DeckSession, workspace: Path) ->
     if not original_outline.strip():
         raise RuntimeError("Cannot run Hermes planning without an input brief or outline.")
 
+    _append_agent_log(workspace, f"识别需求：{_brief_summary(original_outline)}")
+    _append_agent_log(workspace, f"规划策略：{_planning_strategy(original_outline)}")
+    _append_agent_log(workspace, "准备调用 Hermes/MiMo 生成页面结构和讲述顺序。")
+
     prompt_path = workspace / "input" / "hermes_plan_prompt.md"
     prompt = _planning_prompt(deck, original_outline)
     prompt_path.write_text(prompt, encoding="utf-8")
@@ -35,30 +41,28 @@ def write_hermes_plan(settings: Settings, deck: DeckSession, workspace: Path) ->
     env = os.environ.copy()
     env["HERMES_ACCEPT_HOOKS"] = "1"
 
-    result = subprocess.run(
-        command,
-        cwd=workspace,
+    _append_agent_log(workspace, "Hermes/MiMo 正在规划：压缩标题、组织卡片、检查公式与边界表达。")
+    returncode, stdout, stderr = _run_hermes_command(
+        command=command,
+        workspace=workspace,
         env=env,
-        capture_output=True,
-        text=True,
-        timeout=settings.hermes_plan_timeout_seconds,
-        check=False,
+        timeout_seconds=settings.hermes_plan_timeout_seconds,
     )
 
-    if result.stderr.strip():
-        _append_log(workspace, result.stderr.strip())
-
     raw_path = workspace / "logs" / "hermes_plan.raw.md"
-    raw_path.write_text(result.stdout.strip() + "\n", encoding="utf-8")
+    if not raw_path.exists():
+        raw_path.write_text(stdout.strip() + "\n", encoding="utf-8")
+    if stderr.strip():
+        _append_log(workspace, stderr.strip())
 
-    if result.returncode != 0:
+    if returncode != 0:
         provider = settings.hermes_provider or "default"
         model = settings.hermes_model or "default"
         raise RuntimeError(
-            f"Hermes planning failed ({result.returncode}) with provider={provider}, model={model}."
+            f"Hermes planning failed ({returncode}) with provider={provider}, model={model}."
         )
 
-    planned_outline = _clean_markdown(result.stdout)
+    planned_outline = _clean_markdown(stdout)
     if len(planned_outline) < 120:
         raise RuntimeError("Hermes planning returned too little content.")
 
@@ -68,7 +72,8 @@ def write_hermes_plan(settings: Settings, deck: DeckSession, workspace: Path) ->
     report_path = workspace / "logs" / "hermes_plan.md"
     report_path.write_text(_render_report(settings, deck, planned_outline), encoding="utf-8")
 
-    _append_log(workspace, "Hermes deep planning wrote ir/planned_outline.md")
+    _append_agent_log(workspace, f"完成规划：{_outline_summary(planned_outline)}")
+    _append_agent_log(workspace, "已写入规划大纲，准备进入 PPTX 渲染。")
     return PlanningArtifact(
         outline_path=planned_outline_path,
         report_path=report_path,
@@ -87,6 +92,85 @@ def _hermes_command(settings: Settings, prompt: str) -> list[str]:
     if settings.hermes_skills:
         command.extend(["--skills", settings.hermes_skills])
     return command
+
+
+def _run_hermes_command(
+    *,
+    command: list[str],
+    workspace: Path,
+    env: dict[str, str],
+    timeout_seconds: int,
+) -> tuple[int, str, str]:
+    raw_path = workspace / "logs" / "hermes_plan.raw.md"
+    process = subprocess.Popen(
+        command,
+        cwd=workspace,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        bufsize=0,
+    )
+    if process.stdout is None or process.stderr is None:
+        raise RuntimeError("Hermes command did not expose stdout/stderr pipes.")
+
+    stdout_fd = process.stdout.fileno()
+    stderr_fd = process.stderr.fileno()
+    os.set_blocking(stdout_fd, False)
+    os.set_blocking(stderr_fd, False)
+    stdout_decoder = codecs.getincrementaldecoder("utf-8")("replace")
+    stderr_decoder = codecs.getincrementaldecoder("utf-8")("replace")
+    stdout_chunks: list[str] = []
+    stderr_chunks: list[str] = []
+    stdout_buffer = ""
+    seen: set[str] = set()
+    deadline = time.monotonic() + timeout_seconds
+    next_heartbeat = time.monotonic() + 25
+
+    with raw_path.open("w", encoding="utf-8") as raw:
+        open_fds = {stdout_fd, stderr_fd}
+        while open_fds:
+            now = time.monotonic()
+            if now >= deadline:
+                process.kill()
+                process.wait()
+                raise RuntimeError(f"Hermes planning timed out after {timeout_seconds} seconds.")
+
+            for fd, decoder, chunks in (
+                (stdout_fd, stdout_decoder, stdout_chunks),
+                (stderr_fd, stderr_decoder, stderr_chunks),
+            ):
+                if fd not in open_fds:
+                    continue
+                try:
+                    data = os.read(fd, 4096)
+                except BlockingIOError:
+                    continue
+                if not data:
+                    open_fds.remove(fd)
+                    tail = decoder.decode(b"", final=True)
+                    if tail:
+                        chunks.append(tail)
+                        if fd == stdout_fd:
+                            raw.write(tail)
+                            raw.flush()
+                            stdout_buffer = _emit_outline_progress(workspace, stdout_buffer + tail, seen)
+                    continue
+
+                text = decoder.decode(data)
+                chunks.append(text)
+                if fd == stdout_fd:
+                    raw.write(text)
+                    raw.flush()
+                    stdout_buffer = _emit_outline_progress(workspace, stdout_buffer + text, seen)
+
+            if time.monotonic() >= next_heartbeat and process.poll() is None:
+                _append_agent_log(workspace, "仍在规划：正在检查页面密度、标题长度和卡片结构。")
+                next_heartbeat += 25
+            time.sleep(0.05)
+
+    if stdout_buffer.strip():
+        _maybe_log_outline_line(workspace, stdout_buffer.strip(), seen)
+    return process.wait(), "".join(stdout_chunks), "".join(stderr_chunks)
 
 
 def _planning_prompt(deck: DeckSession, original_outline: str) -> str:
@@ -141,8 +225,62 @@ def _clean_markdown(raw: str) -> str:
     return "\n".join(_strip_disallowed_labels(line) for line in lines)
 
 
+def _emit_outline_progress(workspace: Path, text: str, seen: set[str]) -> str:
+    lines = text.split("\n")
+    for line in lines[:-1]:
+        _maybe_log_outline_line(workspace, line, seen)
+    return lines[-1]
+
+
+def _maybe_log_outline_line(workspace: Path, line: str, seen: set[str]) -> None:
+    clean = line.strip()
+    if clean.startswith("# "):
+        title = clean.lstrip("#").strip()
+        key = f"title:{title}"
+        if title and key not in seen:
+            seen.add(key)
+            _append_agent_log(workspace, f"确定主题：{title}")
+        return
+
+    if not clean.startswith("## "):
+        return
+
+    heading = clean.lstrip("#").strip()
+    heading = re.sub(r"^第\s*\d+\s*页\s*[·:：\-—]\s*", "", heading)
+    if not heading or heading == "封面":
+        return
+    key = f"heading:{heading}"
+    if key in seen:
+        return
+    seen.add(key)
+    _append_agent_log(workspace, f"正在规划页面：{heading}")
+
+
 def _strip_disallowed_labels(line: str) -> str:
     return re.sub(r"^(\s*(?:[-*+]\s+|\d+[.)]\s+)?)一句话\s*[：:]\s*", r"\1", line)
+
+
+def _brief_summary(text: str) -> str:
+    compact = re.sub(r"\s+", " ", text).strip()
+    return compact[:80] + ("..." if len(compact) > 80 else "")
+
+
+def _planning_strategy(text: str) -> str:
+    page_count = "尊重用户给定页数" if re.search(r"\d+\s*[-~到至]?\s*\d*\s*页|[一二两三四五六七八九十]+\s*页", text) else "自动规划 5-8 页"
+    detail = "按已有大纲重组" if "第 " in text or "##" in text else "从简短需求扩展为教学型大纲"
+    return f"{page_count}，{detail}，使用 SJTU 模板卡片化表达。"
+
+
+def _outline_summary(markdown: str) -> str:
+    headings = [
+        re.sub(r"^第\s*\d+\s*页\s*[·:：\-—]\s*", "", line.strip("# "))
+        for line in markdown.splitlines()
+        if line.startswith("## ")
+    ]
+    headings = [heading for heading in headings if heading and heading != "封面"]
+    if not headings:
+        return f"生成 {len(markdown)} 字 Markdown 大纲。"
+    return " / ".join(headings[:5])
 
 
 def _render_report(settings: Settings, deck: DeckSession, planned_outline: str) -> str:
@@ -170,3 +308,7 @@ def _append_log(workspace: Path, line: str) -> None:
     log_path = workspace / "logs" / "job.log"
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(line.rstrip() + "\n")
+
+
+def _append_agent_log(workspace: Path, line: str) -> None:
+    _append_log(workspace, f"AIPPT_AGENT: {line}")

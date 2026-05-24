@@ -73,13 +73,19 @@ expose that path.
 - `plan_outline` jobs are the explicit Hermes/MiMo deep-planning path. They read
   `input/outline.md`, call Hermes in the job workspace, write
   `ir/planned_outline.md` plus `logs/hermes_plan.md`, then update the deck's
-  editable Markdown outline and mark the deck `outline_ready`.
-- The web UI defaults new decks to the deep-planning path. The fast builder is
-  still available as the deterministic rendering step after planning, not as
-  the primary creation mode.
-- The workbench shows recent job stages and `logs/job.log` snippets so users can
-  see what the agent is doing while Hermes/MiMo planning takes longer than PPTX
-  rendering.
+  editable Markdown outline.
+- When `AIPPT_HERMES_AUTO_BUILD_AFTER_PLAN=true`, successful planning
+  immediately queues `build_pptx` with the planned outline. The deck remains
+  `generating` across both jobs and becomes `ready` only after the PPTX asset is
+  written.
+- The web UI defaults new decks to this one-click deep-planning path. The user
+  presses `生成 PPT` once; the deterministic builder runs as the rendering step
+  after planning, and the finished card only exposes `下载 PPTX`.
+- The workbench shows a compact 1/2/3/4 progress strip instead of raw action
+  buttons: `理解需求`, `Hermes/MiMo 规划`, `PPTX 渲染`, and `完成下载`.
+- Job logs should include curated `AIPPT_AGENT:` lines for user-visible progress.
+  The UI filters out raw timestamps and internal job events so the card reads
+  like an agent working note, not a server log.
 - Planner prompts and parser guards should not surface fixed lead labels such as
   "一句话：" in generated decks; the claim text should appear directly.
 - `hermes_review` jobs create non-destructive QA/review artifacts

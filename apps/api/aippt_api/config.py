@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     hermes_toolsets: str = "memory"
     hermes_skills: str = "aippt-sjtu-ppt"
     hermes_plan_timeout_seconds: int = 300
+    hermes_auto_build_after_plan: bool = True
     jaccount_client_id: str = ""
     jaccount_client_secret: str = ""
     jaccount_redirect_uri: str = "http://127.0.0.1:8000/api/auth/jaccount/callback"
