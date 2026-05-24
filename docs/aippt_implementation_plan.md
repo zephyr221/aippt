@@ -46,11 +46,16 @@ expose that path.
 ## Phase 3: Planner And Worker
 
 - Planner creates Markdown outline and Deck IR.
+- Hermes memory stores user and lab preferences for audience, tone, density,
+  template choice, and preferred slide components.
 - Worker creates isolated job workspaces.
 - Worker loop claims queued jobs, writes Deck IR, builds PPTX, and records
   internal artifacts. `run-once` remains available for debugging.
 - Hermes operates only inside the current job workspace.
 - Worker can repair IR and rerun builder on validation/build failures.
+- Experimental path: Hermes/MiMo can generate a constrained SJTU-template
+  deck spec in a job workspace; deterministic runtime scripts split it into
+  per-slide modules and assemble the PPTX after guards and validation.
 
 ## Phase 4: Web UI
 

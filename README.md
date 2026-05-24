@@ -31,6 +31,7 @@ Useful starting docs:
 - [Frontend plan](docs/aippt_frontend_plan.md)
 - [Operations playbook](docs/aippt_ops_playbook.md)
 - [Hermes deployment notes](docs/aippt_hermes_deployment.md)
+- [Hermes memory and SJTU template experiment](docs/aippt_hermes_memory_and_sjtu_template.md)
 
 ## Development Priorities
 
