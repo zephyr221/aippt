@@ -1,13 +1,41 @@
+import re
 from pathlib import Path
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-from .constants import BG_LIGHT, CONTENT_LEFT_IN, CONTENT_TOP_IN, CONTENT_W_IN, GOLD, SJTU_RED, TEXT_MAIN, WHITE
+from .constants import (
+    GOLD,
+    GOLD_PALE,
+    SJTU_DEEP,
+    SJTU_RED,
+    WHITE,
+)
 from .schema import Deck, Layout, Slide
+
+
+SLIDE_W_IN = 13.333
+SLIDE_H_IN = 7.5
+MARGIN_IN = 0.82
+CONTENT_TOP_IN = 1.12
+CONTENT_BOTTOM_IN = 6.63
+CONTENT_W_IN = SLIDE_W_IN - MARGIN_IN * 2
+FONT = "Microsoft YaHei"
+TEXT_PRIMARY = "1A1A2E"
+TEXT_BODY = "3D3D4E"
+TEXT_CAPTION = "6B7280"
+WARM_GRAY_1 = "F5F4F2"
+WARM_GRAY_2 = "EDECEA"
+WARM_GRAY_3 = "D2D0CD"
+BROWN = "8B5C3E"
+OFF_WHITE = "FAFAFB"
+DATE_RE = re.compile(r"(?:20\d{2}[./-]\d{1,2}[./-]\d{1,2}|20\d{2}\s*年|三年前|上周)")
+TABLE_RULE_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
+KEY_VALUE_RE = re.compile(r"^([^：:]{1,14})[：:]\s*(.+)$")
 
 
 def rgb(hex_color: str) -> RGBColor:
@@ -16,8 +44,8 @@ def rgb(hex_color: str) -> RGBColor:
 
 def build_pptx(deck: Deck, output_path: str | Path) -> Path:
     prs = Presentation()
-    prs.slide_width = Inches(13.333)
-    prs.slide_height = Inches(7.5)
+    prs.slide_width = Inches(SLIDE_W_IN)
+    prs.slide_height = Inches(SLIDE_H_IN)
 
     for idx, slide in enumerate(deck.slides, start=1):
         render_slide(prs, slide, idx)
@@ -47,112 +75,561 @@ def render_slide(prs: Presentation, slide_data: Slide, page_num: int) -> None:
 
 
 def render_cover(slide, slide_data: Slide) -> None:
-    bg = slide.background.fill
-    bg.solid()
-    bg.fore_color.rgb = rgb(SJTU_RED)
-    title = slide.shapes.add_textbox(Inches(1.0), Inches(2.3), Inches(11.3), Inches(1.0))
-    p = title.text_frame.paragraphs[0]
-    p.text = slide_data.title
-    p.font.size = Pt(34)
-    p.font.bold = True
-    p.font.color.rgb = rgb(WHITE)
-    p.alignment = PP_ALIGN.CENTER
+    _fill_background(slide, SJTU_RED)
+    _rect(slide, 9.65, 0, 3.68, 7.5, SJTU_DEEP)
+    _rect(slide, 0, 6.92, 13.333, 0.08, GOLD)
+    _rect(slide, 0.86, 1.12, 0.09, 4.95, GOLD)
+    _decorative_rule(slide, 1.05, 1.18, 4.55)
 
-    subtitle = slide.shapes.add_textbox(Inches(1.3), Inches(3.35), Inches(10.7), Inches(1.6))
-    frame = subtitle.text_frame
+    title = slide_data.title or "AIPPT"
+    title_box = slide.shapes.add_textbox(Inches(1.18), Inches(1.72), Inches(7.95), Inches(1.45))
+    frame = title_box.text_frame
     frame.word_wrap = True
-    lines = [line.strip() for line in slide_data.subtitle.splitlines() if line.strip()]
-    if not lines:
-        lines = ["AI-generated draft"]
-    for idx, line in enumerate(lines):
-        p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
-        p.text = line
-        p.font.size = Pt(18 if idx == 0 else 15)
-        p.font.color.rgb = rgb(WHITE)
-        p.alignment = PP_ALIGN.CENTER
+    p = frame.paragraphs[0]
+    p.text = title
+    _style_paragraph(p, 34 if len(title) <= 22 else 29, WHITE, bold=True)
+    p.line_spacing = 1.05
+
+    subtitle_lines = [line.strip() for line in slide_data.subtitle.splitlines() if line.strip()]
+    subtitle_lines = subtitle_lines[:4] or ["AI PPT 生成工作台"]
+    meta = slide.shapes.add_textbox(Inches(1.2), Inches(3.45), Inches(7.8), Inches(1.55))
+    meta_frame = meta.text_frame
+    meta_frame.word_wrap = True
+    for idx, line in enumerate(subtitle_lines):
+        p = meta_frame.paragraphs[0] if idx == 0 else meta_frame.add_paragraph()
+        p.text = _trim(line, 54)
+        _style_paragraph(p, 15 if idx == 0 else 12.5, WHITE, bold=(idx == 0))
+        p.space_after = Pt(5)
+
+    badge = _round_rect(slide, 1.2, 5.55, 2.2, 0.36, GOLD_PALE, border=GOLD, radius=0.14)
+    _shape_text(badge, "SJTU Wine Red + Gold", 9, SJTU_DEEP, bold=True, align=PP_ALIGN.CENTER)
 
 
 def render_thanks(slide, slide_data: Slide) -> None:
-    bg = slide.background.fill
-    bg.solid()
-    bg.fore_color.rgb = rgb(SJTU_RED)
-    box = slide.shapes.add_textbox(Inches(1.0), Inches(2.8), Inches(11.3), Inches(1.1))
+    _fill_background(slide, SJTU_RED)
+    _rect(slide, 0, 6.92, 13.333, 0.08, GOLD)
+    _rect(slide, 9.8, 0, 3.53, 7.5, SJTU_DEEP)
+    box = slide.shapes.add_textbox(Inches(1.12), Inches(2.7), Inches(7.7), Inches(1.0))
     p = box.text_frame.paragraphs[0]
     p.text = slide_data.title or "谢谢"
-    p.font.size = Pt(38)
-    p.font.bold = True
-    p.font.color.rgb = rgb(WHITE)
-    p.alignment = PP_ALIGN.CENTER
+    _style_paragraph(p, 42, WHITE, bold=True)
+    _decorative_rule(slide, 1.16, 3.88, 3.35)
+    note = slide.shapes.add_textbox(Inches(1.15), Inches(4.12), Inches(6.2), Inches(0.4))
+    p = note.text_frame.paragraphs[0]
+    p.text = "AI PPT 生成工作台"
+    _style_paragraph(p, 13, WHITE)
 
 
 def render_header(slide, title: str) -> None:
-    bar = slide.shapes.add_shape(
-        MSO_SHAPE.RECTANGLE,
-        Inches(0),
-        Inches(0),
-        Inches(13.333),
-        Inches(0.88),
-    )
-    bar.fill.solid()
-    bar.fill.fore_color.rgb = rgb(SJTU_RED)
-    bar.line.fill.background()
-    box = slide.shapes.add_textbox(Inches(0.72), Inches(0.17), Inches(11.8), Inches(0.5))
+    _fill_background(slide, OFF_WHITE)
+    _rect(slide, 0, 0, 13.333, 0.78, SJTU_RED)
+    _rect(slide, 0, 0.78, 13.333, 0.035, GOLD)
+    _rect(slide, 11.35, 0, 1.98, 0.78, SJTU_DEEP)
+    box = slide.shapes.add_textbox(Inches(0.78), Inches(0.18), Inches(10.4), Inches(0.42))
     p = box.text_frame.paragraphs[0]
     p.text = title
-    p.font.size = Pt(20)
-    p.font.bold = True
-    p.font.color.rgb = rgb(WHITE)
+    _style_paragraph(p, _title_size(title), WHITE, bold=True)
 
 
 def render_toc(slide, slide_data: Slide) -> None:
-    box = slide.shapes.add_textbox(Inches(1.35), Inches(1.45), Inches(10.6), Inches(4.9))
-    frame = box.text_frame
-    frame.word_wrap = True
-    for idx, bullet in enumerate(slide_data.bullets, start=1):
-        p = frame.paragraphs[0] if idx == 1 else frame.add_paragraph()
-        p.text = f"{idx:02d}  {bullet}"
-        p.font.size = Pt(24)
-        p.font.bold = True
-        p.font.color.rgb = rgb(TEXT_MAIN)
-        p.space_after = Pt(16)
+    bullets = _clean_items(slide_data.bullets)
+    _section_label(slide, "目录", "从问题到方法，再到可执行的工作流")
+    for idx, item in enumerate(bullets[:8], start=1):
+        col = 0 if idx <= 4 else 1
+        row = (idx - 1) % 4
+        left = MARGIN_IN + col * 5.95
+        top = 1.45 + row * 1.18
+        _number_badge(slide, left, top + 0.07, f"{idx:02d}", color=SJTU_RED)
+        title = slide.shapes.add_textbox(Inches(left + 0.58), Inches(top), Inches(4.75), Inches(0.38))
+        p = title.text_frame.paragraphs[0]
+        p.text = item
+        _style_paragraph(p, 17, TEXT_PRIMARY, bold=True)
+        _rect(slide, left + 0.58, top + 0.48, 4.55, 0.012, WARM_GRAY_3)
 
 
 def render_body(slide, slide_data: Slide) -> None:
-    card = slide.shapes.add_shape(
-        MSO_SHAPE.ROUNDED_RECTANGLE,
-        Inches(CONTENT_LEFT_IN),
-        Inches(CONTENT_TOP_IN),
-        Inches(CONTENT_W_IN),
-        Inches(5.35),
-    )
-    card.fill.solid()
-    card.fill.fore_color.rgb = rgb(BG_LIGHT)
-    card.line.color.rgb = rgb(GOLD)
+    items = _clean_items(slide_data.bullets or [c.heading for c in slide_data.columns if c.heading])
+    if not items:
+        items = ["请补充这一页的核心结论。"]
 
-    box = slide.shapes.add_textbox(Inches(1.1), Inches(1.55), Inches(11.1), Inches(4.6))
-    frame = box.text_frame
-    frame.word_wrap = True
-    content = slide_data.bullets or [c.heading for c in slide_data.columns if c.heading]
-    for idx, bullet in enumerate(content):
-        p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
-        p.text = f"• {bullet}"
-        p.level = 0
-        p.font.size = Pt(17)
-        p.font.color.rgb = rgb(TEXT_MAIN)
-        p.space_after = Pt(10)
+    if _looks_like_timeline(items):
+        _render_timeline(slide, items)
+    elif _looks_like_process(slide_data.title, items):
+        _render_process(slide, items)
+    elif _looks_like_fact_grid(items):
+        _render_fact_grid(slide, items)
+    else:
+        _render_card_grid(slide, items)
 
     if slide_data.insight:
-        insight = slide.shapes.add_textbox(Inches(1.1), Inches(6.25), Inches(11.0), Inches(0.45))
-        p = insight.text_frame.paragraphs[0]
-        p.text = slide_data.insight
-        p.font.size = Pt(13)
-        p.font.color.rgb = rgb(SJTU_RED)
+        _insight(slide, slide_data.insight)
+
+
+def _render_card_grid(slide, items: list[str]) -> None:
+    lead, cards = _split_lead(items)
+    if not lead and items:
+        lead, cards = items[0], items[1:]
+    _lead_callout(slide, lead)
+    cards = cards[:4] or items[:4]
+    positions = [
+        (0.92, 2.42),
+        (6.82, 2.42),
+        (0.92, 4.45),
+        (6.82, 4.45),
+    ]
+    for idx, item in enumerate(cards[:4], start=1):
+        left, top = positions[idx - 1]
+        _content_card(slide, left, top, 5.55, 1.55, idx, item)
+
+
+def _render_fact_grid(slide, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    key_values = [_split_key_value(item) for item in rest]
+    if not key_values:
+        key_values = [_split_key_value(item) for item in items]
+        lead = ""
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+        top_start = 2.15
+    else:
+        top_start = 1.28
+    for idx, (label, value) in enumerate(key_values[:6], start=1):
+        col = (idx - 1) % 2
+        row = (idx - 1) // 2
+        left = 0.92 + col * 5.9
+        top = top_start + row * 1.45
+        _fact_card(slide, left, top, 5.55, 1.08, label or f"要点 {idx}", value)
+
+
+def _render_timeline(slide, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    _lead_callout(slide, lead, compact=True)
+    timeline_items = rest[:4] if rest else items[:4]
+    axis_x = 1.22
+    top0 = 2.08
+    _rect(slide, axis_x + 0.13, top0 + 0.16, 0.025, 3.7, GOLD)
+    for idx, item in enumerate(timeline_items, start=1):
+        top = top0 + (idx - 1) * 0.95
+        _number_badge(slide, axis_x, top, str(idx), size=0.32, color=SJTU_RED if idx % 2 else GOLD)
+        date, text = _split_date(item)
+        if date:
+            date_box = slide.shapes.add_textbox(Inches(1.72), Inches(top - 0.03), Inches(1.55), Inches(0.28))
+            p = date_box.text_frame.paragraphs[0]
+            p.text = date
+            _style_paragraph(p, 11, SJTU_RED, bold=True)
+            text_left = 3.2
+            text_w = 5.45
+        else:
+            text_left = 1.72
+            text_w = 6.95
+        text_box = slide.shapes.add_textbox(Inches(text_left), Inches(top - 0.04), Inches(text_w), Inches(0.45))
+        p = text_box.text_frame.paragraphs[0]
+        p.text = _trim(text, 78)
+        _style_paragraph(p, 12.5, TEXT_BODY)
+
+    _quote_panel(
+        slide,
+        9.1,
+        2.05,
+        3.25,
+        3.65,
+        "这个速度，值得认真对待。",
+        "从“能聊天”到“能独立做数值计算科研”",
+    )
+
+
+def _render_process(slide, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    _lead_callout(slide, lead, compact=True)
+    process = rest[:4] or items[:4]
+    left = 0.9
+    top = 2.42
+    width = 11.55
+    gap = width / max(len(process), 1)
+    colors = [SJTU_RED, GOLD, BROWN, TEXT_PRIMARY]
+    for idx, item in enumerate(process, start=1):
+        x = left + (idx - 1) * gap
+        card_w = max(gap - 0.22, 2.25)
+        accent = colors[(idx - 1) % len(colors)]
+        _process_card(slide, x, top, card_w, 1.72, idx, item, accent)
+        if idx < len(process):
+            _arrow(slide, x + card_w + 0.03, top + 0.83, 0.18)
+
+    if len(items) > len(process) + 1:
+        _insight(slide, items[-1], top=5.75)
+
+
+def _lead_callout(slide, text: str, compact: bool = False) -> None:
+    text = text or "核心结论"
+    h = 0.88 if compact else 1.05
+    _round_rect(slide, 0.9, 1.16, 11.55, h, WHITE, border=WARM_GRAY_2, radius=0.04, shadow=True)
+    _rect(slide, 0.9, 1.16, 0.06, h, GOLD)
+    box = slide.shapes.add_textbox(Inches(1.17), Inches(1.28), Inches(10.8), Inches(h - 0.18))
+    frame = box.text_frame
+    frame.word_wrap = True
+    p = frame.paragraphs[0]
+    p.text = _trim(text, 104)
+    _style_paragraph(p, 17 if len(text) < 58 else 14.5, TEXT_PRIMARY, bold=True)
+    p.line_spacing = 1.08
+
+
+def _content_card(slide, left: float, top: float, width: float, height: float, idx: int, text: str) -> None:
+    _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.04, SJTU_RED if idx % 2 else GOLD)
+    _number_badge(slide, left + 0.24, top + 0.23, str(idx), size=0.38, color=SJTU_RED if idx % 2 else GOLD)
+    title, body = _split_key_value(text)
+    title_box = slide.shapes.add_textbox(Inches(left + 0.78), Inches(top + 0.18), Inches(width - 1.08), Inches(0.32))
+    p = title_box.text_frame.paragraphs[0]
+    p.text = title if body else _trim(text, 36)
+    _style_paragraph(p, 13.5, TEXT_PRIMARY, bold=True)
+    if body:
+        body_text = body
+        body_top = top + 0.58
+    else:
+        body_text = text
+        body_top = top + 0.56
+    body_box = slide.shapes.add_textbox(Inches(left + 0.34), Inches(body_top), Inches(width - 0.62), Inches(height - 0.72))
+    body_box.text_frame.word_wrap = True
+    p = body_box.text_frame.paragraphs[0]
+    p.text = _trim(body_text, 90)
+    _style_paragraph(p, 11.5 if len(body_text) > 52 else 12.5, TEXT_BODY)
+    p.line_spacing = 1.15
+
+
+def _fact_card(slide, left: float, top: float, width: float, height: float, label: str, value: str) -> None:
+    _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
+    _rect(slide, left, top, 0.05, height, GOLD)
+    label_box = slide.shapes.add_textbox(Inches(left + 0.23), Inches(top + 0.16), Inches(1.32), Inches(0.26))
+    p = label_box.text_frame.paragraphs[0]
+    p.text = _trim(label, 10)
+    _style_paragraph(p, 10.5, SJTU_RED, bold=True)
+    value_box = slide.shapes.add_textbox(Inches(left + 1.45), Inches(top + 0.14), Inches(width - 1.7), Inches(height - 0.2))
+    value_box.text_frame.word_wrap = True
+    p = value_box.text_frame.paragraphs[0]
+    p.text = _trim(value, 82)
+    _style_paragraph(p, 12.2 if len(value) < 54 else 10.8, TEXT_BODY)
+    p.line_spacing = 1.12
+
+
+def _process_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    idx: int,
+    text: str,
+    accent: str,
+) -> None:
+    _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, accent)
+    _number_badge(slide, left + 0.2, top + 0.22, str(idx), size=0.36, color=accent)
+    title, body = _split_process_text(text)
+    title_box = slide.shapes.add_textbox(Inches(left + 0.65), Inches(top + 0.18), Inches(width - 0.85), Inches(0.48))
+    title_box.text_frame.word_wrap = True
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 20)
+    _style_paragraph(p, 11.5 if len(title) > 12 else 12.5, TEXT_PRIMARY, bold=True)
+    p.line_spacing = 1.0
+    body_box = slide.shapes.add_textbox(Inches(left + 0.24), Inches(top + 0.82), Inches(width - 0.48), Inches(0.62))
+    body_box.text_frame.word_wrap = True
+    p = body_box.text_frame.paragraphs[0]
+    p.text = _trim(body, 60)
+    _style_paragraph(p, 9.6 if len(body) > 34 else 10.4, TEXT_BODY)
+    p.alignment = PP_ALIGN.CENTER
+
+
+def _quote_panel(slide, left: float, top: float, width: float, height: float, title: str, body: str) -> None:
+    _round_rect(slide, left, top, width, height, GOLD_PALE, border=GOLD, radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, SJTU_RED)
+    title_box = slide.shapes.add_textbox(Inches(left + 0.3), Inches(top + 0.38), Inches(width - 0.6), Inches(0.8))
+    title_box.text_frame.word_wrap = True
+    p = title_box.text_frame.paragraphs[0]
+    p.text = title
+    _style_paragraph(p, 20, SJTU_DEEP, bold=True, align=PP_ALIGN.CENTER)
+    body_box = slide.shapes.add_textbox(Inches(left + 0.35), Inches(top + 1.58), Inches(width - 0.7), Inches(1.05))
+    body_box.text_frame.word_wrap = True
+    p = body_box.text_frame.paragraphs[0]
+    p.text = body
+    _style_paragraph(p, 12, TEXT_BODY, align=PP_ALIGN.CENTER)
+
+
+def _insight(slide, text: str, top: float = 6.05) -> None:
+    _round_rect(slide, 0.9, top, 11.55, 0.5, WARM_GRAY_1, border=WARM_GRAY_2, radius=0.045)
+    _rect(slide, 0.9, top, 0.04, 0.5, GOLD)
+    box = slide.shapes.add_textbox(Inches(1.12), Inches(top + 0.08), Inches(11.0), Inches(0.34))
+    p = box.text_frame.paragraphs[0]
+    p.text = _trim(text, 98)
+    _style_paragraph(p, 10.8, TEXT_BODY)
 
 
 def render_footer(slide, page_num: int) -> None:
-    box = slide.shapes.add_textbox(Inches(12.0), Inches(6.9), Inches(0.7), Inches(0.3))
+    box = slide.shapes.add_textbox(Inches(11.85), Inches(6.92), Inches(0.85), Inches(0.28))
     p = box.text_frame.paragraphs[0]
-    p.text = str(page_num)
-    p.font.size = Pt(9)
-    p.font.color.rgb = rgb(TEXT_MAIN)
+    p.text = f"◆  {page_num:02d}"
+    _style_paragraph(p, 9, TEXT_CAPTION)
     p.alignment = PP_ALIGN.RIGHT
+
+
+def _fill_background(slide, color: str) -> None:
+    bg = slide.background.fill
+    bg.solid()
+    bg.fore_color.rgb = rgb(color)
+
+
+def _rect(slide, left: float, top: float, width: float, height: float, fill: str, border: str | None = None):
+    shape = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE,
+        Inches(left),
+        Inches(top),
+        Inches(width),
+        Inches(height),
+    )
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = rgb(fill)
+    if border:
+        shape.line.color.rgb = rgb(border)
+        shape.line.width = Pt(0.6)
+    else:
+        shape.line.fill.background()
+    shape.shadow.inherit = False
+    return shape
+
+
+def _round_rect(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    fill: str,
+    border: str | None = None,
+    radius: float = 0.045,
+    shadow: bool = False,
+):
+    shape = slide.shapes.add_shape(
+        MSO_SHAPE.ROUNDED_RECTANGLE,
+        Inches(left),
+        Inches(top),
+        Inches(width),
+        Inches(height),
+    )
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = rgb(fill)
+    if border:
+        shape.line.color.rgb = rgb(border)
+        shape.line.width = Pt(0.55)
+    else:
+        shape.line.fill.background()
+    shape.shadow.inherit = False
+    try:
+        shape.adjustments[0] = radius
+    except (IndexError, TypeError):
+        pass
+    if shadow:
+        _add_shadow(shape)
+    return shape
+
+
+def _number_badge(
+    slide,
+    left: float,
+    top: float,
+    text: str,
+    size: float = 0.36,
+    color: str = SJTU_RED,
+):
+    shape = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(left), Inches(top), Inches(size), Inches(size))
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = rgb(color)
+    shape.line.fill.background()
+    shape.shadow.inherit = False
+    _shape_text(shape, text, 10, WHITE, bold=True, align=PP_ALIGN.CENTER)
+    return shape
+
+
+def _arrow(slide, left: float, top: float, size: float) -> None:
+    shape = slide.shapes.add_shape(MSO_SHAPE.RIGHT_TRIANGLE, Inches(left), Inches(top), Inches(size), Inches(size))
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = rgb(GOLD)
+    shape.line.fill.background()
+    shape.shadow.inherit = False
+
+
+def _decorative_rule(slide, left: float, top: float, width: float) -> None:
+    _rect(slide, left, top, width, 0.018, GOLD)
+    diamond = slide.shapes.add_shape(
+        MSO_SHAPE.DIAMOND,
+        Inches(left + width + 0.1),
+        Inches(top - 0.035),
+        Inches(0.09),
+        Inches(0.09),
+    )
+    diamond.fill.solid()
+    diamond.fill.fore_color.rgb = rgb(GOLD)
+    diamond.line.fill.background()
+
+
+def _section_label(slide, label: str, subtitle: str) -> None:
+    pill = _round_rect(slide, 0.9, 1.1, 1.35, 0.34, SJTU_RED, radius=0.14)
+    _shape_text(pill, label, 10, WHITE, bold=True, align=PP_ALIGN.CENTER)
+    box = slide.shapes.add_textbox(Inches(2.45), Inches(1.08), Inches(6.8), Inches(0.38))
+    p = box.text_frame.paragraphs[0]
+    p.text = subtitle
+    _style_paragraph(p, 12.2, TEXT_CAPTION)
+
+
+def _shape_text(shape, text: str, size: float, color: str, bold: bool = False, align=PP_ALIGN.LEFT):
+    frame = shape.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    frame.margin_left = Pt(4)
+    frame.margin_right = Pt(4)
+    frame.margin_top = Pt(2)
+    frame.margin_bottom = Pt(2)
+    p = frame.paragraphs[0]
+    p.text = text
+    _style_paragraph(p, size, color, bold=bold, align=align)
+    return p
+
+
+def _style_paragraph(p, size: float, color: str, bold: bool = False, align=PP_ALIGN.LEFT) -> None:
+    p.font.name = FONT
+    p.font.size = Pt(size)
+    p.font.bold = bold
+    p.font.color.rgb = rgb(color)
+    p.alignment = align
+    for run in p.runs:
+        run.font.name = FONT
+        run.font.size = Pt(size)
+        run.font.bold = bold
+        run.font.color.rgb = rgb(color)
+        _set_ea(run)
+
+
+def _set_ea(run) -> None:
+    r_pr = run._r.get_or_add_rPr()
+    ea = r_pr.find(qn("a:ea"))
+    if ea is None:
+        ea = r_pr.makeelement(qn("a:ea"), {})
+        r_pr.append(ea)
+    ea.set("typeface", FONT)
+
+
+def _add_shadow(shape) -> None:
+    sp_pr = shape._element.spPr
+    effect_lst = sp_pr.find(qn("a:effectLst"))
+    if effect_lst is None:
+        effect_lst = sp_pr.makeelement(qn("a:effectLst"), {})
+        sp_pr.append(effect_lst)
+    else:
+        for child in list(effect_lst):
+            effect_lst.remove(child)
+    outer = sp_pr.makeelement(qn("a:outerShdw"), {})
+    outer.set("blurRad", "63500")
+    outer.set("dist", "19050")
+    outer.set("dir", "5400000")
+    outer.set("rotWithShape", "0")
+    color = sp_pr.makeelement(qn("a:srgbClr"), {})
+    color.set("val", SJTU_DEEP)
+    alpha = sp_pr.makeelement(qn("a:alpha"), {})
+    alpha.set("val", "9000")
+    color.append(alpha)
+    outer.append(color)
+    effect_lst.append(outer)
+
+
+def _clean_items(items: list[str]) -> list[str]:
+    cleaned: list[str] = []
+    for item in items:
+        text = item.strip()
+        if not text or TABLE_RULE_RE.match(text):
+            continue
+        if text in {"| | |", "|---|---|"}:
+            continue
+        text = re.sub(r"\s+", " ", text)
+        text = text.strip(" -•")
+        if text and text not in cleaned:
+            cleaned.append(text)
+    return cleaned[:6]
+
+
+def _split_lead(items: list[str]) -> tuple[str, list[str]]:
+    if not items:
+        return "", []
+    first = items[0]
+    if len(items) == 1:
+        return first, []
+    if _split_key_value(first)[1] and not DATE_RE.search(first):
+        return "", items
+    return first, items[1:]
+
+
+def _split_key_value(text: str) -> tuple[str, str]:
+    match = KEY_VALUE_RE.match(text)
+    if match:
+        return match.group(1).strip(), match.group(2).strip()
+    if " / " in text:
+        head, _, tail = text.partition(" / ")
+        if len(head) <= 16:
+            return head.strip(), tail.strip()
+    return _trim(text, 28), ""
+
+
+def _split_date(text: str) -> tuple[str, str]:
+    match = re.match(r"^([20]\d{3}[./-]\d{1,2}[./-]\d{1,2}|20\d{2}\s*年|三年前|上周)\s*[—\-:：]?\s*(.+)$", text)
+    if match:
+        return match.group(1), match.group(2).strip(" ，,")
+    return "", text
+
+
+def _looks_like_timeline(items: list[str]) -> bool:
+    return sum(1 for item in items if DATE_RE.search(item)) >= 2
+
+
+def _looks_like_fact_grid(items: list[str]) -> bool:
+    candidates = items
+    if items:
+        label, value = _split_key_value(items[0])
+        if value and len(label) >= 8:
+            candidates = items[1:]
+    return sum(1 for item in candidates if _split_key_value(item)[1]) >= 3
+
+
+def _looks_like_process(title: str, items: list[str]) -> bool:
+    joined = " ".join(items[:5])
+    return (
+        "怎么工作" in title
+        or "流程" in title
+        or "Loop" in joined
+        or joined.count("→") >= 2
+        or joined.count("->") >= 2
+    )
+
+
+def _split_process_text(text: str) -> tuple[str, str]:
+    title, body = _split_key_value(text)
+    if body:
+        return title, body
+    arrow = "→" if "→" in text else "->" if "->" in text else ""
+    if arrow:
+        parts = [part.strip() for part in text.split(arrow) if part.strip()]
+        if len(parts) >= 2:
+            return parts[0], " → ".join(parts[1:])
+    return _trim(text, 20), text
+
+
+def _title_size(title: str) -> float:
+    if len(title) <= 18:
+        return 20
+    if len(title) <= 28:
+        return 18
+    return 16
+
+
+def _trim(text: str, limit: int) -> str:
+    text = text.strip()
+    if len(text) <= limit:
+        return text
+    return text[: max(0, limit - 1)].rstrip() + "…"

@@ -88,6 +88,26 @@ def test_outline_limits_toc_to_valid_bullet_count() -> None:
     assert validate_deck(deck) == []
 
 
+def test_explicit_page_outline_prefers_document_title_over_job_label() -> None:
+    deck = outline_to_deck(
+        """# 正式报告标题
+
+## 第 1 页 · 封面
+
+**正式报告标题**
+
+## 第 2 页 · 内容
+
+- 要点
+""",
+        title="AIPPT Demo",
+    )
+
+    assert deck.title == "正式报告标题"
+    assert deck.slides[0].title == "正式报告标题"
+    assert validate_deck(deck) == []
+
+
 def test_explicit_page_outline_ignores_planning_notes_and_speaker_notes() -> None:
     deck = outline_to_deck(
         """# AI × 计算材料科研：2026 年春，你需要知道的事

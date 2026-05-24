@@ -25,7 +25,8 @@ class ParsedOutline:
 
 def outline_to_deck(markdown: str, title: str | None = None, author: str = "") -> Deck:
     parsed = _parse_sections(markdown)
-    deck_title = _clip(title or parsed.deck_title or "Untitled Deck", 120)
+    title_source = (parsed.deck_title or title) if parsed.explicit_pages else (title or parsed.deck_title)
+    deck_title = _clip(title_source or "Untitled Deck", 120)
     subtitle = _cover_subtitle(parsed.cover_notes) or "AI-generated draft"
 
     slides = [
