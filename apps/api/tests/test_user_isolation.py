@@ -51,9 +51,10 @@ def register(client: TestClient, email: str) -> dict:
 def test_root_redirect_respects_proxy_root_path(app_context) -> None:
     app, _tmp_path = app_context
     with TestClient(app, root_path="/ppt") as client:
-        response = client.get("/", follow_redirects=False)
-        assert response.status_code == 307
-        assert response.headers["location"] == "/ppt/docs"
+        response = client.get("/")
+        assert response.status_code == 200
+        assert 'data-root-path="/ppt"' in response.text
+        assert "AI PPT 生成工作台" in response.text
 
 
 def test_users_only_see_their_own_decks(app_context) -> None:
@@ -90,6 +91,34 @@ def test_jaccount_dev_login_creates_session(app_context) -> None:
         assert payload["jaccount"] == "alice"
         assert payload["display_name"] == "开发用户 alice"
         assert payload["user_type"] == "student"
+
+
+def test_password_auth_is_disabled_in_production(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AIPPT_APP_ENV", "production")
+    monkeypatch.setenv("AIPPT_DATABASE_URL", f"sqlite:///{tmp_path / 'prod-auth.db'}")
+    get_settings.cache_clear()
+    reset_engine()
+
+    try:
+        with TestClient(create_app()) as client:
+            register_response = client.post(
+                "/api/auth/register",
+                json={
+                    "email": "prod@example.com",
+                    "password": "password-123",
+                    "display_name": "prod",
+                },
+            )
+            assert register_response.status_code == 404
+
+            login_response = client.post(
+                "/api/auth/login",
+                json={"email": "prod@example.com", "password": "password-123"},
+            )
+            assert login_response.status_code == 404
+    finally:
+        reset_engine()
+        get_settings.cache_clear()
 
 
 def test_jaccount_login_redirect_sets_signed_state(app_context) -> None:
@@ -260,8 +289,9 @@ def test_job_creation_materializes_owner_scoped_workspace(app_context) -> None:
 
 def test_worker_run_once_builds_pptx_and_records_artifacts(app_context) -> None:
     app, tmp_path = app_context
-    with TestClient(app) as alice:
+    with TestClient(app) as alice, TestClient(app) as bob:
         register(alice, "alice@example.com")
+        register(bob, "bob@example.com")
         deck_response = alice.post(
             "/api/decks",
             json={
@@ -276,21 +306,36 @@ def test_worker_run_once_builds_pptx_and_records_artifacts(app_context) -> None:
         assert job_response.status_code == 201
         job_id = job_response.json()["id"]
 
-    with Session(get_engine()) as session:
-        job = run_next_job(session, get_settings())
-        assert job is not None
-        assert str(job.id) == job_id
-        assert job.status == JobStatus.SUCCEEDED
+        with Session(get_engine()) as session:
+            job = run_next_job(session, get_settings())
+            assert job is not None
+            assert str(job.id) == job_id
+            assert job.status == JobStatus.SUCCEEDED
 
-        deck = session.get(DeckSession, UUID(deck_id))
-        assert deck is not None
-        assert deck.status == DeckStatus.READY
+            deck = session.get(DeckSession, UUID(deck_id))
+            assert deck is not None
+            assert deck.status == DeckStatus.READY
 
-        assets = session.exec(
-            select(FileAsset).where(FileAsset.deck_session_id == deck.id)
-        ).all()
-        kinds = {asset.kind for asset in assets}
-        assert {FileKind.DECK_IR, FileKind.PPTX, FileKind.LOG}.issubset(kinds)
+            assets = session.exec(
+                select(FileAsset).where(FileAsset.deck_session_id == deck.id)
+            ).all()
+            kinds = {asset.kind for asset in assets}
+            assert {FileKind.DECK_IR, FileKind.PPTX, FileKind.LOG}.issubset(kinds)
+
+        files_response = alice.get(f"/api/files/decks/{deck_id}")
+        assert files_response.status_code == 200
+        files = files_response.json()
+        pptx_file = next(file for file in files if file["kind"] == "pptx")
+
+        download_response = alice.get(f"/api/files/{pptx_file['id']}/download")
+        assert download_response.status_code == 200
+        assert download_response.headers["content-type"] == (
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+        assert download_response.content.startswith(b"PK")
+
+        assert bob.get(f"/api/files/decks/{deck_id}").status_code == 404
+        assert bob.get(f"/api/files/{pptx_file['id']}/download").status_code == 404
 
     job_workspace = next((tmp_path / "jobs").glob(f"*/{job_id}"))
     assert (job_workspace / "ir" / "deck.json").is_file()

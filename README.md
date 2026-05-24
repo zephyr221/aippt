@@ -48,6 +48,9 @@ Public campus route:
 https://ai4edu.sjtu.edu.cn/ppt/
 ```
 
+The route serves the first thin workbench for jAccount login, deck creation,
+job submission, status refresh, and authenticated PPTX downloads.
+
 The current development server is available through:
 
 ```bash

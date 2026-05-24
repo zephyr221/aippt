@@ -1,4 +1,5 @@
 import argparse
+import time
 from uuid import UUID
 
 from sqlmodel import Session
@@ -14,13 +15,25 @@ def main() -> None:
 
     run_once = sub.add_parser("run-once")
     run_once.add_argument("--job-id", default=None)
+    loop = sub.add_parser("loop")
+    loop.add_argument("--sleep-seconds", type=float, default=5.0)
 
     args = parser.parse_args()
     settings = get_settings()
     create_db_and_tables()
 
+    if args.command == "loop":
+        while True:
+            with Session(get_engine()) as session:
+                job = run_next_job(session, settings)
+            if job is not None:
+                print(f"{job.id} {job.status}", flush=True)
+                continue
+            time.sleep(args.sleep_seconds)
+        return
+
     with Session(get_engine()) as session:
-        if args.command == "run-once" and args.job_id:
+        if args.job_id:
             job = run_job(session, settings, UUID(args.job_id))
         else:
             job = run_next_job(session, settings)

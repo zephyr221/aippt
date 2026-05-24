@@ -128,6 +128,14 @@ Needed API surfaces:
 - Job detail by id, still scoped to the logged-in user.
 - Authenticated artifact download endpoints.
 
+Current thin slice:
+
+- `/ppt/` serves a small server-rendered workbench from the API app.
+- It is intentionally narrow: jAccount login, deck creation, job submission,
+  status refresh, and PPTX download.
+- When the UI expands beyond this first workflow, split the workbench into a
+  dedicated frontend package following the module map above.
+
 ## Verification Checklist
 
 For any UI change:

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
-from .models import DeckStatus, JobStatus, JobType
+from .models import DeckStatus, FileKind, JobStatus, JobType
 
 
 class UserCreate(BaseModel):
@@ -64,3 +64,12 @@ class JobRead(BaseModel):
     error_message: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class FileRead(BaseModel):
+    id: UUID
+    deck_session_id: UUID
+    owner_user_id: UUID
+    kind: FileKind
+    content_type: str
+    created_at: datetime

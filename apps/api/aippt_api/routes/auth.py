@@ -92,6 +92,7 @@ def register(
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> User:
+    _require_local_password_auth(settings)
     email = payload.email.lower()
     if get_user_by_email(session, email):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
@@ -115,6 +116,7 @@ def login(
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> User:
+    _require_local_password_auth(settings)
     user = get_user_by_email(session, payload.email.lower())
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
@@ -255,3 +257,11 @@ def logout_redirect(settings: Settings = Depends(get_settings)) -> RedirectRespo
 @router.get("/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
+
+
+def _require_local_password_auth(settings: Settings) -> None:
+    if settings.app_env == "production":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Password auth is disabled",
+        )

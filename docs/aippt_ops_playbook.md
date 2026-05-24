@@ -73,6 +73,7 @@ Runtime units:
 
 ```bash
 ssh aippt 'systemctl status aippt-api'
+ssh aippt 'systemctl status aippt-worker'
 ssh pj2-ext 'systemctl status aippt-pj2-tunnel'
 ssh pj2-ext 'nginx -t'
 ```
@@ -81,6 +82,7 @@ Config files:
 
 ```text
 aippt:/etc/systemd/system/aippt-api.service
+aippt:/etc/systemd/system/aippt-worker.service
 pj2-ext:/etc/systemd/system/aippt-pj2-tunnel.service
 pj2-ext:/etc/nginx/snippets/aippt-ppt-location.conf
 pj2-ext:/etc/nginx/sites-enabled/ai4edu
@@ -92,6 +94,12 @@ Health checks:
 curl -sS https://ai4edu.sjtu.edu.cn/ppt/health
 curl -I https://ai4edu.sjtu.edu.cn/ppt/docs
 ```
+
+The public root `/ppt/` serves the first thin workbench UI. It uses the same
+cookie-authenticated API surface as the docs: jAccount login, deck creation, job
+submission, status polling, and authenticated PPTX downloads. The worker unit
+runs `aippt-worker loop --sleep-seconds 3`, so queued web jobs are picked up
+without a manual `run-once`.
 
 ## Git Remotes
 
@@ -145,6 +153,8 @@ Operational rules:
 - Every resource query filters by both id and `owner_user_id`.
 - Production authentication uses SJTU jAccount; keep
   `AIPPT_DEV_ALLOW_FAKE_LOGIN=false` and `AIPPT_APP_ENV=production` on servers.
+- Password register/login routes are disabled when `AIPPT_APP_ENV=production`;
+  keep them as local scaffolding only.
 - The current campus setup reuses the jAccount OAuth client from
   `/opt/aistudy/.env` on `pj2-ext`. Map its client id/secret/redirect URI/scope
   into `/srv/aippt/env/aippt.env` as `AIPPT_JACCOUNT_*`; never commit the copied
@@ -167,5 +177,5 @@ The next stable milestone is an end-to-end local job loop:
    logs, and worker instructions.
 4. Let the worker build or repair Deck IR and write authenticated artifacts.
 
-The deterministic `run-once` loop now covers this path for `build_pptx` jobs.
-The next backend step is authenticated artifact download endpoints.
+The deterministic worker loop and authenticated artifact download endpoints now
+cover this path for `build_pptx` jobs.

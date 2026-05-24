@@ -1,0 +1,18 @@
+[Unit]
+Description=AIPPT background worker
+After=network-online.target aippt-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/srv/aippt/app/api
+EnvironmentFile=/srv/aippt/env/aippt.env
+ExecStart=/srv/aippt/venvs/api/bin/aippt-worker loop --sleep-seconds 3
+Restart=always
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

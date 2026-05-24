@@ -20,8 +20,9 @@ On the campus deployment these API routes are published under
 GET /ppt/api/auth/jaccount/login?next=/ppt/docs
 ```
 
-The legacy password register/login routes still exist for early local testing,
-but product UI should use jAccount.
+The legacy password register/login routes are development-only scaffolding. In
+production (`AIPPT_APP_ENV=production`) they return 404; product UI uses
+jAccount.
 
 ## OAuth Flow
 

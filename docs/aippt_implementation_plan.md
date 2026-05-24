@@ -44,18 +44,20 @@ expose that path.
 
 - Planner creates Markdown outline and Deck IR.
 - Worker creates isolated job workspaces.
-- Worker run-once loop claims one queued job, writes Deck IR, builds PPTX, and
-  records internal artifacts.
+- Worker loop claims queued jobs, writes Deck IR, builds PPTX, and records
+  internal artifacts. `run-once` remains available for debugging.
 - Hermes operates only inside the current job workspace.
 - Worker can repair IR and rerun builder on validation/build failures.
 
 ## Phase 4: Web UI
 
-- Login/register.
+- jAccount login.
 - Deck list scoped to the current user.
 - Markdown outline editor.
 - Generate PPTX button and job progress view.
 - Download through authenticated API only.
+- The first thin workbench is live at `/ppt/`; future work should split it into
+  structured frontend modules once interaction complexity grows.
 - Follow the owner map in `docs/aippt_frontend_plan.md` before adding shared
   components or page CSS.
 
