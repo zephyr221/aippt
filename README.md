@@ -26,6 +26,7 @@ ops/               Server bootstrap and operational scripts
 Useful starting docs:
 
 - [Architecture](docs/aippt_architecture.md)
+- [Authentication](docs/aippt_auth.md)
 - [Implementation plan](docs/aippt_implementation_plan.md)
 - [Frontend plan](docs/aippt_frontend_plan.md)
 - [Operations playbook](docs/aippt_ops_playbook.md)

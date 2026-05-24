@@ -19,8 +19,13 @@ class UserLogin(BaseModel):
 
 class UserRead(BaseModel):
     id: UUID
+    jaccount: str | None
+    code: str
     email: EmailStr
     display_name: str
+    affiliation: str
+    user_type: str
+    last_login_at: datetime | None
     created_at: datetime
 
 

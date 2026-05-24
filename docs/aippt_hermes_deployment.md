@@ -111,3 +111,14 @@ vi /srv/aippt/env/aippt.env
 ```
 
 不要把真实密钥提交到仓库。
+
+jAccount 生产配置至少包括：
+
+```bash
+AIPPT_APP_ENV=production
+AIPPT_SESSION_SECRET=...
+AIPPT_SECURE_COOKIES=true
+AIPPT_JACCOUNT_CLIENT_ID=...
+AIPPT_JACCOUNT_CLIENT_SECRET=...
+AIPPT_JACCOUNT_REDIRECT_URI=https://your-domain.example/api/auth/jaccount/callback
+```

@@ -7,8 +7,10 @@ operate on their own decks, jobs, files, and logs.
 
 ## Phase 1: Product Backbone
 
-- API service with users, sessions, deck sessions, jobs, and file assets.
+- API service with jAccount users, sessions, deck sessions, jobs, and file assets.
 - Strict owner-based authorization on every query.
+- Production auth uses SJTU jAccount OAuth2; password auth is only temporary
+  local scaffolding.
 - SQLite for local development, Postgres-ready schema decisions.
 - Job workspace manifest convention:
 

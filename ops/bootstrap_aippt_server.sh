@@ -78,8 +78,16 @@ cat > "$APP_ROOT/env/aippt.env.example" <<'EOF'
 NOUS_API_KEY=
 OPENAI_API_KEY=
 AIPPT_ROOT=/srv/aippt
-AIPPT_JOBS_DIR=/srv/aippt/jobs
-AIPPT_BUILDER_PYTHON=/srv/aippt/venvs/ppt-builder/bin/python
+AIPPT_APP_ENV=production
+AIPPT_DATABASE_URL=sqlite:////srv/aippt/app/api/aippt.db
+AIPPT_SESSION_SECRET=replace-with-a-long-random-secret
+AIPPT_SECURE_COOKIES=true
+AIPPT_JOBS_ROOT=/srv/aippt/jobs
+AIPPT_BUILDER_COMMAND=/srv/aippt/venvs/ppt-builder/bin/aippt-build
+AIPPT_JACCOUNT_CLIENT_ID=
+AIPPT_JACCOUNT_CLIENT_SECRET=
+AIPPT_JACCOUNT_REDIRECT_URI=https://your-domain.example/api/auth/jaccount/callback
+AIPPT_JACCOUNT_SCOPE=basic
 HERMES_AGENT_DIR=/srv/aippt/vendor/hermes-agent
 EOF
 

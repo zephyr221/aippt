@@ -2,10 +2,13 @@ import json
 import os
 import sys
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 from uuid import UUID
 
 import pytest
+import httpx
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
 from sqlmodel import Session, select
 
 from aippt_api.config import get_settings
@@ -19,6 +22,12 @@ from aippt_api.services.job_runner import run_next_job
 def app_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AIPPT_DATABASE_URL", f"sqlite:///{tmp_path / 'aippt-test.db'}")
     monkeypatch.setenv("AIPPT_JOBS_ROOT", str(tmp_path / "jobs"))
+    monkeypatch.setenv("AIPPT_JACCOUNT_CLIENT_ID", "test-client")
+    monkeypatch.setenv("AIPPT_JACCOUNT_CLIENT_SECRET", "test-secret")
+    monkeypatch.setenv(
+        "AIPPT_JACCOUNT_REDIRECT_URI",
+        "http://testserver/api/auth/jaccount/callback",
+    )
     monkeypatch.setenv(
         "AIPPT_BUILDER_COMMAND",
         os.environ.get("AIPPT_BUILDER_COMMAND", f"{sys.executable} -m aippt_builder.cli"),
@@ -55,6 +64,141 @@ def test_users_only_see_their_own_decks(app_context) -> None:
 
         bob_get = bob.get(f"/api/decks/{deck_id}")
         assert bob_get.status_code == 404
+
+
+def test_jaccount_dev_login_creates_session(app_context) -> None:
+    app, _tmp_path = app_context
+    with TestClient(app) as client:
+        response = client.get(
+            "/api/auth/jaccount/login?dev_login=alice&next=/decks",
+            follow_redirects=False,
+        )
+        assert response.status_code == 302
+        assert response.headers["location"] == "/decks"
+
+        me = client.get("/api/auth/me")
+        assert me.status_code == 200
+        payload = me.json()
+        assert payload["jaccount"] == "alice"
+        assert payload["display_name"] == "开发用户 alice"
+        assert payload["user_type"] == "student"
+
+
+def test_jaccount_login_redirect_sets_signed_state(app_context) -> None:
+    app, _tmp_path = app_context
+    with TestClient(app) as client:
+        response = client.get("/api/auth/jaccount/login?next=/decks", follow_redirects=False)
+        assert response.status_code == 302
+        location = response.headers["location"]
+        parsed = urlparse(location)
+        query = parse_qs(parsed.query)
+
+        assert location.startswith("https://jaccount.sjtu.edu.cn/oauth2/authorize?")
+        assert query["client_id"] == ["test-client"]
+        assert query["redirect_uri"] == ["http://testserver/api/auth/jaccount/callback"]
+        assert query["scope"] == ["basic"]
+        assert query["response_type"] == ["code"]
+        assert query["state"][0]
+        assert "aippt_oauth_state" in client.cookies
+
+
+def test_jaccount_callback_upserts_profile_user(app_context, monkeypatch: pytest.MonkeyPatch) -> None:
+    app, _tmp_path = app_context
+
+    class FakeJaccountClient:
+        def __init__(self, timeout: int) -> None:
+            self.timeout = timeout
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args) -> None:
+            return None
+
+        def post(self, _url: str, *, data: dict, headers: dict) -> httpx.Response:
+            assert data["code"] == "abc"
+            assert data["client_id"] == "test-client"
+            assert headers["Accept"] == "application/json"
+            return httpx.Response(200, json={"access_token": "token-123"})
+
+        def get(self, _url: str, *, headers: dict) -> httpx.Response:
+            assert headers["Authorization"] == "Bearer token-123"
+            return httpx.Response(
+                200,
+                json={
+                    "errno": 0,
+                    "entities": [
+                        {
+                            "account": "moran",
+                            "code": "001",
+                            "name": "Moran",
+                            "email": "moran@sjtu.edu.cn",
+                            "userType": "faculty",
+                            "organize": {"name": "SJTU"},
+                        }
+                    ],
+                },
+            )
+
+    monkeypatch.setattr("aippt_api.routes.auth.httpx.Client", FakeJaccountClient)
+
+    with TestClient(app) as client:
+        login_response = client.get("/api/auth/jaccount/login?next=/decks", follow_redirects=False)
+        state = parse_qs(urlparse(login_response.headers["location"]).query)["state"][0]
+
+        callback_response = client.get(
+            f"/api/auth/jaccount/callback?code=abc&state={state}",
+            follow_redirects=False,
+        )
+        assert callback_response.status_code == 302
+        assert callback_response.headers["location"] == "/decks"
+
+        me = client.get("/api/auth/me")
+        assert me.status_code == 200
+        assert me.json()["jaccount"] == "moran"
+        assert me.json()["display_name"] == "Moran"
+        assert me.json()["affiliation"] == "SJTU"
+        assert me.json()["user_type"] == "faculty"
+
+
+def test_existing_sqlite_user_table_gets_jaccount_columns(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    database_url = f"sqlite:///{tmp_path / 'legacy.db'}"
+    legacy_engine = create_engine(database_url)
+    with legacy_engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE "user" (
+                    id CHAR(32) NOT NULL PRIMARY KEY,
+                    email VARCHAR NOT NULL,
+                    display_name VARCHAR NOT NULL,
+                    password_hash VARCHAR NOT NULL,
+                    created_at DATETIME NOT NULL
+                )
+                """
+            )
+        )
+        connection.execute(text('CREATE UNIQUE INDEX ix_user_email ON "user" (email)'))
+
+    monkeypatch.setenv("AIPPT_DATABASE_URL", database_url)
+    get_settings.cache_clear()
+    reset_engine()
+
+    try:
+        with TestClient(create_app()) as client:
+            response = client.get(
+                "/api/auth/jaccount/login?dev_login=legacy&next=/decks",
+                follow_redirects=False,
+            )
+            assert response.status_code == 302
+            assert response.headers["location"] == "/decks"
+
+            me = client.get("/api/auth/me")
+            assert me.status_code == 200
+            assert me.json()["jaccount"] == "legacy"
+    finally:
+        reset_engine()
+        get_settings.cache_clear()
 
 
 def test_job_creation_materializes_owner_scoped_workspace(app_context) -> None:

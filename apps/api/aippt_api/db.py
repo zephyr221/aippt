@@ -1,5 +1,6 @@
 from collections.abc import Generator
 
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -26,7 +27,33 @@ def get_engine() -> Engine:
 
 
 def create_db_and_tables() -> None:
-    SQLModel.metadata.create_all(get_engine())
+    engine = get_engine()
+    SQLModel.metadata.create_all(engine)
+    _migrate_sqlite_user_table(engine)
+
+
+def _migrate_sqlite_user_table(engine: Engine) -> None:
+    if engine.dialect.name != "sqlite":
+        return
+
+    inspector = inspect(engine)
+    if "user" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("user")}
+    additions = {
+        "jaccount": "VARCHAR(64)",
+        "code": "VARCHAR(32) NOT NULL DEFAULT ''",
+        "affiliation": "VARCHAR NOT NULL DEFAULT ''",
+        "user_type": "VARCHAR NOT NULL DEFAULT ''",
+        "last_login_at": "DATETIME",
+    }
+
+    with engine.begin() as connection:
+        for column_name, column_type in additions.items():
+            if column_name not in existing_columns:
+                connection.execute(text(f'ALTER TABLE "user" ADD COLUMN {column_name} {column_type}'))
+        connection.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS ix_user_jaccount ON "user" (jaccount)'))
 
 
 def get_session() -> Generator[Session, None, None]:

@@ -41,9 +41,14 @@ class FileKind(StrEnum):
 
 class User(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
+    jaccount: str | None = Field(default=None, index=True, unique=True, max_length=64)
+    code: str = Field(default="", max_length=32)
     email: str = Field(index=True, unique=True)
     display_name: str
-    password_hash: str
+    password_hash: str = ""
+    affiliation: str = ""
+    user_type: str = ""
+    last_login_at: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
     decks: list["DeckSession"] = Relationship(back_populates="owner")

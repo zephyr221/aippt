@@ -14,6 +14,7 @@ tokens; page-specific layout belongs to that page.
 AIPPT is a logged-in workbench, not a marketing site. The first screen after
 login should help a user continue or create PPT work quickly:
 
+- Production login uses SJTU jAccount.
 - Deck list scoped to the current user.
 - Recent job status and generated artifacts.
 - Clear entry point for a new PPT request.
@@ -29,6 +30,10 @@ login should help a user continue or create PPT work quickly:
                      focused job progress and logs
 /settings            account and model/runtime preferences
 ```
+
+`/login` should point users to `/api/auth/jaccount/login`; local development may
+offer a small fake-login switch that calls `?dev_login=...`, but production UI
+must not expose fake login.
 
 ## Owner Map
 
