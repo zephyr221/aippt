@@ -25,6 +25,7 @@ CONTENT_TOP_IN = 1.12
 CONTENT_BOTTOM_IN = 6.63
 CONTENT_W_IN = SLIDE_W_IN - MARGIN_IN * 2
 FONT = "Microsoft YaHei"
+MATH_FONT = "Cambria Math"
 TEXT_PRIMARY = "1A1A2E"
 TEXT_BODY = "3D3D4E"
 TEXT_CAPTION = "6B7280"
@@ -36,6 +37,23 @@ OFF_WHITE = "FAFAFB"
 DATE_RE = re.compile(r"(?:20\d{2}[./-]\d{1,2}[./-]\d{1,2}|20\d{2}\s*年|三年前|上周)")
 TABLE_RULE_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
 KEY_VALUE_RE = re.compile(r"^([^：:]{1,14})[：:]\s*(.+)$")
+FORMULA_RE = re.compile(r"(\$[^$]+\$|\\\(|\\\[|[=∑∫√≤≥≈θλμσᵢŷ])")
+LATEX_REPLACEMENTS = {
+    r"\theta": "θ",
+    r"\lambda": "λ",
+    r"\mu": "μ",
+    r"\sigma": "σ",
+    r"\alpha": "α",
+    r"\beta": "β",
+    r"\hat{y}": "ŷ",
+    r"\sum": "∑",
+    r"\sqrt": "√",
+    r"\le": "≤",
+    r"\ge": "≥",
+    r"\approx": "≈",
+    r"\times": "×",
+    r"\cdot": "·",
+}
 
 
 def rgb(hex_color: str) -> RGBColor:
@@ -241,7 +259,10 @@ def _render_timeline(slide, items: list[str]) -> None:
 def _render_process(slide, items: list[str]) -> None:
     lead, rest = _split_lead(items)
     _lead_callout(slide, lead, compact=True)
-    process = rest[:4] or items[:4]
+    formula_items = [item for item in rest if _is_formula_item(item)]
+    non_formula_items = [item for item in rest if item not in formula_items]
+    process = non_formula_items[:3] if formula_items else non_formula_items[:4]
+    process = process or items[:4]
     left = 0.9
     top = 2.42
     width = 11.55
@@ -254,6 +275,10 @@ def _render_process(slide, items: list[str]) -> None:
         _process_card(slide, x, top, card_w, 1.72, idx, item, accent)
         if idx < len(process):
             _arrow(slide, x + card_w + 0.03, top + 0.83, 0.18)
+
+    if formula_items:
+        _formula_panel(slide, _normalize_formula_text(formula_items[0]), top=4.72)
+        return
 
     if len(items) > len(process) + 1:
         _insight(slide, items[-1], top=5.75)
@@ -291,8 +316,12 @@ def _content_card(slide, left: float, top: float, width: float, height: float, i
     body_box = slide.shapes.add_textbox(Inches(left + 0.34), Inches(body_top), Inches(width - 0.62), Inches(height - 0.72))
     body_box.text_frame.word_wrap = True
     p = body_box.text_frame.paragraphs[0]
-    p.text = _trim(body_text, 90)
-    _style_paragraph(p, 11.5 if len(body_text) > 52 else 12.5, TEXT_BODY)
+    body_text = _normalize_formula_text(body_text)
+    p.text = _trim(body_text, 96)
+    if _looks_like_formula_text(body_text):
+        _style_paragraph(p, 14 if len(body_text) <= 58 else 12.2, TEXT_BODY, font_name=MATH_FONT)
+    else:
+        _style_paragraph(p, 11.5 if len(body_text) > 52 else 12.5, TEXT_BODY)
     p.line_spacing = 1.15
 
 
@@ -306,8 +335,12 @@ def _fact_card(slide, left: float, top: float, width: float, height: float, labe
     value_box = slide.shapes.add_textbox(Inches(left + 1.45), Inches(top + 0.14), Inches(width - 1.7), Inches(height - 0.2))
     value_box.text_frame.word_wrap = True
     p = value_box.text_frame.paragraphs[0]
-    p.text = _trim(value, 82)
-    _style_paragraph(p, 12.2 if len(value) < 54 else 10.8, TEXT_BODY)
+    value = _normalize_formula_text(value)
+    p.text = _trim(value, 92)
+    if _looks_like_formula_text(value):
+        _style_paragraph(p, 12.6 if len(value) < 58 else 10.8, TEXT_BODY, font_name=MATH_FONT)
+    else:
+        _style_paragraph(p, 12.2 if len(value) < 54 else 10.8, TEXT_BODY)
     p.line_spacing = 1.12
 
 
@@ -334,8 +367,12 @@ def _process_card(
     body_box = slide.shapes.add_textbox(Inches(left + 0.24), Inches(top + 0.82), Inches(width - 0.48), Inches(0.62))
     body_box.text_frame.word_wrap = True
     p = body_box.text_frame.paragraphs[0]
-    p.text = _trim(body, 60)
-    _style_paragraph(p, 9.6 if len(body) > 34 else 10.4, TEXT_BODY)
+    body = _normalize_formula_text(body)
+    p.text = _trim(body, 68)
+    if _looks_like_formula_text(body):
+        _style_paragraph(p, 11.4 if len(body) <= 44 else 9.8, TEXT_BODY, font_name=MATH_FONT)
+    else:
+        _style_paragraph(p, 9.6 if len(body) > 34 else 10.4, TEXT_BODY)
     p.alignment = PP_ALIGN.CENTER
 
 
@@ -361,6 +398,23 @@ def _insight(slide, text: str, top: float = 6.05) -> None:
     p = box.text_frame.paragraphs[0]
     p.text = _trim(text, 98)
     _style_paragraph(p, 10.8, TEXT_BODY)
+
+
+def _formula_panel(slide, text: str, top: float = 4.88) -> None:
+    title, formula = _split_key_value(text)
+    if not formula:
+        title, formula = "公式", text
+    _round_rect(slide, 0.9, top, 11.55, 0.86, GOLD_PALE, border=GOLD, radius=0.035)
+    _rect(slide, 0.9, top, 0.05, 0.86, SJTU_RED)
+    label_box = slide.shapes.add_textbox(Inches(1.16), Inches(top + 0.14), Inches(1.1), Inches(0.24))
+    p = label_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 10)
+    _style_paragraph(p, 10.5, SJTU_RED, bold=True)
+    formula_box = slide.shapes.add_textbox(Inches(2.1), Inches(top + 0.16), Inches(9.85), Inches(0.5))
+    formula_box.text_frame.word_wrap = True
+    p = formula_box.text_frame.paragraphs[0]
+    p.text = _trim(_normalize_formula_text(formula), 118)
+    _style_paragraph(p, 15 if len(formula) <= 70 else 12.5, TEXT_PRIMARY, font_name=MATH_FONT)
 
 
 def render_footer(slide, page_num: int) -> None:
@@ -494,27 +548,34 @@ def _shape_text(shape, text: str, size: float, color: str, bold: bool = False, a
     return p
 
 
-def _style_paragraph(p, size: float, color: str, bold: bool = False, align=PP_ALIGN.LEFT) -> None:
-    p.font.name = FONT
+def _style_paragraph(
+    p,
+    size: float,
+    color: str,
+    bold: bool = False,
+    align=PP_ALIGN.LEFT,
+    font_name: str = FONT,
+) -> None:
+    p.font.name = font_name
     p.font.size = Pt(size)
     p.font.bold = bold
     p.font.color.rgb = rgb(color)
     p.alignment = align
     for run in p.runs:
-        run.font.name = FONT
+        run.font.name = font_name
         run.font.size = Pt(size)
         run.font.bold = bold
         run.font.color.rgb = rgb(color)
-        _set_ea(run)
+        _set_ea(run, font_name)
 
 
-def _set_ea(run) -> None:
+def _set_ea(run, font_name: str = FONT) -> None:
     r_pr = run._r.get_or_add_rPr()
     ea = r_pr.find(qn("a:ea"))
     if ea is None:
         ea = r_pr.makeelement(qn("a:ea"), {})
         r_pr.append(ea)
-    ea.set("typeface", FONT)
+    ea.set("typeface", font_name)
 
 
 def _add_shadow(shape) -> None:
@@ -550,9 +611,39 @@ def _clean_items(items: list[str]) -> list[str]:
             continue
         text = re.sub(r"\s+", " ", text)
         text = text.strip(" -•")
+        text = _normalize_formula_text(text)
         if text and text not in cleaned:
             cleaned.append(text)
     return cleaned[:6]
+
+
+def _looks_like_formula_text(text: str) -> bool:
+    return bool(FORMULA_RE.search(text or "")) or text.strip().startswith(("公式：", "公式:"))
+
+
+def _is_formula_item(text: str) -> bool:
+    normalized = _normalize_formula_text(text)
+    label, value = _split_key_value(normalized)
+    if label in {"公式", "目标函数", "损失函数", "更新规则"} and value:
+        return True
+    return normalized.startswith(("$", r"\(", r"\["))
+
+
+def _normalize_formula_text(text: str) -> str:
+    text = text.strip()
+    if not text:
+        return text
+    text = text.replace("$$", "$")
+    if text.startswith("$") and text.endswith("$") and len(text) > 2:
+        text = text[1:-1].strip()
+    text = text.replace(r"\(", "").replace(r"\)", "")
+    text = text.replace(r"\[", "").replace(r"\]", "")
+    text = re.sub(r"\\frac\{([^{}]+)\}\{([^{}]+)\}", r"(\1/\2)", text)
+    text = re.sub(r"_\{([^{}]+)\}", r"_\1", text)
+    text = re.sub(r"\^\{([^{}]+)\}", r"^\1", text)
+    for latex, replacement in LATEX_REPLACEMENTS.items():
+        text = text.replace(latex, replacement)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def _split_lead(items: list[str]) -> tuple[str, list[str]]:
@@ -601,6 +692,7 @@ def _looks_like_process(title: str, items: list[str]) -> bool:
     joined = " ".join(items[:5])
     return (
         "怎么工作" in title
+        or "如何工作" in title
         or "流程" in title
         or "Loop" in joined
         or joined.count("→") >= 2

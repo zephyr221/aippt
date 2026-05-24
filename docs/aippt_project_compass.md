@@ -29,6 +29,9 @@ Implemented and verified:
 - Isolated job workspace layout under `/srv/aippt/jobs/{owner}/{job}`.
 - Deterministic Markdown -> Deck IR -> PPTX builder.
 - Short prompt expansion for simple requests such as "做 5-6 页机器学习科普 PPT".
+- Editable text-formula rendering for simple math expressions such as
+  `J(theta)=1/m sum_i L(y_i, f_theta(x_i))`; these are PPT text boxes, not
+  raster images.
 - Non-destructive `hermes_review` job path that writes `qa/qa.json` and a
   downloadable `logs/hermes_review.md` report.
 - Deterministic preview rendering for review jobs: PDF, page PNGs, and contact
@@ -111,6 +114,14 @@ They also should not be treated as the visual QA engine unless the configured
 provider explicitly supports image input. A text-only model can still improve
 slides by reading `qa/qa.json`, `logs/hermes_review.md`, and any optional
 `logs/vision_review.md`.
+
+### Formula Support Is Text-Editable First
+
+The current builder can display formula-like content as editable PPT text, using
+a math-oriented font when expressions contain symbols such as `=`, `sum`, or
+Greek letters. This is intentionally not image rendering. True Office Math
+equation objects remain an experiment because `python-pptx` does not expose a
+stable high-level equation API.
 
 ### Modular Slide Scripts Are Worth Keeping
 

@@ -43,6 +43,8 @@ expose that path.
   TOC when there are at least three sections.
 - Short one-line requests can be expanded into a simple 5-6 page starter deck
   before the deterministic builder runs.
+- Formula-like bullets are rendered as editable PPT text boxes with math styling
+  rather than raster images.
 - QA for page count, readable PPTX, and basic text overflow risks.
 
 ## Phase 3: Planner And Worker

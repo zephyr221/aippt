@@ -1,6 +1,8 @@
 import json
+import zipfile
 
 from aippt_builder.outline import outline_to_deck
+from aippt_builder.render import build_pptx
 from aippt_builder.validate import validate_deck
 
 
@@ -103,8 +105,24 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     ]
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
     assert "从数据中发现规律" in body_text
-    assert "数据结合" in body_text
+    assert "J(θ)=1/m" in body_text
+    assert "反馈闭环" in body_text
     assert validate_deck(deck) == []
+
+
+def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:
+    deck = outline_to_deck("请制作五六页 PPT，关于机器学习的科普啊")
+    output = build_pptx(deck, tmp_path / "ml.pptx")
+
+    with zipfile.ZipFile(output) as pptx:
+        slide_xml = "\n".join(
+            pptx.read(name).decode("utf-8")
+            for name in pptx.namelist()
+            if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+        )
+
+    assert "J(θ)=1/m" in slide_xml
+    assert "Cambria Math" in slide_xml
 
 
 def test_explicit_page_outline_prefers_document_title_over_job_label() -> None:
