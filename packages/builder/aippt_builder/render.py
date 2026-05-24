@@ -65,6 +65,8 @@ TEMPLATE_LAYOUTS = {
     Layout.THANKS: ("封底01", 12),
 }
 TEMPLATE_CONTENT_LAYOUT = "常规样式（1）"
+COVER_TITLE_LIMIT = 18
+COVER_SUBTITLE_LIMIT = 18
 
 
 def rgb(hex_color: str) -> RGBColor:
@@ -163,20 +165,20 @@ def _template_layout(prs: Presentation, layout: Layout):
 
 
 def _render_template_cover(slide, slide_data: Slide) -> None:
+    title, subtitle = _cover_title_and_subtitle(slide_data)
     _set_placeholder_lines(
         slide,
         0,
-        [slide_data.title or "AIPPT"],
-        size=40,
+        [title],
+        size=41 if len(title) <= 12 else 35,
         color=WHITE,
         bold=True,
     )
-    subtitle_lines = [line.strip() for line in slide_data.subtitle.splitlines() if line.strip()]
     _set_placeholder_lines(
         slide,
         11,
-        subtitle_lines[:3] or ["AI PPT 生成工作台"],
-        size=18,
+        [subtitle] if subtitle else ["AI PPT 生成工作台"],
+        size=17,
         color=WHITE,
         bold=True,
     )
@@ -184,10 +186,20 @@ def _render_template_cover(slide, slide_data: Slide) -> None:
 
 def _render_template_content(slide, slide_data: Slide) -> None:
     _set_placeholder_lines(slide, 11, [slide_data.title], size=25, color=WHITE, bold=True)
+    _clear_placeholder(slide, 14)
     items = _clean_items(slide_data.bullets or [c.heading for c in slide_data.columns if c.heading])
     if not items:
         items = ["请补充这一页的核心结论。"]
-    _set_template_body(slide, items[:6])
+    render_body(
+        slide,
+        Slide(
+            title=slide_data.title,
+            layout=slide_data.layout,
+            bullets=items,
+            columns=slide_data.columns,
+            insight=slide_data.insight,
+        ),
+    )
 
 
 def _render_template_toc(slide, slide_data: Slide) -> None:
@@ -202,14 +214,54 @@ def _render_template_toc(slide, slide_data: Slide) -> None:
 
 
 def _render_template_thanks(slide, slide_data: Slide) -> None:
-    _set_placeholder_lines(
-        slide,
-        11,
-        [slide_data.title or "谢谢"],
-        size=44,
-        color=WHITE,
-        bold=True,
-    )
+    _clear_placeholder(slide, 11)
+    box = slide.shapes.add_textbox(Inches(3.22), Inches(2.94), Inches(2.38), Inches(0.85))
+    frame = box.text_frame
+    frame.clear()
+    frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = frame.paragraphs[0]
+    p.text = slide_data.title or "谢谢"
+    _style_paragraph(p, 36, WHITE, bold=True, align=PP_ALIGN.CENTER)
+
+
+def _cover_title_and_subtitle(slide_data: Slide) -> tuple[str, str]:
+    raw_title = (slide_data.title or "AIPPT").strip()
+    title, title_tail = _split_cover_title(raw_title)
+    subtitle_candidates = [title_tail, *slide_data.subtitle.splitlines()]
+    subtitle = ""
+    for candidate in subtitle_candidates:
+        compact = _compact_cover_subtitle(candidate, title)
+        if compact:
+            subtitle = compact
+            break
+    return _trim(title, COVER_TITLE_LIMIT), _trim(subtitle, COVER_SUBTITLE_LIMIT)
+
+
+def _split_cover_title(title: str) -> tuple[str, str]:
+    for delimiter in ("：", ":", "——", "—", " - "):
+        if delimiter not in title:
+            continue
+        head, tail = title.split(delimiter, 1)
+        head = head.strip()
+        tail = tail.strip()
+        if 3 <= len(head) <= COVER_TITLE_LIMIT + 4 and tail:
+            return head, tail
+    return title, ""
+
+
+def _compact_cover_subtitle(text: str, title: str) -> str:
+    text = re.sub(r"^\s*副标题\s*[：:]\s*", "", text.strip())
+    text = re.sub(r"\s+", " ", text)
+    if not text or text == title:
+        return ""
+    if any(skip in text for skip in ("可继续编辑大纲", "一句话需求自动规划")):
+        return ""
+    match = re.match(r"用\s*([0-9一二三四五六七八九十]+)\s*页讲清楚", text)
+    if match:
+        return f"{match.group(1)} 页速览"
+    if len(text) > COVER_SUBTITLE_LIMIT and "——" in text:
+        text = text.split("——", 1)[0].strip()
+    return text
 
 
 def _set_placeholder_lines(
@@ -234,34 +286,17 @@ def _set_placeholder_lines(
         p.line_spacing = 1.06
 
 
-def _set_template_body(slide, items: list[str]) -> None:
-    placeholder = _placeholder(slide, 14)
-    if placeholder is None:
-        return
-    frame = placeholder.text_frame
-    frame.clear()
-    frame.word_wrap = True
-    for idx, item in enumerate(items):
-        p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
-        text = _normalize_formula_text(item)
-        p.text = text
-        p.level = 0
-        font_name = MATH_FONT if _looks_like_formula_text(text) else FONT
-        _style_paragraph(
-            p,
-            19 if len(text) <= 44 else 16,
-            TEXT_BODY,
-            bold=True,
-            font_name=font_name,
-        )
-        p.space_after = Pt(10)
-
-
 def _placeholder(slide, idx: int):
     for placeholder in slide.placeholders:
         if placeholder.placeholder_format.idx == idx:
             return placeholder
     return None
+
+
+def _clear_placeholder(slide, idx: int) -> None:
+    placeholder = _placeholder(slide, idx)
+    if placeholder is not None and placeholder.has_text_frame:
+        placeholder.text_frame.clear()
 
 
 def render_cover(slide, slide_data: Slide) -> None:

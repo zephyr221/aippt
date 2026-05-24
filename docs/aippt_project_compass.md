@@ -116,6 +116,10 @@ The visual chrome should come from the SJTU template deck first. The builder now
 loads the template PPTX when `AIPPT_TEMPLATE_PPTX` or
 `AIPPT_TEMPLATE_PPTX_PATH` points to it, using the template cover, red-header
 content layout, and closing page before falling back to hand-drawn shapes.
+Template-backed decks keep the cover concise: one short title and one short
+subtitle line. Body pages should not degrade into plain bullet lists; the
+renderer turns structured points into lead callouts, two-column/fact cards,
+process cards, and formula panels where possible.
 
 They also should not be treated as the visual QA engine unless the configured
 provider explicitly supports image input. A text-only model can still improve

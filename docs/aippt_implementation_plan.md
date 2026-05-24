@@ -40,6 +40,9 @@ expose that path.
 - Minimal python-pptx renderer using SJTU colors and predictable spacing.
 - The renderer should use `SJTU 模板.pptx` as the first-choice visual source:
   cover layout, red-header content layout, and closing layout.
+- Cover generation must keep the template's role clear: short title, one short
+  subtitle, no workflow/meta copy. Content pages should prefer cards, process
+  lanes, fact grids, and formula panels over full-slide bullet lists.
 - Markdown parser promotes cover metadata into the cover slide, normalizes
   `第 N 页 · ...` headings, skips legacy cover placeholder pages, and inserts a
   TOC when there are at least three sections.

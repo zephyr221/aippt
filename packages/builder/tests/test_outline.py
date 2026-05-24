@@ -7,6 +7,7 @@ from aippt_builder.outline import outline_to_deck
 from aippt_builder.render import build_pptx
 from aippt_builder.validate import validate_deck
 from pptx import Presentation
+from pptx.util import Inches
 
 
 def _sjtu_template_path() -> Path:
@@ -155,6 +156,22 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     assert prs.slides[0].slide_layout.name == "封面-01"
     assert prs.slides[1].slide_layout.name == "常规样式（1）"
     assert prs.slides[-1].slide_layout.name == "封底01"
+    cover_text = "\n".join(
+        shape.text_frame.text
+        for shape in prs.slides[0].shapes
+        if shape.has_text_frame and shape.text_frame.text.strip()
+    )
+    assert "机器学习科普" in cover_text
+    assert "6 页速览" in cover_text
+    assert "一句话需求自动规划" not in cover_text
+    assert len(prs.slides[1].shapes) >= 12
+    thanks = next(
+        shape
+        for shape in prs.slides[-1].shapes
+        if shape.has_text_frame and shape.text_frame.text.strip() == "谢谢"
+    )
+    assert Inches(3.0) < thanks.left < Inches(3.5)
+    assert Inches(2.8) < thanks.top < Inches(3.1)
 
 
 def test_explicit_page_outline_prefers_document_title_over_job_label() -> None:
