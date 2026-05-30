@@ -20,6 +20,8 @@ Each non-cover slide should have:
 - No more than five supporting points.
 - No paragraph that should have been split into cards.
 - Short enough text to survive PowerPoint rendering.
+- Large enough text for classroom projection: prefer 2-3 cards or process
+  steps per slide, with 2-3 short points each.
 - A clear visual hierarchy at thumbnail size.
 
 ## Contact-Sheet Checklist

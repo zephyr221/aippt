@@ -82,6 +82,10 @@ teaching flow is: why rules are insufficient, data/model/loss vocabulary,
 house-price prediction walkthrough, supervised/unsupervised/reinforcement
 tasks, training-validation loop, common mistakes and next practice.
 
+For classroom projection, prefer fewer stronger objects over many tiny boxes:
+2-3 cards or steps per content slide are usually more readable than five, and
+each card should carry 2-3 short points rather than a paragraph.
+
 ## Content Grammar
 
 Use `标签：要点一；要点二；要点三` for structured cards. Examples:

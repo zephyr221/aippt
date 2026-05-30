@@ -465,7 +465,7 @@ def _render_column_cards(slide, columns, items: list[str], count: int) -> None:
         title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
         p = title_box.text_frame.paragraphs[0]
         p.text = _trim(heading, 24 if width >= 5 else 16)
-        _style_paragraph(p, 13 if width >= 5 else 11.8, TEXT_PRIMARY, bold=True)
+        _style_paragraph(p, 14 if width >= 5 else 13, TEXT_PRIMARY, bold=True)
 
         points = column.bullets or [_trim(heading, 44)]
         _draw_card_points(
@@ -900,7 +900,7 @@ def _lead_callout(slide, text: str, compact: bool = False) -> None:
     frame.margin_bottom = Pt(0)
     p = frame.paragraphs[0]
     p.text = _trim(text, 104)
-    _style_paragraph(p, 17 if len(text) < 58 else 14.5, TEXT_PRIMARY, bold=True)
+    _style_paragraph(p, 17.6 if len(text) < 58 else 15.2, TEXT_PRIMARY, bold=True)
     p.line_spacing = 1.08
 
 
@@ -913,7 +913,7 @@ def _content_card(slide, left: float, top: float, width: float, height: float, i
     title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = title_box.text_frame.paragraphs[0]
     p.text = title if body else _trim(text, 36)
-    _style_paragraph(p, 13.5, TEXT_PRIMARY, bold=True)
+    _style_paragraph(p, 14, TEXT_PRIMARY, bold=True)
     if body:
         body_text = body
         body_top = top + 0.58
@@ -927,9 +927,9 @@ def _content_card(slide, left: float, top: float, width: float, height: float, i
     body_text = _normalize_formula_text(body_text)
     p.text = _trim(body_text, 96)
     if _looks_like_formula_text(body_text):
-        _style_paragraph(p, 14 if len(body_text) <= 58 else 12.2, TEXT_BODY, font_name=MATH_FONT)
+        _style_paragraph(p, 14.5 if len(body_text) <= 58 else 12.8, TEXT_BODY, font_name=MATH_FONT)
     else:
-        _style_paragraph(p, 11.5 if len(body_text) > 52 else 12.5, TEXT_BODY)
+        _style_paragraph(p, 12.2 if len(body_text) > 52 else 13, TEXT_BODY)
     p.line_spacing = 1.15
 
 
@@ -945,7 +945,7 @@ def _rich_content_card(slide, left: float, top: float, width: float, height: flo
     label_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = label_box.text_frame.paragraphs[0]
     p.text = _trim(title, 18 if width < 4 else 24)
-    _style_paragraph(p, 13 if width >= 5 else 12.2, TEXT_PRIMARY, bold=True)
+    _style_paragraph(p, 14 if width >= 5 else 13, TEXT_PRIMARY, bold=True)
     _draw_card_points(
         slide,
         left + 0.3,
@@ -997,7 +997,7 @@ def _process_card(
     title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = title_box.text_frame.paragraphs[0]
     p.text = _trim(title, 20)
-    _style_paragraph(p, 11.5 if len(title) > 12 else 12.5, TEXT_PRIMARY, bold=True)
+    _style_paragraph(p, 12.5 if len(title) > 12 else 13.4, TEXT_PRIMARY, bold=True)
     p.line_spacing = 1.0
     body = _normalize_formula_text(body)
     points = _split_card_points(body)
@@ -1018,9 +1018,9 @@ def _process_card(
         p = body_box.text_frame.paragraphs[0]
         p.text = _trim(body, 72)
         if _looks_like_formula_text(body):
-            _style_paragraph(p, 11.4 if len(body) <= 44 else 9.8, TEXT_BODY, font_name=MATH_FONT)
+            _style_paragraph(p, 12 if len(body) <= 44 else 11.2, TEXT_BODY, font_name=MATH_FONT)
         else:
-            _style_paragraph(p, 9.6 if len(body) > 34 else 10.4, TEXT_BODY)
+            _style_paragraph(p, 11 if len(body) > 34 else 11.6, TEXT_BODY)
         p.alignment = PP_ALIGN.CENTER
 
 
@@ -1042,19 +1042,21 @@ def _draw_card_points(
     frame.margin_top = Pt(0)
     frame.margin_bottom = Pt(0)
     max_points = 3 if compact else 4
+    point_font_size = 11.4 if compact and width < 2.35 else 11.8 if compact else 12.1
+    trim_chars = 32 if compact and width < 2.35 else 36 if compact else 54
     for idx, point in enumerate(points[:max_points]):
         p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
         text = _normalize_formula_text(point)
-        p.text = f"▪ {_trim(text, 42 if compact else 58)}"
+        p.text = f"▪ {_trim(text, trim_chars)}"
         font_name = MATH_FONT if _looks_like_formula_text(text) else FONT
         _style_paragraph(
             p,
-            10.8 if compact else 11.2,
+            point_font_size,
             TEXT_BODY,
             font_name=font_name,
         )
         p.line_spacing = 1.08
-        p.space_after = Pt(5 if compact else 7)
+        p.space_after = Pt(6 if compact else 8)
 
 
 def _quote_panel(slide, left: float, top: float, width: float, height: float, title: str, body: str) -> None:
@@ -1078,7 +1080,7 @@ def _insight(slide, text: str, top: float = 6.05) -> None:
     box = slide.shapes.add_textbox(Inches(1.12), Inches(top + 0.08), Inches(11.0), Inches(0.34))
     p = box.text_frame.paragraphs[0]
     p.text = _trim(text, 98)
-    _style_paragraph(p, 10.8, TEXT_BODY)
+    _style_paragraph(p, 11.4, TEXT_BODY)
 
 
 def _formula_panel(slide, text: str, top: float = 4.88) -> None:

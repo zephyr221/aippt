@@ -103,6 +103,8 @@ Prefer shorter text than the hard limits. A good academic slide normally has:
 - One support object or structured layout. For teaching/training decks this can
   be definitions, examples, steps, exercises, or action items; for analytical
   decks it can be data, evidence, source, or method.
+- Projection-readable density: 2-3 cards or process steps are usually better
+  than five small boxes; keep each card to 2-3 short points when possible.
 
 For short teaching prompts, especially "导论" or "入门", expand the deck as a
 micro-lesson rather than a topic list: motivation, core vocabulary, smallest

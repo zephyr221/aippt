@@ -332,7 +332,7 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
         if run.font.size is not None
     ]
     assert point_sizes
-    assert min(point_sizes) >= Pt(10.5)
+    assert min(point_sizes) >= Pt(11.5)
     process_title = next(
         shape
         for shape in prs.slides[3].shapes

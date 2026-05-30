@@ -67,10 +67,12 @@ anything. If references are needed, load:
 6. Choose a safe layout/component signal when it improves the page rhythm.
 7. Keep content within the builder contract: short titles, limited bullets,
    whitelisted layouts, no free-form coordinates.
-8. Prefer concrete fixes over advice.
-9. If you do not have image input, do not claim direct visual inspection.
+8. Protect projection readability: prefer 2-3 cards or steps per content
+   slide, with 2-3 short points per card.
+9. Prefer concrete fixes over advice.
+10. If you do not have image input, do not claim direct visual inspection.
    Reason from `qa/qa.json`, Deck IR, and any text visual review report instead.
-10. Write results to the job workspace:
+11. Write results to the job workspace:
    - `ir/deck.repaired.json` for machine-readable IR repair.
    - `logs/hermes_review.md` for human-readable findings.
    - `logs/hermes_repair.md` for repair rationale.
