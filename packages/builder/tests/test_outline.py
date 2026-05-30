@@ -431,19 +431,16 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
         for shape in prs.slides[-1].shapes
         if shape.has_text_frame and shape.text_frame.text.strip() == "谢谢"
     )
-    assert 11 not in {
-        shape.placeholder_format.idx
-        for shape in prs.slides[-1].shapes
-        if shape.is_placeholder
-    }
+    assert thanks.is_placeholder
+    assert thanks.placeholder_format.idx == 11
     thanks_text = "\n".join(
         shape.text_frame.text
         for shape in prs.slides[-1].shapes
         if shape.has_text_frame and shape.text_frame.text.strip()
     )
     assert "单击此处添加文本" not in thanks_text
-    assert Inches(3.0) < thanks.left < Inches(3.5)
-    assert Inches(2.8) < thanks.top < Inches(3.1)
+    assert Inches(0.85) < thanks.left < Inches(1.05)
+    assert Inches(2.25) < thanks.top < Inches(2.45)
 
 
 def test_explicit_page_outline_prefers_document_title_over_job_label() -> None:

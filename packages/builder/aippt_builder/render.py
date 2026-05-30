@@ -74,9 +74,13 @@ def rgb(hex_color: str) -> RGBColor:
 
 
 def build_pptx(deck: Deck, output_path: str | Path) -> Path:
-    prs, use_template = _new_presentation()
+    preserve_template_cover = bool(deck.slides and deck.slides[0].layout == Layout.COVER)
+    prs, use_template, template_cover_ready = _new_presentation(preserve_template_cover=preserve_template_cover)
 
     for idx, slide in enumerate(deck.slides, start=1):
+        if use_template and template_cover_ready and idx == 1 and slide.layout == Layout.COVER:
+            _render_template_cover(prs.slides[0], slide)
+            continue
         render_slide(prs, slide, idx, use_template=use_template)
 
     output = Path(output_path)
@@ -85,20 +89,27 @@ def build_pptx(deck: Deck, output_path: str | Path) -> Path:
     return output
 
 
-def _new_presentation() -> tuple[Presentation, bool]:
+def _new_presentation(preserve_template_cover: bool = False) -> tuple[Presentation, bool, bool]:
     template_path = _template_path()
     if template_path is not None:
         prs = Presentation(template_path)
-        _remove_existing_slides(prs)
-        return prs, True
+        template_cover_ready = preserve_template_cover and len(prs.slides) > 0
+        _remove_existing_slides(prs, keep_first=template_cover_ready)
+        return prs, True, template_cover_ready
     prs = Presentation()
     prs.slide_width = Inches(SLIDE_W_IN)
     prs.slide_height = Inches(SLIDE_H_IN)
-    return prs, False
+    return prs, False, False
 
 
 def _template_path() -> Path | None:
     candidates = [Path(value) for key in TEMPLATE_CANDIDATES if (value := os.getenv(key))]
+    if repo_root := os.getenv("AIPPT_REPO_ROOT"):
+        candidates.append(Path(repo_root) / "docs" / "SJTU PPT 模板" / "SJTU 模板.pptx")
+    candidates.extend(
+        parent / "docs" / "SJTU PPT 模板" / "SJTU 模板.pptx"
+        for parent in Path(__file__).resolve().parents
+    )
     candidates.append(Path.cwd() / "assets" / "SJTU 模板.pptx")
     for candidate in candidates:
         if candidate.is_file():
@@ -106,9 +117,12 @@ def _template_path() -> Path | None:
     return None
 
 
-def _remove_existing_slides(prs: Presentation) -> None:
+def _remove_existing_slides(prs: Presentation, keep_first: bool = False) -> None:
     slide_id_list = prs.slides._sldIdLst
-    for slide_id in list(slide_id_list):
+    slide_ids = list(slide_id_list)
+    if keep_first:
+        slide_ids = slide_ids[1:]
+    for slide_id in slide_ids:
         prs.part.drop_rel(slide_id.rId)
         slide_id_list.remove(slide_id)
 
@@ -219,14 +233,14 @@ def _render_template_toc(slide, slide_data: Slide) -> None:
 
 
 def _render_template_thanks(slide, slide_data: Slide) -> None:
-    _remove_placeholder(slide, 11)
-    box = slide.shapes.add_textbox(Inches(3.22), Inches(2.94), Inches(2.38), Inches(0.85))
-    frame = box.text_frame
-    frame.clear()
-    frame.vertical_anchor = MSO_ANCHOR.MIDDLE
-    p = frame.paragraphs[0]
-    p.text = slide_data.title or "谢谢"
-    _style_paragraph(p, 36, WHITE, bold=True, align=PP_ALIGN.CENTER)
+    _set_placeholder_lines(
+        slide,
+        11,
+        [slide_data.title or "谢谢"],
+        size=36,
+        color=WHITE,
+        bold=True,
+    )
 
 
 def _cover_title_and_subtitle(slide_data: Slide) -> tuple[str, str]:
