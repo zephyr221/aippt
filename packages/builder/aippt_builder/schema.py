@@ -38,6 +38,7 @@ class Slide(BaseModel):
     subtitle: str = ""
     visual: str | None = Field(default=None, max_length=40)
     proof: str | None = Field(default=None, max_length=120)
+    support: str | None = Field(default=None, max_length=120)
     bullets: list[str] = Field(default_factory=list)
     columns: list[Column] = Field(default_factory=list)
     items: list[HorizontalItem] = Field(default_factory=list)

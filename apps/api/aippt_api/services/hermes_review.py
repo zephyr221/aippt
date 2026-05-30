@@ -108,6 +108,7 @@ def _build_qa(
         _check_slide_text(slides, issues, suggestions)
         _check_layout_rhythm(slides, suggestions)
         _check_design_signals(slides, suggestions)
+        _check_detail_depth(slides, suggestions)
     else:
         issues.append(_issue("medium", "deck_ir", "Deck IR 中没有可审阅的 slides。"))
 
@@ -197,14 +198,46 @@ def _check_design_signals(slides: list[dict[str, Any]], suggestions: list[str]) 
         shown = "、".join(str(idx) for idx in missing_visual[:4])
         suggestions.append(f"第 {shown} 张缺少组件信号；建议 Hermes 明确写 `组件：...`。")
 
-    missing_proof = [
+    missing_support = [
         idx
         for idx, slide in _numbered_content_slides(slides)
-        if not slide.get("proof") and slide.get("visual") not in {"table", "timeline", "stat_callout"}
+        if not _slide_support(slide) and slide.get("visual") not in {"table", "timeline", "stat_callout"}
     ]
-    if missing_proof:
-        shown = "、".join(str(idx) for idx in missing_proof[:4])
-        suggestions.append(f"第 {shown} 张缺少证据对象；建议补 `证据：数据、案例、流程或来源`。")
+    if missing_support:
+        shown = "、".join(str(idx) for idx in missing_support[:4])
+        suggestions.append(f"第 {shown} 张缺少支撑/展开对象；建议补 `支撑：案例、步骤、定义、数据或行动项`。")
+
+
+def _check_detail_depth(slides: list[dict[str, Any]], suggestions: list[str]) -> None:
+    shallow: list[int] = []
+    for idx, slide in _numbered_content_slides(slides):
+        if slide.get("visual") in {"quote_block", "stat_callout"}:
+            continue
+        if _detail_units(slide) < 3:
+            shallow.append(idx)
+    if shallow:
+        shown = "、".join(str(idx) for idx in shallow[:4])
+        suggestions.append(f"第 {shown} 张展开偏薄；建议每页至少 3 个具体分点或 2 个分点加案例/步骤。")
+
+
+def _detail_units(slide: dict[str, Any]) -> int:
+    total = len([item for item in slide.get("bullets") or [] if str(item).strip()])
+    if _slide_support(slide):
+        total += 1
+    total += sum(
+        len([item for item in (column.get("bullets") or []) if str(item).strip()])
+        for column in slide.get("columns") or []
+        if isinstance(column, dict)
+    )
+    total += len([item for item in slide.get("items") or [] if isinstance(item, dict) and item.get("desc")])
+    table = slide.get("table")
+    if isinstance(table, dict):
+        total += len(table.get("rows") or [])
+    return total
+
+
+def _slide_support(slide: dict[str, Any]) -> str:
+    return str(slide.get("support") or slide.get("proof") or "").strip()
 
 
 def _numbered_content_slides(slides: list[dict[str, Any]]) -> list[tuple[int, dict[str, Any]]]:

@@ -42,9 +42,9 @@ Implemented and verified:
 - SJTU Wine Red + Gold renderer with timeline, fact-card, card-grid, process,
   cover, thanks, and TOC rhythms.
 - Hermes-authored page design signals in Markdown: `版式：...`、`组件：...`,
-  `证据：...`, and `洞察：...` now flow into Deck IR so the model can choose
-  safe slide rhythms and proof objects while the builder keeps deterministic
-  geometry.
+  `支撑：...`, and `洞察：...` now flow into Deck IR so the model can choose
+  safe slide rhythms and detailed support objects while the builder keeps
+  deterministic geometry.
 - Server API and worker managed by systemd.
 - GitHub private and SJTU GitLab private remotes.
 - Hermes/MiMo research probes for outline planning and modular SJTU-template
@@ -98,7 +98,7 @@ contact sheet by choosing layout rhythms from content cues:
 - Timeline when multiple date anchors appear.
 - Process cards when a page describes `→` loops or "how it works".
 - Fact cards when several key-value rows exist.
-- Card grid for mixed claims and supporting points.
+- Card grid for mixed takeaways and supporting points.
 
 Hermes can now make that choice explicitly in the planned Markdown. The safe
 contract is:
@@ -106,15 +106,15 @@ contract is:
 ```text
 版式：three_column
 组件：rich_cards
-证据：数据、案例、流程、公式或来源
+支撑：定义、例子、步骤、案例、行动项、数据、流程、公式或来源
 洞察：底部一句总结
 ```
 
 The parser converts those hints into `layout`, `visual`, `columns`, `items`,
-`proof`, `table`, and `insight` fields. The renderer honors known signals and
+`support`, `table`, and `insight` fields. The renderer honors known signals and
 ignores unknown ones. The current production-safe component set also includes
-`stat_callout` for metric pages and `quote_block` for a sourced principle or
-warning.
+`stat_callout` for metric pages and `quote_block` for a sourced principle,
+example, or warning.
 
 The next style improvements should continue at the layout-system level, not by
 manually polishing one generated deck.
@@ -143,8 +143,9 @@ renderer turns structured points into lead callouts, two-column/fact cards,
 process cards, and formula panels where possible.
 For common teaching prompts such as "machine learning introduction" or
 "artificial intelligence primer", brief-prompt expansion should create a richer
-slide spine: each body page starts with one claim, then 2-3 theme cards, and
-each card carries 2-4 concrete sub-points rather than a single sentence.
+slide spine: each body page starts with one learning goal or takeaway, then 2-3
+theme cards, and each card carries 2-4 concrete sub-points rather than a single
+sentence.
 When using the SJTU content template, remove the inherited body placeholder from
 generated slides so PowerPoint does not show the dashed editing frame over the
 custom cards. Keep card sub-bullets at projection-readable sizes.
@@ -182,7 +183,7 @@ one module per slide is better than one giant script:
 - Keep improving the deterministic renderer in `packages/builder`.
 - Continue improving preview rendering and visual QA artifacts.
 - Extend the lightweight visual QA report beyond page count, long text, likely
-  overflow, repeated layout, and missing claims.
+  overflow, repeated layout, and missing slide takeaways.
 - Keep deterministic QA useful even without a multimodal model.
 - Add a "regenerate with same outline" path in the UI.
 

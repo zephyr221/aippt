@@ -60,7 +60,8 @@ anything. If references are needed, load:
    preference memory.
 2. Read the job manifest and input outline.
 3. Preserve explicit page contracts such as `## 第 3 页 · 标题`.
-4. Build or check a claim spine: each non-cover slide needs one clear claim.
+4. Build or check a slide spine: each non-cover slide needs one clear claim,
+   teaching goal, or action takeaway.
 5. Choose a safe layout/component signal when it improves the page rhythm.
 6. Keep content within the builder contract: short titles, limited bullets,
    whitelisted layouts, no free-form coordinates.
@@ -79,9 +80,9 @@ Use the user's authored structure first. When choosing slide rhythms:
 - Date-heavy content -> timeline.
 - `→` loops or "how it works" -> process cards.
 - Multiple key-value rows -> fact cards.
-- Mixed claims and support -> card grid.
+- Mixed takeaways and support -> card grid.
 - Dense table-like content -> table or fact cards.
-- A long paragraph -> lead claim + 3-4 short supporting cards.
+- A long paragraph -> lead takeaway + 3-4 short supporting cards.
 
 Do not produce pages that are only large bullet boxes when a stronger structure
 is available.
@@ -92,7 +93,7 @@ honor:
 ```text
 版式：three_column
 组件：rich_cards
-证据：数据、案例、流程、公式或来源
+支撑：定义、例子、步骤、案例、行动项、数据、流程、公式或来源
 洞察：底部一句总结
 ```
 
@@ -104,7 +105,7 @@ Repair in this order:
 
 1. Validation failures.
 2. Page count mismatch.
-3. Missing slide claims.
+3. Missing slide claims, teaching goals, or action takeaways.
 4. Text too long for the renderer.
 5. Repetitive layout rhythm.
 6. Academic tone/style issues.

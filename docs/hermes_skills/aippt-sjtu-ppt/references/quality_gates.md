@@ -15,7 +15,7 @@ Use this reference when reviewing an AIPPT deck, QA report, or repair proposal.
 
 Each non-cover slide should have:
 
-- A specific claim, not just a topic.
+- A specific claim, teaching goal, or action takeaway, not just a topic.
 - A layout that matches the content type.
 - No more than five supporting points.
 - No paragraph that should have been split into cards.
@@ -44,9 +44,9 @@ Use these repairs:
 too many dates         -> timeline
 too many arrows        -> process cards
 many key-value facts   -> fact cards
-long prose             -> lead claim + 3 cards
+long prose             -> lead takeaway + 3 cards
 dense comparison       -> two_column or table
-page feels empty       -> add proof object, quote, or process structure
+page feels empty       -> add support object, example, quote, or process structure
 page feels crowded     -> shorten bullets or split page
 ```
 
@@ -57,7 +57,7 @@ For SJTU academic use:
 - Prefer concrete dates, model names, tasks, metrics, and examples.
 - Avoid marketing adjectives unless the audience is external.
 - Avoid "AI is magical" framing.
-- Keep claims grounded and reproducible.
+- Keep claims, examples, and recommendations grounded and reproducible.
 - Use Chinese punctuation consistently in Chinese decks.
 
 ## Repair Report Template

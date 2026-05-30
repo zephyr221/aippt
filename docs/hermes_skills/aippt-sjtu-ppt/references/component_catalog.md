@@ -12,7 +12,7 @@ the page heading:
 ```text
 版式：three_column
 组件：rich_cards
-证据：用于证明本页判断的数据、案例、流程、公式或来源
+支撑：用于展开本页的数据、案例、步骤、定义、行动项、流程、公式或来源
 洞察：底部一句总结
 ```
 
@@ -50,9 +50,9 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
 
 ## When To Use Each Component
 
-- `rich_cards`: default for teaching/report pages with one claim plus 2-4
+- `rich_cards`: default for teaching/report pages with one takeaway plus 2-4
   titled support cards.
-- `fact_grid`: key-value evidence such as `指标：含义 / 数值 / 风险`.
+- `fact_grid`: key-value details such as `指标：含义 / 数值 / 风险`.
 - `timeline`: two or more dated events.
 - `process`: workflow, agent loop, model training, validation pipeline, or any
   `A -> B -> C` sequence.
@@ -86,10 +86,10 @@ For metric slides, make the first segment a large number:
 ## 第 2 页 · 质量提升先看三项指标
 版式：one_column
 组件：stat_callout
-证据：QA 报告、预览渲染与用户反馈会进入同一轮改写。
+支撑：QA 报告、预览渲染与用户反馈会进入同一轮改写。
 用指标约束生成质量，比只调 prompt 更可靠。
 - 设计覆盖：100% / 内容页都要求组件信号
-- 证据对象：每页 1 个 / 数据、流程、案例或公式
+- 展开对象：每页 1 个 / 定义、步骤、案例、数据或公式
 - 节奏重复：≤2 页 / 连续同版式会被 QA 提醒
 ```
 
@@ -99,9 +99,9 @@ For quote slides, put the conclusion after a short label:
 ## 第 5 页 · 设计原则
 版式：one_column
 组件：quote_block
-证据：来自当前 AIPPT 生成链路的稳定性约束。
+支撑：来自当前 AIPPT 生成链路的稳定性约束。
 模型做设计决策，builder 做稳定渲染。
-- 原则：Hermes 负责版式和证据对象，Python 只执行白名单组件
+- 原则：Hermes 负责版式和展开对象，Python 只执行白名单组件
 - 落地：任何 repair 都必须先 validation，再 build，再 QA
 ```
 

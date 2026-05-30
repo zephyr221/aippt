@@ -22,8 +22,8 @@ INSIGHT_LABEL_RE = re.compile(
     r"^(?:洞察|insight|核心提示|页面提示|底部提示)\s*[：:]\s*(.+?)\s*$",
     re.IGNORECASE,
 )
-PROOF_LABEL_RE = re.compile(
-    r"^(?:证据|证明|proof|proof object|证据对象)\s*[：:]\s*(.+?)\s*$",
+SUPPORT_LABEL_RE = re.compile(
+    r"^(?:支撑|展开|展开方式|展开对象|细化|依据|案例|例子|证据|证明|support|detail|proof|proof object|证据对象)\s*[：:]\s*(.+?)\s*$",
     re.IGNORECASE,
 )
 COVER_HEADINGS = {"封面", "首页", "标题页"}
@@ -341,7 +341,7 @@ def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
     layout_hint: Layout | None = None
     visual_hint: str | None = None
     insight: str | None = None
-    proof: str | None = None
+    support: str | None = None
     content_items: list[str] = []
 
     for item in raw_items:
@@ -361,10 +361,10 @@ def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
             insight = _clip(_clean_inline(insight_match.group(1)), MAX_BULLET_CHARS)
             continue
 
-        proof_match = PROOF_LABEL_RE.match(item)
-        if proof_match:
-            if proof is None:
-                proof = _clip(_clean_inline(proof_match.group(1)), 120)
+        support_match = SUPPORT_LABEL_RE.match(item)
+        if support_match:
+            if support is None:
+                support = _clip(_clean_inline(support_match.group(1)), 120)
             else:
                 content_items.append(item)
             continue
@@ -406,7 +406,8 @@ def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
         layout=layout,
         title=_clip(section_title, MAX_TITLE_CHARS),
         visual=visual,
-        proof=proof,
+        proof=support,
+        support=support,
         bullets=bullets,
         columns=columns,
         items=items,

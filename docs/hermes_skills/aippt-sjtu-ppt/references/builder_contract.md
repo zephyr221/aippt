@@ -76,6 +76,7 @@ Common slide fields:
   "subtitle": "",
   "visual": "rich_cards",
   "proof": "source, data point, workflow, formula, or case",
+  "support": "definition, example, steps, case, action, data, or source",
   "bullets": [],
   "columns": [],
   "items": [],
@@ -97,9 +98,11 @@ table <= 5 rows x 4 columns
 
 Prefer shorter text than the hard limits. A good academic slide normally has:
 
-- One claim line.
+- One lead line: a claim, teaching goal, or action takeaway.
 - Three to four supporting points.
-- One proof object or structured layout.
+- One support object or structured layout. For teaching/training decks this can
+  be definitions, examples, steps, exercises, or action items; for analytical
+  decks it can be data, evidence, source, or method.
 
 ## Markdown Design Signals
 
@@ -109,7 +112,7 @@ the page heading:
 ```text
 版式：two_column
 组件：rich_cards
-证据：本页使用的数据、案例、流程、公式或来源
+支撑：本页使用的定义、例子、步骤、案例、行动项、数据、流程、公式或来源
 洞察：本页一句底部总结
 ```
 
@@ -156,14 +159,14 @@ Use `stat_callout` for 2-4 key metrics:
 
 ```text
 - 设计覆盖：100% / 内容页都要求组件信号
-- 证据对象：每页 1 个 / 数据、流程、案例或公式
+- 展开对象：每页 1 个 / 定义、步骤、案例、数据或公式
 ```
 
 Use `quote_block` for one strong sourced conclusion:
 
 ```text
 组件：quote_block
-证据：来自 QA 报告和用户反馈。
+支撑：来自 QA 报告和用户反馈。
 - 原则：模型做设计决策，builder 做稳定渲染
 ```
 
@@ -175,7 +178,7 @@ The current builder chooses visual rhythm from content cues:
 timeline      multiple date anchors
 process       arrows, loops, "how it works"
 fact cards    several key-value rows
-card grid     mixed claims and supporting points
+card grid     mixed takeaways and supporting points
 ```
 
 When repairing Markdown or IR, make cues easy for the builder to detect. For

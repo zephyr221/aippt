@@ -158,7 +158,7 @@ def test_explicit_page_design_signals_create_structured_ir() -> None:
 ## 第 2 页 · 三类能力协同
 版式：three_column
 组件：rich_cards
-证据：规划日志、Deck IR 与预览 QA 会进入同一条生成链路。
+支撑：规划日志、Deck IR 与预览 QA 会进入同一条生成链路。
 三类能力共同决定 AI PPT 初稿是否可用。
 - 规划能力：识别受众；建立主线；压缩标题
 - 结构能力：选择版式；组织卡片；控制页面密度
@@ -178,6 +178,7 @@ def test_explicit_page_design_signals_create_structured_ir() -> None:
     assert card_slide.layout == "three_column"
     assert card_slide.visual == "rich_cards"
     assert card_slide.proof == "规划日志、Deck IR 与预览 QA 会进入同一条生成链路。"
+    assert card_slide.support == "规划日志、Deck IR 与预览 QA 会进入同一条生成链路。"
     assert len(card_slide.columns) == 3
     assert card_slide.columns[0].heading == "规划能力"
     assert card_slide.columns[0].bullets == ["识别受众", "建立主线", "压缩标题"]
@@ -203,24 +204,25 @@ def test_stat_callout_and_quote_block_render_as_editable_text(tmp_path) -> None:
 ## 第 2 页 · 质量提升先看三项指标
 版式：one_column
 组件：stat_callout
-证据：QA 报告、预览渲染与用户反馈会进入同一轮改写。
+支撑：QA 报告、预览渲染与用户反馈会进入同一轮改写。
 用指标约束生成质量，比只调 prompt 更可靠。
 - 设计覆盖：100% / 内容页都要求组件信号
-- 证据对象：每页 1 个 / 数据、流程、案例或公式
+- 展开对象：每页 1 个 / 定义、步骤、案例、数据或公式
 - 节奏重复：≤2 页 / 连续同版式会被 QA 提醒
 
 ## 第 3 页 · 设计原则
 版式：one_column
 组件：quote_block
-证据：来自当前 AIPPT 生成链路的稳定性约束。
+支撑：来自当前 AIPPT 生成链路的稳定性约束。
 模型做设计决策，builder 做稳定渲染。
-- 原则：Hermes 负责版式和证据对象，Python 只执行白名单组件
+- 原则：Hermes 负责版式和展开对象，Python 只执行白名单组件
 - 落地：任何 repair 都必须先 validation，再 build，再 QA
 """,
     )
 
     assert deck.slides[1].visual == "stat_callout"
     assert deck.slides[1].proof == "QA 报告、预览渲染与用户反馈会进入同一轮改写。"
+    assert deck.slides[1].support == "QA 报告、预览渲染与用户反馈会进入同一轮改写。"
     assert deck.slides[2].visual == "quote_block"
     assert validate_deck(deck) == []
 
@@ -233,7 +235,7 @@ def test_stat_callout_and_quote_block_render_as_editable_text(tmp_path) -> None:
         )
 
     assert "100%" in slide_xml
-    assert "证据对象" in slide_xml
+    assert "展开对象" in slide_xml
     assert "模型做设计决策" in slide_xml
     assert "白名单组件" in slide_xml
 

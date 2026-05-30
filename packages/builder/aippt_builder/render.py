@@ -197,6 +197,7 @@ def _render_template_content(slide, slide_data: Slide) -> None:
             layout=slide_data.layout,
             visual=slide_data.visual,
             proof=slide_data.proof,
+            support=slide_data.support,
             bullets=items,
             columns=slide_data.columns,
             items=slide_data.items,
@@ -389,10 +390,11 @@ def render_body(slide, slide_data: Slide) -> None:
         items = ["请补充这一页的核心结论。"]
 
     visual = slide_data.visual or ""
+    support = slide_data.support or slide_data.proof
     if visual == "stat_callout":
-        _render_stat_callouts(slide, items, slide_data.proof)
+        _render_stat_callouts(slide, items, support)
     elif visual == "quote_block":
-        _render_quote_block_slide(slide, items, slide_data.proof)
+        _render_quote_block_slide(slide, items, support)
     elif slide_data.layout == Layout.TABLE or visual == "table":
         _render_table_slide(slide, slide_data.table, items)
     elif slide_data.layout in {Layout.TWO_COLUMN, Layout.COMPARISON} or visual == "two_column":
@@ -418,7 +420,7 @@ def render_body(slide, slide_data: Slide) -> None:
     else:
         _render_card_grid(slide, items)
 
-    if slide_data.insight and not (visual == "stat_callout" and slide_data.proof):
+    if slide_data.insight and not (visual == "stat_callout" and support):
         _insight(slide, slide_data.insight)
 
 
@@ -623,7 +625,7 @@ def _fallback_table(items: list[str]) -> tuple[list[str], list[list[str]]]:
     return headers, rows
 
 
-def _render_stat_callouts(slide, items: list[str], proof: str | None) -> None:
+def _render_stat_callouts(slide, items: list[str], support: str | None) -> None:
     lead, rest = _split_lead(items)
     _lead_callout(slide, lead or "用几个关键指标先建立判断。", compact=True)
     metrics = [_metric_from_item(item) for item in (rest or items)[:4]]
@@ -650,8 +652,8 @@ def _render_stat_callouts(slide, items: list[str], proof: str | None) -> None:
         left, top, width, height = positions[idx - 1]
         _stat_card(slide, left, top, width, height, *metric, accent=SJTU_RED if idx % 2 else GOLD)
 
-    if proof:
-        _insight(slide, f"证据：{proof}", top=6.08)
+    if support:
+        _insight(slide, f"支撑：{support}", top=6.08)
 
 
 def _metric_from_item(item: str) -> tuple[str, str, str, str]:
@@ -702,7 +704,7 @@ def _stat_card(
         p.line_spacing = 1.12
 
 
-def _render_quote_block_slide(slide, items: list[str], proof: str | None) -> None:
+def _render_quote_block_slide(slide, items: list[str], support: str | None) -> None:
     lead, rest = _split_lead(items)
     if lead:
         _lead_callout(slide, lead, compact=True)
@@ -711,10 +713,10 @@ def _render_quote_block_slide(slide, items: list[str], proof: str | None) -> Non
     if not quote_body:
         quote_title, quote_body = "核心判断", quote
 
-    _quote_block_wide(slide, 0.92, 2.08, 11.55, 2.15, quote_body, quote_title, proof)
+    _quote_block_wide(slide, 0.92, 2.08, 11.55, 2.15, quote_body, quote_title, support)
 
-    support = rest[1:3] if rest else items[1:3]
-    for idx, item in enumerate(support, start=1):
+    supporting_items = rest[1:3] if rest else items[1:3]
+    for idx, item in enumerate(supporting_items, start=1):
         left = 0.92 if idx == 1 else 6.82
         _content_card(slide, left, 4.75, 5.55, 1.26, idx, item)
 
@@ -751,7 +753,7 @@ def _quote_block_wide(
     if source:
         source_box = slide.shapes.add_textbox(Inches(left + 0.86), Inches(top + 1.58), Inches(width - 1.35), Inches(0.28))
         p = source_box.text_frame.paragraphs[0]
-        p.text = f"证据：{_trim(source, 80)}"
+        p.text = f"支撑：{_trim(source, 80)}"
         _style_paragraph(p, 10.2, TEXT_CAPTION)
 
 
