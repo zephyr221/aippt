@@ -145,7 +145,11 @@ For common teaching prompts such as "machine learning introduction" or
 "artificial intelligence primer", brief-prompt expansion should create a richer
 slide spine: each body page starts with one learning goal or takeaway, then 2-3
 theme cards, and each card carries 2-4 concrete sub-points rather than a single
-sentence.
+sentence. Treat these decks as micro-lessons: motivation, core vocabulary,
+smallest worked example, categories/process, common mistakes, and summary or
+practice. For "machine learning introduction", use a concrete walkthrough such
+as house-price prediction before listing supervised, unsupervised, and
+reinforcement learning.
 When using the SJTU content template, remove the inherited body placeholder from
 generated slides so PowerPoint does not show the dashed editing frame over the
 custom cards. Keep card sub-bullets at projection-readable sizes.

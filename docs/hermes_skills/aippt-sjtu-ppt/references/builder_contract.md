@@ -104,6 +104,10 @@ Prefer shorter text than the hard limits. A good academic slide normally has:
   be definitions, examples, steps, exercises, or action items; for analytical
   decks it can be data, evidence, source, or method.
 
+For short teaching prompts, especially "导论" or "入门", expand the deck as a
+micro-lesson rather than a topic list: motivation, core vocabulary, smallest
+worked example, categories or process, common mistakes, and summary/practice.
+
 ## Markdown Design Signals
 
 Hermes may choose safe page design signals in Markdown. Put them directly under

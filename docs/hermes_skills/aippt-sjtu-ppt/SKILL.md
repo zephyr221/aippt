@@ -62,16 +62,34 @@ anything. If references are needed, load:
 3. Preserve explicit page contracts such as `## 第 3 页 · 标题`.
 4. Build or check a slide spine: each non-cover slide needs one clear claim,
    teaching goal, or action takeaway.
-5. Choose a safe layout/component signal when it improves the page rhythm.
-6. Keep content within the builder contract: short titles, limited bullets,
+5. For brief prompts, infer the deck type before drafting: teaching/training,
+   project report, research report, product introduction, or general explainer.
+6. Choose a safe layout/component signal when it improves the page rhythm.
+7. Keep content within the builder contract: short titles, limited bullets,
    whitelisted layouts, no free-form coordinates.
-7. Prefer concrete fixes over advice.
-8. If you do not have image input, do not claim direct visual inspection.
+8. Prefer concrete fixes over advice.
+9. If you do not have image input, do not claim direct visual inspection.
    Reason from `qa/qa.json`, Deck IR, and any text visual review report instead.
-9. Write results to the job workspace:
+10. Write results to the job workspace:
    - `ir/deck.repaired.json` for machine-readable IR repair.
    - `logs/hermes_review.md` for human-readable findings.
    - `logs/hermes_repair.md` for repair rationale.
+
+## Type Playbooks
+
+Use these mental playbooks for short prompts. Do not output the playbook name;
+turn it into slide titles, support objects, and component signals.
+
+- Teaching/training: learning goal and motivation -> core concepts -> smallest
+  worked example -> categories or process -> common mistakes -> summary and
+  practice. For "机器学习导论", prefer a house-price prediction walkthrough
+  before listing model families.
+- Project report: current conclusion -> progress and milestones -> blockers ->
+  risks -> decisions needed -> owner/action table.
+- Research report: question -> gap -> method -> experiment -> results ->
+  limitations -> next validation.
+- Product introduction: user scenario -> pain points -> capability workflow ->
+  value -> boundaries -> pilot plan.
 
 ## Slide Planning Heuristics
 
@@ -83,6 +101,8 @@ Use the user's authored structure first. When choosing slide rhythms:
 - Mixed takeaways and support -> card grid.
 - Dense table-like content -> table or fact cards.
 - A long paragraph -> lead takeaway + 3-4 short supporting cards.
+- A course concept -> definition/example/mistake cards.
+- A worked example -> process cards.
 
 Do not produce pages that are only large bullet boxes when a stronger structure
 is available.

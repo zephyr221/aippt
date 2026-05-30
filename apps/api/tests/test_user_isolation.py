@@ -404,11 +404,13 @@ def test_worker_expands_brief_prompt_to_intro_deck(app_context) -> None:
     assert deck_ir["title"] == "机器学习科普"
     assert len(deck_ir["slides"]) == 6
     assert [slide["title"] for slide in deck_ir["slides"][1:5]] == [
-        "为什么值得了解",
-        "核心概念",
-        "它如何工作",
-        "身边的应用",
+        "为什么需要机器学习",
+        "核心思想：从数据中学习规律",
+        "最小例子：房价预测",
+        "三类经典任务",
     ]
+    assert deck_ir["slides"][1]["support"] == "规则系统的局限、数据中的规律和学习目标。"
+    assert deck_ir["slides"][3]["visual"] == "process"
 
 
 def test_worker_hermes_plan_updates_outline_and_records_artifact(

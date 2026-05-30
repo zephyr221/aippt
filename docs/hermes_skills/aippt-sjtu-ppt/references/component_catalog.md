@@ -65,6 +65,23 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
 - `table`: compact matrix with at most 5 rows x 4 columns.
 - `summary`: final synthesis before the generated thanks page.
 
+## Deck Type Patterns
+
+For brief prompts, choose the deck spine before choosing components:
+
+- Teaching/training decks: motivation, core concepts, smallest worked example,
+  categories/process, common mistakes, summary/practice.
+- Project reports: conclusion, progress, blockers, risks, decisions, owners.
+- Research reports: question, gap, method, experiment, results, limits, next
+  validation.
+- Product introductions: user scenario, pain, capability workflow, value,
+  boundary, pilot plan.
+
+For "机器学习导论", do not jump straight to a list of algorithms. A stronger
+teaching flow is: why rules are insufficient, data/model/loss vocabulary,
+house-price prediction walkthrough, supervised/unsupervised/reinforcement
+tasks, training-validation loop, common mistakes and next practice.
+
 ## Content Grammar
 
 Use `标签：要点一；要点二；要点三` for structured cards. Examples:

@@ -119,19 +119,44 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     assert len(deck.slides) == 6
     assert [slide.title for slide in deck.slides] == [
         "机器学习科普",
-        "为什么值得了解",
-        "核心概念",
-        "它如何工作",
-        "身边的应用",
+        "为什么需要机器学习",
+        "核心思想：从数据中学习规律",
+        "最小例子：房价预测",
+        "三类经典任务",
         "谢谢",
     ]
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
-    assert "从数据中发现规律" in body_text
+    assert "规则难以手写" in body_text
+    assert "房价预测" in body_text
     assert "J(θ)=1/m" in body_text
-    assert "反馈闭环" in body_text
+    assert "监督学习" in body_text
     assert len(deck.slides[1].bullets) == 4
+    assert deck.slides[1].support == "规则系统的局限、数据中的规律和学习目标。"
+    assert deck.slides[3].visual == "process"
     assert all("：" in bullet for bullet in deck.slides[1].bullets[1:])
     assert all("；" in bullet for bullet in deck.slides[1].bullets[1:])
+    assert validate_deck(deck) == []
+
+
+def test_brief_machine_learning_intro_defaults_to_micro_lesson() -> None:
+    deck = outline_to_deck("机器学习导论 PPT")
+
+    assert deck.title == "机器学习导论"
+    assert len(deck.slides) == 8
+    assert [slide.title for slide in deck.slides[1:7]] == [
+        "为什么需要机器学习",
+        "核心思想：从数据中学习规律",
+        "最小例子：房价预测",
+        "三类经典任务",
+        "训练流程与验证闭环",
+        "常见误区与下一步",
+    ]
+    assert deck.slides[1].layout == "three_column"
+    assert deck.slides[3].visual == "process"
+    assert deck.slides[6].visual == "summary"
+    body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
+    assert "垃圾邮件分类" in body_text
+    assert "训练集高分不等于真实可靠" in body_text
     assert validate_deck(deck) == []
 
 
@@ -139,10 +164,13 @@ def test_brief_prompt_handles_intro_deck_for_enterprise_audience() -> None:
     deck = outline_to_deck("为企业生成一份人工智能导论介绍 PPT")
 
     assert deck.title == "人工智能导论"
-    assert len(deck.slides) == 6
+    assert len(deck.slides) == 8
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
-    assert "人工智能导论已经进入学习、工作和科研工具链" in body_text
+    assert "学习 人工智能导论 之前" in body_text
+    assert "小案例" in body_text
     assert "；" in body_text
+    assert deck.slides[1].support == "用定义、例子和学习目标展开 人工智能导论。"
+    assert deck.slides[-2].visual == "summary"
     assert validate_deck(deck) == []
 
 
@@ -286,11 +314,11 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
         if shape.has_text_frame and shape.text_frame.text.strip()
     )
     assert "▪" in first_body_text
-    assert "技术位置" in first_body_text
+    assert "规则方法" in first_body_text
     lead_shape = next(
         shape
         for shape in prs.slides[1].shapes
-        if shape.has_text_frame and "关键是理解它能做什么" in shape.text_frame.text
+        if shape.has_text_frame and "规则难以手写" in shape.text_frame.text
     )
     assert lead_shape.text_frame.vertical_anchor == MSO_ANCHOR.MIDDLE
     assert Inches(1.12) < lead_shape.top < Inches(1.2)
@@ -308,7 +336,7 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
     process_title = next(
         shape
         for shape in prs.slides[3].shapes
-        if shape.has_text_frame and shape.text_frame.text.strip() == "模型训练"
+        if shape.has_text_frame and shape.text_frame.text.strip() == "建立模型"
     )
     assert process_title.text_frame.vertical_anchor == MSO_ANCHOR.MIDDLE
     process_arrow_types = []
