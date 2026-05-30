@@ -108,7 +108,9 @@ Prefer shorter text than the hard limits. A good academic slide normally has:
 
 For short teaching prompts, especially "导论" or "入门", expand the deck as a
 micro-lesson rather than a topic list: motivation, core vocabulary, smallest
-worked example, categories or process, common mistakes, and summary/practice.
+worked example, categories or process, common mistakes, and summary/next steps.
+For intro courses, prefer one throughline example over many scattered examples,
+and do not force exercises unless requested.
 
 ## Markdown Design Signals
 
@@ -121,6 +123,9 @@ the page heading:
 支撑：本页使用的定义、例子、步骤、案例、行动项、数据、流程、公式或来源
 洞察：本页一句底部总结
 ```
+
+`洞察` may also be a transition sentence that explains why the next slide
+follows. This is especially useful for intro courses.
 
 Allowed `版式` values:
 

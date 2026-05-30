@@ -76,7 +76,7 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
 For brief prompts, choose the deck spine before choosing components:
 
 - Teaching/training decks: motivation, core concepts, smallest worked example,
-  categories/process, common mistakes, summary/practice.
+  categories/process, common mistakes, summary/next steps.
 - Project reports: conclusion, progress, blockers, risks, decisions, owners.
 - Research reports: question, gap, method, experiment, results, limits, next
   validation.
@@ -86,7 +86,14 @@ For brief prompts, choose the deck spine before choosing components:
 For "机器学习导论", do not jump straight to a list of algorithms. A stronger
 teaching flow is: why rules are insufficient, data/model/loss vocabulary,
 house-price prediction walkthrough, supervised/unsupervised/reinforcement
-tasks, training-validation loop, common mistakes and next practice.
+tasks, training-validation loop, common mistakes and next steps. Use house-price
+prediction as the main throughline across the concept, example, task, and
+validation slides; use another example such as spam classification only as a
+supporting contrast.
+
+For intro courses with limited time, do not force a practice or understanding
+check page unless the user explicitly asks. The harder job is to make the
+throughline and transitions clear.
 
 For classroom projection, prefer fewer stronger objects over many tiny boxes:
 2-3 cards or steps per content slide are usually more readable than five, and
@@ -95,6 +102,10 @@ each card should carry 2-3 short points rather than a paragraph.
 ## Content Grammar
 
 Use `标签：要点一；要点二；要点三` for structured cards. Examples:
+
+Use `洞察：...` as a transition, not only a summary. A strong transition tells
+why the next slide follows, such as "四个词讲清楚后，房价预测就从例子变成了一条
+可复用主线。"
 
 For concept maps, use `concept_diagram` and order the bullets as the diagram
 should read:

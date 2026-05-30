@@ -412,6 +412,9 @@ def test_worker_expands_brief_prompt_to_intro_deck(app_context) -> None:
     assert deck_ir["slides"][1]["support"] == "规则系统的局限、数据中的规律和学习目标。"
     assert deck_ir["slides"][2]["visual"] == "concept_diagram"
     assert deck_ir["slides"][3]["visual"] == "example_walkthrough"
+    body_text = "\n".join("\n".join(slide["bullets"]) for slide in deck_ir["slides"])
+    assert "房价成交记录" in body_text
+    assert "课堂练习" not in body_text
 
 
 def test_worker_hermes_plan_updates_outline_and_records_artifact(

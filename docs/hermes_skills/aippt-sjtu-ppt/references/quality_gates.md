@@ -23,6 +23,8 @@ Each non-cover slide should have:
 - Large enough text for classroom projection: prefer 2-3 cards or process
   steps per slide, with 2-3 short points each.
 - A clear visual hierarchy at thumbnail size.
+- For intro teaching decks, a visible throughline example instead of unrelated
+  examples on every page.
 
 ## Contact-Sheet Checklist
 
@@ -51,6 +53,7 @@ long prose             -> lead takeaway + 3 cards
 dense comparison       -> two_column or table
 page feels empty       -> add support object, example, quote, or process structure
 page feels crowded     -> shorten bullets or split page
+intro deck feels scattered -> reuse one throughline example and add transition insights
 ```
 
 ## Tone Gate

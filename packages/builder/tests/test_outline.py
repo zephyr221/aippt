@@ -128,9 +128,11 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
     assert "规则难以手写" in body_text
     assert "房价预测" in body_text
+    assert "房价成交记录" in body_text
     assert "J(θ)=1/m" in body_text
     assert "预测 ŷ" in body_text
     assert "监督学习" in body_text
+    assert "课堂练习" not in body_text
     assert len(deck.slides[1].bullets) == 4
     assert deck.slides[1].support == "规则系统的局限、数据中的规律和学习目标。"
     assert deck.slides[2].visual == "concept_diagram"
@@ -157,8 +159,11 @@ def test_brief_machine_learning_intro_defaults_to_micro_lesson() -> None:
     assert deck.slides[2].visual == "concept_diagram"
     assert deck.slides[3].visual == "example_walkthrough"
     assert deck.slides[6].visual == "summary"
+    assert deck.slides[6].support == "误区、贯穿主线和学习路径共同收束。"
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
-    assert "垃圾邮件分类" in body_text
+    assert "垃圾邮件" in body_text
+    assert "贯穿主线" in body_text
+    assert "课堂练习" not in body_text
     assert "训练集高分不等于真实可靠" in body_text
     assert validate_deck(deck) == []
 

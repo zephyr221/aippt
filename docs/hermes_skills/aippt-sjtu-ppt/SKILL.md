@@ -52,6 +52,8 @@ anything. If references are needed, load:
 - `references/builder_contract.md` for Markdown/IR/builder rules.
 - `references/component_catalog.md` for allowed layout/component design signals.
 - `references/quality_gates.md` for review and repair checks.
+- `references/teaching_golden_examples.md` for the "机器学习导论" teaching
+  throughline pattern.
 - `references/memory_policy.md` for preference memory rules.
 
 ## Standard Workflow
@@ -84,8 +86,9 @@ turn it into slide titles, support objects, and component signals.
 
 - Teaching/training: learning goal and motivation -> core concepts -> smallest
   worked example -> categories or process -> common mistakes -> summary and
-  practice. For "机器学习导论", prefer a house-price prediction walkthrough
-  with `example_walkthrough` before listing model families.
+  next steps. For intro courses, do not force an exercise page unless the user
+  asks for one. For "机器学习导论", use house-price prediction as the throughline
+  across vocabulary, walkthrough, task types, and validation.
 - Project report: current conclusion -> progress and milestones -> blockers ->
   risks -> decisions needed -> owner/action table.
 - Research report: question -> gap -> method -> experiment -> results ->
@@ -107,6 +110,7 @@ Use the user's authored structure first. When choosing slide rhythms:
 - A course concept -> definition/example/mistake cards.
 - A worked example -> `example_walkthrough`; use process cards for broader
   workflows.
+- A teaching transition -> use `洞察：...` to connect why the next slide follows.
 
 Do not produce pages that are only large bullet boxes when a stronger structure
 is available.
