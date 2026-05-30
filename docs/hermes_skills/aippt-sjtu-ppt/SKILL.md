@@ -104,6 +104,10 @@ Use the user's authored structure first. When choosing slide rhythms:
 - `→` loops or "how it works" -> process cards.
 - Multiple key-value rows -> fact cards.
 - Core vocabulary with relationships -> `concept_diagram`.
+- Report overview with 3-4 big numbers -> `metric_strip`.
+- Roadmap or stage progress with dates -> `milestone_timeline`.
+- Representative projects/cases -> `project_showcase`.
+- Product/platform page with a screenshot or image need -> `media_explain`.
 - Mixed takeaways and support -> card grid.
 - Dense table-like content -> table or fact cards.
 - A long paragraph -> lead takeaway + 3-4 short supporting cards.

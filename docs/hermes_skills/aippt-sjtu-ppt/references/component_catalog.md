@@ -38,6 +38,10 @@ timeline
 process
 concept_diagram
 example_walkthrough
+metric_strip
+milestone_timeline
+project_showcase
+media_explain
 stat_callout
 quote_block
 two_column
@@ -62,6 +66,14 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
   such as input, model, output, loss, feedback, or boundary.
 - `example_walkthrough`: one worked teaching example with input, model/action,
   formula or result, and validation.
+- `metric_strip`: report overview with 3-4 large KPI/result numbers plus
+  optional workstream detail.
+- `milestone_timeline`: dated stages, project roadmap, or multi-phase progress
+  with optional screenshot placeholders.
+- `project_showcase`: 3-4 representative projects, products, cases, or modules
+  that each need a title, short points, and a visual placeholder.
+- `media_explain`: left screenshot/image placeholder plus right-side
+  positioning, layered structure, and supporting points.
 - `stat_callout`: 2-4 key metrics or counts that should be read first.
 - `quote_block`: one strong conclusion, cited example, warning, or principle.
 - `two_column`: input/output, before/after, problem/solution, theory/practice.
@@ -77,11 +89,12 @@ For brief prompts, choose the deck spine before choosing components:
 
 - Teaching/training decks: motivation, core concepts, smallest worked example,
   categories/process, common mistakes, summary/next steps.
-- Project reports: conclusion, progress, blockers, risks, decisions, owners.
+- Project reports: conclusion/KPIs, progress timeline, representative projects,
+  blockers, risks, decisions, owners.
 - Research reports: question, gap, method, experiment, results, limits, next
   validation.
-- Product introductions: user scenario, pain, capability workflow, value,
-  boundary, pilot plan.
+- Product introductions: user scenario, pain, screenshot/story, capability
+  workflow, value, boundary, pilot plan.
 
 For "机器学习导论", do not jump straight to a list of algorithms. A stronger
 teaching flow is: why rules are insufficient, data/model/loss vocabulary,
@@ -106,6 +119,62 @@ Use `标签：要点一；要点二；要点三` for structured cards. Examples:
 Use `洞察：...` as a transition, not only a summary. A strong transition tells
 why the next slide follows, such as "四个词讲清楚后，房价预测就从例子变成了一条
 可复用主线。"
+
+For report overview pages, use `metric_strip`:
+
+```text
+## 第 2 页 · 三年工作总览
+版式：one_column
+组件：metric_strip
+支撑：用关键数字和两条主线建立汇报全局。
+两条主线推进：AI 教学与应用 + AI 教务信息化。
+- 系统数量：30+ / 独立开发系统与应用
+- 课程支持：240+ / AI 课程深度支持
+- 持续开发：16 / 个月持续 AI 开发
+- 平台职责：平台 / AI 应用平台负责人
+- 主线一：AI 教学与应用开发；课程支持；平台建设；知识库沉淀
+- 主线二：AI 教务信息化；评教系统；教学运行监控；修业导师
+```
+
+For dated roadmaps, use `milestone_timeline`:
+
+```text
+## 第 3 页 · AI 应用开发全景
+版式：horizontal
+组件：milestone_timeline
+16 个月独立开发 30+ 系统，并全部稳定运行。
+- 2024 秋：AI 翻译；AI 转录；本地 A100 部署
+- 2024.11：AI 应用平台上线；招生 AI 审核；AI 组卷助手
+- 2025.5：AI 修业导师；评教系统；研小知智能体
+- 2025-2026：教学运行监控；查重系统；AI 知识库 / AIPPT
+```
+
+For representative projects, use `project_showcase`:
+
+```text
+## 第 4 页 · 代表性项目
+版式：horizontal
+组件：project_showcase
+国家级、省部级平台输出，并沉淀为自研产品。
+- AI 组卷助手：上线国家智慧教育平台；中小学大规模使用
+- 研小知智能体：为教育部学位中心建设；获得官方感谢信
+- 研招自命题查重：保密环境独立开发；600+ 套试卷解析
+- AI 知识库平台：高质量 RAG 引擎；教学与学科大模型底座
+```
+
+For platform/product explanation, use `media_explain`:
+
+```text
+## 第 5 页 · AI 知识库平台
+版式：horizontal
+组件：media_explain
+支撑：AI 知识库首页 / 笔记 / 检索界面截图。
+对标腾讯 ima，沉淀教学与学科大模型的基础底座。
+- 定位：自研高质量知识库平台，把文档做 RAG 处理，沉淀为可复用知识资产
+- 学科大模型建设：向上支撑学科模型
+- AI 教学材料与课程：服务教师制作和学生学习
+- AI 知识库底座：提供 RAG 引擎和检索能力
+```
 
 For concept maps, use `concept_diagram` and order the bullets as the diagram
 should read:

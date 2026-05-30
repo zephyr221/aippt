@@ -391,7 +391,15 @@ def render_body(slide, slide_data: Slide) -> None:
 
     visual = slide_data.visual or ""
     support = slide_data.support or slide_data.proof
-    if visual == "stat_callout":
+    if visual == "metric_strip":
+        _render_metric_strip(slide, items, support)
+    elif visual == "milestone_timeline":
+        _render_milestone_timeline(slide, items)
+    elif visual == "project_showcase":
+        _render_project_showcase(slide, items)
+    elif visual == "media_explain":
+        _render_media_explain(slide, items, support)
+    elif visual == "stat_callout":
         _render_stat_callouts(slide, items, support)
     elif visual == "quote_block":
         _render_quote_block_slide(slide, items, support)
@@ -658,6 +666,162 @@ def _render_stat_callouts(slide, items: list[str], support: str | None) -> None:
 
     if support:
         _insight(slide, f"支撑：{support}", top=6.08)
+
+
+def _render_metric_strip(slide, items: list[str], support: str | None) -> None:
+    lead, rest = _split_lead(items)
+    _lead_callout(slide, lead or "先用关键数字建立汇报判断。", compact=True)
+    metrics = [_metric_from_item(item) for item in (rest or items)[:4]]
+    metric_w = 2.72
+    for idx, metric in enumerate(metrics, start=1):
+        left = 0.92 + (idx - 1) * 2.94
+        _strip_metric_card(slide, left, 2.18, metric_w, 1.26, *metric)
+
+    detail_items = (rest or items)[4:6]
+    if detail_items:
+        positions = [(0.92, 3.78, 5.55, 1.86), (6.82, 3.78, 5.55, 1.86)]
+        for idx, item in enumerate(detail_items[:2], start=1):
+            left, top, width, height = positions[idx - 1]
+            _workstream_panel(slide, left, top, width, height, idx, item, active=idx == 1)
+    elif support:
+        _insight(slide, support, top=5.65)
+
+
+def _strip_metric_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    label: str,
+    number: str,
+    unit: str,
+    desc: str,
+) -> None:
+    _round_rect(slide, left, top, width, height, "FDF1F1", radius=0.035)
+    num_box = slide.shapes.add_textbox(Inches(left + 0.18), Inches(top + 0.22), Inches(width - 0.36), Inches(0.46))
+    p = num_box.text_frame.paragraphs[0]
+    p.text = f"{number}{unit}"
+    _style_paragraph(p, 28 if len(number) <= 5 else 23, SJTU_RED, bold=True)
+    label_box = slide.shapes.add_textbox(Inches(left + 0.2), Inches(top + 0.76), Inches(width - 0.4), Inches(0.24))
+    p = label_box.text_frame.paragraphs[0]
+    p.text = _trim(desc or label, 28)
+    _style_paragraph(p, 10.6, TEXT_BODY)
+
+
+def _workstream_panel(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    idx: int,
+    text: str,
+    active: bool = False,
+) -> None:
+    title, body = _split_key_value(text)
+    accent = SJTU_RED if active else WARM_GRAY_3
+    fill = WHITE if active else WARM_GRAY_1
+    border = SJTU_RED if active else WARM_GRAY_2
+    _round_rect(slide, left, top, width, height, fill, border=border, radius=0.035, shadow=True)
+    _rect(slide, left, top, 0.08, height, accent)
+    _number_badge(slide, left + 0.28, top + 0.26, str(idx), size=0.48, color=SJTU_RED if active else TEXT_CAPTION)
+    title_box = slide.shapes.add_textbox(Inches(left + 0.92), Inches(top + 0.24), Inches(width - 1.2), Inches(0.32))
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 26)
+    _style_paragraph(p, 14.5, SJTU_RED if active else TEXT_PRIMARY, bold=True)
+    _draw_check_points(slide, left + 0.46, top + 0.78, width - 0.76, height - 0.9, _split_card_points(body), compact=True)
+
+
+def _render_milestone_timeline(slide, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+    milestones = rest[:4] or items[:4]
+    if not milestones:
+        milestones = ["阶段一：明确目标；完成启动", "阶段二：交付原型；验证效果", "阶段三：扩大应用；沉淀经验"]
+
+    axis_y = 2.34 if lead else 1.72
+    _rect(slide, 1.2, axis_y, 10.88, 0.035, SJTU_RED)
+    count = min(len(milestones), 4)
+    col_w = 11.48 / max(count, 1)
+    for idx, item in enumerate(milestones[:4], start=1):
+        x = 0.92 + (idx - 1) * col_w
+        center = x + col_w / 2
+        _number_badge(slide, center - 0.15, axis_y - 0.15, str(idx), size=0.34, color=SJTU_RED)
+        label, body = _split_key_value(item)
+        title_box = slide.shapes.add_textbox(Inches(x + 0.08), Inches(axis_y + 0.35), Inches(col_w - 0.16), Inches(0.34))
+        p = title_box.text_frame.paragraphs[0]
+        p.text = _trim(label, 14)
+        _style_paragraph(p, 13.4, SJTU_RED, bold=True, align=PP_ALIGN.CENTER)
+        _timeline_stage_card(slide, x + 0.08, axis_y + 0.86, col_w - 0.18, 1.24, body or item)
+        _image_placeholder(slide, x + 0.08, axis_y + 2.36, col_w - 0.18, 1.48, "系统界面截图")
+
+
+def _timeline_stage_card(slide, left: float, top: float, width: float, height: float, body: str) -> None:
+    _round_rect(slide, left, top, width, height, "FDF1F1", radius=0.035)
+    _draw_check_points(slide, left + 0.22, top + 0.18, width - 0.44, height - 0.24, _split_card_points(body), compact=True)
+
+
+def _render_project_showcase(slide, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+    projects = rest[:4] or items[:4]
+    top = 2.12 if lead else 1.5
+    card_w = 2.73
+    gap = 0.24
+    for idx, item in enumerate(projects[:4], start=1):
+        left = 0.92 + (idx - 1) * (card_w + gap)
+        _project_showcase_card(slide, left, top, card_w, 2.28, item)
+        title, _body = _split_key_value(item)
+        _image_placeholder(slide, left, top + 2.52, card_w, 1.48, title or f"项目 {idx}")
+
+
+def _project_showcase_card(slide, left: float, top: float, width: float, height: float, text: str) -> None:
+    title, body = _split_key_value(text)
+    if not body:
+        title, body = _trim(text, 18), text
+    _rect(slide, left, top, width, 0.78, SJTU_RED)
+    title_box = slide.shapes.add_textbox(Inches(left + 0.28), Inches(top + 0.18), Inches(width - 0.5), Inches(0.36))
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 16)
+    _style_paragraph(p, 13.2, WHITE, bold=True)
+    _rect(slide, left, top + 0.78, width, height - 0.78, WARM_GRAY_1)
+    _draw_check_points(slide, left + 0.28, top + 1.02, width - 0.5, height - 1.08, _split_card_points(body), compact=True)
+
+
+def _render_media_explain(slide, items: list[str], support: str | None) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+    top = 2.05 if lead else 1.42
+    _image_placeholder(slide, 0.92, top, 6.15, 3.95, support or "系统界面截图")
+    explain = rest[:4] or items[:4]
+    right_x = 7.45
+    section_top = top + 0.12
+    first = explain[0] if explain else "定位：说明这个产品、平台或方法解决什么问题"
+    title, body = _split_key_value(first)
+    _section_heading(slide, right_x, section_top, title or "定位")
+    body_box = slide.shapes.add_textbox(Inches(right_x), Inches(section_top + 0.48), Inches(4.72), Inches(0.88))
+    body_box.text_frame.word_wrap = True
+    p = body_box.text_frame.paragraphs[0]
+    p.text = _trim(body or first, 98)
+    _style_paragraph(p, 12.8, TEXT_BODY)
+    p.line_spacing = 1.12
+
+    stack_items = explain[1:4]
+    if stack_items:
+        _section_heading(slide, right_x, section_top + 1.58, "结构")
+        for idx, item in enumerate(stack_items[:3]):
+            label, value = _split_key_value(item)
+            y = section_top + 2.02 + idx * 0.48
+            color = SJTU_RED if idx == 0 else "D74444" if idx == 1 else "8C8C8C"
+            shape = _round_rect(slide, right_x + 0.58 * idx, y, 4.2 - 0.58 * idx, 0.34, color, radius=0.04)
+            _shape_text(shape, _trim(label if value else item, 24), 10.5, WHITE, bold=True, align=PP_ALIGN.CENTER)
+    point_items = explain[4:]
+    if point_items:
+        _draw_check_points(slide, right_x, top + 3.56, 4.72, 0.82, point_items[:3], compact=True)
 
 
 def _metric_from_item(item: str) -> tuple[str, str, str, str]:
@@ -1224,6 +1388,74 @@ def _draw_card_points(
         )
         p.line_spacing = 1.08
         p.space_after = Pt(6 if compact else 8)
+
+
+def _draw_check_points(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    points: list[str],
+    compact: bool = False,
+) -> None:
+    box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
+    frame = box.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    frame.margin_left = Pt(0)
+    frame.margin_right = Pt(0)
+    frame.margin_top = Pt(0)
+    frame.margin_bottom = Pt(0)
+    max_points = 3 if compact else 4
+    trim_chars = 28 if compact and width < 3 else 42 if compact else 58
+    for idx, point in enumerate((points or ["请补充要点"])[:max_points]):
+        p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
+        text = _normalize_formula_text(point)
+        p.text = ""
+        check = p.add_run()
+        check.text = "✓ "
+        check.font.name = FONT
+        check.font.size = Pt(11.2 if compact else 12.2)
+        check.font.bold = True
+        check.font.color.rgb = rgb(SJTU_RED)
+        _set_ea(check)
+        run = p.add_run()
+        run.text = _trim(text, trim_chars)
+        run.font.name = FONT
+        run.font.size = Pt(11.2 if compact else 12.2)
+        run.font.color.rgb = rgb(TEXT_BODY)
+        _set_ea(run)
+        p.alignment = PP_ALIGN.LEFT
+        p.line_spacing = 1.08
+        p.space_after = Pt(5 if compact else 7)
+
+
+def _section_heading(slide, left: float, top: float, text: str) -> None:
+    box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(4.7), Inches(0.3))
+    p = box.text_frame.paragraphs[0]
+    p.text = _trim(text, 18)
+    _style_paragraph(p, 13, SJTU_RED, bold=True)
+
+
+def _image_placeholder(slide, left: float, top: float, width: float, height: float, caption: str) -> None:
+    _round_rect(slide, left, top, width, height, "F1F4F7", border="C8D2DF", radius=0.035)
+    icon = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE,
+        Inches(left + width / 2 - 0.26),
+        Inches(top + height / 2 - 0.18),
+        Inches(0.52),
+        Inches(0.36),
+    )
+    icon.fill.solid()
+    icon.fill.fore_color.rgb = rgb("9AA7B5")
+    icon.line.fill.background()
+    icon.shadow.inherit = False
+    _shape_text(icon, "图", 10.5, WHITE, bold=True, align=PP_ALIGN.CENTER)
+    label = slide.shapes.add_textbox(Inches(left + 0.2), Inches(top + height - 0.36), Inches(width - 0.4), Inches(0.22))
+    p = label.text_frame.paragraphs[0]
+    p.text = f"建议配图：{_trim(caption, 28)}"
+    _style_paragraph(p, 8.8, TEXT_CAPTION, align=PP_ALIGN.CENTER)
 
 
 def _quote_panel(slide, left: float, top: float, width: float, height: float, title: str, body: str) -> None:

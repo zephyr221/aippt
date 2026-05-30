@@ -114,6 +114,26 @@ VISUAL_ALIASES = {
     "表格": "table",
     "summary": "summary",
     "总结": "summary",
+    "metric_strip": "metric_strip",
+    "metrics": "metric_strip",
+    "kpi_strip": "metric_strip",
+    "成果数字": "metric_strip",
+    "指标条": "metric_strip",
+    "milestone_timeline": "milestone_timeline",
+    "roadmap": "milestone_timeline",
+    "timeline_cards": "milestone_timeline",
+    "里程碑": "milestone_timeline",
+    "阶段时间线": "milestone_timeline",
+    "project_showcase": "project_showcase",
+    "project_grid": "project_showcase",
+    "case_showcase": "project_showcase",
+    "项目展示": "project_showcase",
+    "案例展示": "project_showcase",
+    "media_explain": "media_explain",
+    "screenshot_story": "media_explain",
+    "screenshot_explain": "media_explain",
+    "图文解释": "media_explain",
+    "截图说明": "media_explain",
     "stat": "stat_callout",
     "stats": "stat_callout",
     "stat_callout": "stat_callout",
@@ -491,10 +511,14 @@ def _project_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]
         (
             "当前结论先说清",
             [
-                "版式：three_column",
-                "组件：rich_cards",
-                "支撑：用目标、进展和决策点展开。",
+                "版式：one_column",
+                "组件：metric_strip",
+                "支撑：用关键成果数字、目标、进展和决策点展开。",
                 f"{topic} 的汇报应先给出结论，让听众知道本次需要判断什么。",
+                "交付：3 项 / 已完成或进入验收的关键交付",
+                "进展：80% / 主要工作已推进到可评估阶段",
+                "风险：2 项 / 需要继续跟踪的依赖和质量风险",
+                "决策：1 个 / 需要本次会议确认的推进方向",
                 "目标：本阶段要交付什么；服务哪个对象；验收标准是什么",
                 "进展：已经完成哪些关键事项；哪些结果可复用；哪些还在验证",
                 "决策点：需要谁拍板；影响范围是什么；最晚什么时候决定",
@@ -504,12 +528,25 @@ def _project_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]
             "进展与里程碑",
             [
                 "版式：horizontal",
-                "组件：process",
+                "组件：milestone_timeline",
                 "支撑：按已完成、进行中、下一步展开。",
                 "项目汇报要把状态讲成时间线和责任闭环，而不是散点记录。",
                 "已完成：列出可验收成果；标注负责人；说明验证方式",
                 "进行中：说明当前卡点；给出预计完成时间；同步依赖方",
                 "下一步：拆成具体行动；明确交付物；安排检查节点",
+            ],
+        ),
+        (
+            "代表性成果与案例",
+            [
+                "版式：horizontal",
+                "组件：project_showcase",
+                "支撑：用 3-4 个代表性项目说明成果，而不是只列任务清单。",
+                "代表性成果页要让听众看到工作已经沉淀为可复用案例。",
+                "成果一：说明解决的问题；给出当前状态；提示可补充截图",
+                "成果二：说明服务对象；列出关键产出；提示可补充界面或证明材料",
+                "成果三：说明推广价值；列出验证信号；提示下一步应用场景",
+                "成果四：说明可复用模块；列出沉淀资产；提示后续扩展方向",
             ],
         ),
         (
@@ -522,6 +559,18 @@ def _project_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]
                 "进度风险：影响交付时间 / 依赖未闭环 / 每周同步阻塞清单",
                 "质量风险：影响上线稳定 / 测试覆盖不足 / 补充验证样例",
                 "协作风险：影响决策效率 / 需求口径变化 / 固化版本和负责人",
+            ],
+        ),
+        (
+            "下一步计划",
+            [
+                "版式：horizontal",
+                "组件：process",
+                "支撑：按近期、中期和交付检查点展开。",
+                "下一步计划要讲清顺序、责任和验收方式，让汇报能转成行动。",
+                "近期推进：完成关键缺口；同步依赖方；给出可检查产物",
+                "中期验证：扩大试用范围；收集反馈；修复高优先级问题",
+                "交付检查：对照目标验收；沉淀文档；安排后续维护机制",
             ],
         ),
     ]
@@ -588,7 +637,7 @@ def _product_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]
             "能力与工作流",
             [
                 "版式：horizontal",
-                "组件：process",
+                "组件：media_explain",
                 "支撑：按输入、处理、输出和反馈展开。",
                 "产品能力要讲成工作流，让听众知道它如何进入现有流程。",
                 "输入：接收哪些资料；需要什么权限；如何保证质量",
@@ -607,6 +656,32 @@ def _product_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]
                 "核心价值：节省时间；降低重复劳动；提高结果一致性",
                 "使用边界：不替代最终判断；需要数据和权限；关键结果要可审阅",
                 "下一步：选择试点场景；定义验收指标；安排反馈和迭代节奏",
+            ],
+        ),
+        (
+            "代表能力模块",
+            [
+                "版式：horizontal",
+                "组件：project_showcase",
+                "支撑：用核心模块、关键能力和截图占位展示产品形态。",
+                "产品介绍需要让听众看到它由哪些可复用模块组成。",
+                "模块一：解决一个高频任务；说明输入输出；提示可补充界面截图",
+                "模块二：支撑核心流程；说明自动化边界；提示可补充使用场景",
+                "模块三：沉淀数据或知识；说明复用价值；提示可补充结果截图",
+                "模块四：连接反馈闭环；说明监控或协作方式；提示下一步扩展",
+            ],
+        ),
+        (
+            "试点与推广计划",
+            [
+                "版式：horizontal",
+                "组件：milestone_timeline",
+                "支撑：按试点、验证、推广和复盘展开。",
+                "产品落地需要先小范围验证，再把经验变成可复制方案。",
+                "试点阶段：选择真实场景；确定负责人；明确成功指标",
+                "验证阶段：收集使用数据；访谈关键用户；修正产品边界",
+                "推广阶段：形成操作指南；培训使用者；接入协作流程",
+                "复盘阶段：沉淀问题清单；决定下一轮功能；安排持续运营",
             ],
         ),
     ]
@@ -729,6 +804,13 @@ def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
         layout = Layout.HORIZONTAL
     elif visual == "summary" and layout == Layout.ONE_COLUMN:
         layout = Layout.SUMMARY
+    elif visual in {
+        "metric_strip",
+        "milestone_timeline",
+        "project_showcase",
+        "media_explain",
+    }:
+        layout = Layout.HORIZONTAL if layout == Layout.ONE_COLUMN else layout
 
     if layout in {Layout.TWO_COLUMN, Layout.COMPARISON}:
         columns = _columns_from_items(bullets, 2)

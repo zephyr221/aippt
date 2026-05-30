@@ -187,11 +187,12 @@ SJTU PPT 生成器的 Markdown 大纲。
 - 课程/培训型要像老师备课：学习目标/动机 -> 核心概念 -> 最小案例 walkthrough -> 类型或流程 -> 常见误区 -> 小结/下一步；核心概念页优先用 `组件：concept_diagram`，最小案例页优先用 `组件：example_walkthrough`。
 - 例如“机器学习导论”应展开为为什么需要机器学习、核心思想、房价预测最小例子、监督/无监督/强化学习、训练验证流程、常见误区与下一步，而不是只列算法名。
 - 导论型课程时间有限，除非用户明确要求，不要硬塞练习页或检查理解页；更重要的是选一条主例子贯穿始终，例如机器学习导论用房价预测串起输入、模型、预测、损失、任务类型和验证闭环。
+- 汇报/产品类 PPT 不要全做卡片：总览页优先用 `metric_strip`，阶段进展用 `milestone_timeline`，代表项目用 `project_showcase`，平台/系统介绍用 `media_explain`。
 - 避免整页只有稀疏 bullet；优先组织成可被渲染为卡片、流程、事实块、公式块的内容。
 - 投影可读性优先：内容页通常 2-3 个卡片/步骤，每个卡片 2-3 个短点；不要为了显得丰富而塞满四五行长句。
 - 你需要承担页面设计：为内容页选择安全白名单里的版式和组件，让后端按你的设计信号渲染。
 - 可用版式：one_column、two_column、three_column、horizontal、comparison、table、summary。
-- 可用组件：rich_cards、fact_grid、timeline、process、concept_diagram、example_walkthrough、stat_callout、quote_block、card_grid、two_column、three_column、horizontal、table、summary。
+- 可用组件：rich_cards、fact_grid、timeline、process、concept_diagram、example_walkthrough、metric_strip、milestone_timeline、project_showcase、media_explain、stat_callout、quote_block、card_grid、two_column、three_column、horizontal、table、summary。
 - 版式/组件写成普通正文行，例如 `版式：three_column`、`组件：rich_cards`、`洞察：...`；不要写代码或 JSON。
 - 每个内容页尽量写 `支撑：...`，说明该页如何具体展开；可以是定义、例子、步骤、案例、行动项、数据、流程、公式、时间线或来源。
 - `洞察：...` 不只是总结，也可以承担转场：说明为什么下一页自然要讲这个。
@@ -213,7 +214,7 @@ SJTU PPT 生成器的 Markdown 大纲。
 
 ## 第 2 页 · {{页面标题}}
 版式：{{one_column / two_column / three_column / horizontal / comparison / table / summary}}
-组件：{{rich_cards / fact_grid / timeline / process / concept_diagram / example_walkthrough / stat_callout / quote_block / card_grid / table，可省略}}
+组件：{{rich_cards / fact_grid / timeline / process / concept_diagram / example_walkthrough / metric_strip / milestone_timeline / project_showcase / media_explain / stat_callout / quote_block / card_grid / table，可省略}}
 支撑：{{定义、例子、步骤、案例、行动项、数据、流程、公式、时间线或来源；可省略但建议保留}}
 {{本页核心判断，直接写内容，不加标签}}
 - {{主题一}}：{{2-3 句具体展开}}

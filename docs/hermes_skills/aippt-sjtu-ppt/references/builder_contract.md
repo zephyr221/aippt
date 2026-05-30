@@ -149,6 +149,10 @@ timeline
 process
 concept_diagram
 example_walkthrough
+metric_strip
+milestone_timeline
+project_showcase
+media_explain
 stat_callout
 quote_block
 two_column
@@ -173,6 +177,42 @@ Use `stat_callout` for 2-4 key metrics:
 ```text
 - 设计覆盖：100% / 内容页都要求组件信号
 - 展开对象：每页 1 个 / 定义、步骤、案例、数据或公式
+```
+
+Use `metric_strip` for report overview numbers:
+
+```text
+组件：metric_strip
+- 系统数量：30+ / 独立开发系统与应用
+- 课程支持：240+ / AI 课程深度支持
+- 持续开发：16 / 个月持续 AI 开发
+- 平台职责：平台 / AI 应用平台负责人
+```
+
+Use `milestone_timeline` for dated stage cards:
+
+```text
+组件：milestone_timeline
+- 2024 秋：AI 翻译；AI 转录；本地 A100 部署
+- 2024.11：AI 应用平台上线；招生 AI 审核；AI 组卷助手
+```
+
+Use `project_showcase` for representative projects:
+
+```text
+组件：project_showcase
+- AI 组卷助手：上线平台；大规模使用
+- AI 知识库平台：RAG 引擎；课程知识沉淀
+```
+
+Use `media_explain` when a platform/product page needs a screenshot placeholder:
+
+```text
+组件：media_explain
+支撑：系统首页 / 检索界面截图
+- 定位：说明产品解决什么问题
+- 底座：说明基础能力
+- 应用：说明上层使用场景
 ```
 
 Use `concept_diagram` for core vocabulary or system relationships:
@@ -213,6 +253,10 @@ The current builder chooses visual rhythm from content cues:
 timeline      multiple date anchors
 process       arrows, loops, "how it works"
 concept map   3-4 related concepts, vocabulary, input/model/output/loss
+metrics       report overview with 3-4 large KPI/result numbers
+milestones    dated roadmap or stage progress
+showcase      representative projects/cases with screenshot placeholders
+media explain platform/product screenshot plus explanation
 walkthrough   one concrete teaching example
 fact cards    several key-value rows
 card grid     mixed takeaways and supporting points

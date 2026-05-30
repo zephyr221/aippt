@@ -54,6 +54,7 @@ dense comparison       -> two_column or table
 page feels empty       -> add support object, example, quote, or process structure
 page feels crowded     -> shorten bullets or split page
 intro deck feels scattered -> reuse one throughline example and add transition insights
+report deck looks like only cards -> add metric_strip, milestone_timeline, project_showcase, or media_explain
 ```
 
 ## Tone Gate

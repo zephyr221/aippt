@@ -276,6 +276,74 @@ def test_stat_callout_and_quote_block_render_as_editable_text(tmp_path) -> None:
     assert "白名单组件" in slide_xml
 
 
+def test_report_components_render_as_editable_text(tmp_path) -> None:
+    deck = outline_to_deck(
+        """# 工作汇报组件
+
+## 第 1 页 · 封面
+主标题：工作汇报组件
+副标题：吸收参考 PPT 的汇报型页面
+
+## 第 2 页 · 三年工作总览
+版式：one_column
+组件：metric_strip
+支撑：用关键数字和两条主线建立汇报全局。
+- 系统数量：30+ / 独立开发系统与应用
+- 课程支持：240+ / AI 课程深度支持
+- 持续开发：16 / 个月持续 AI 开发
+- 平台职责：平台 / AI 应用平台负责人
+
+## 第 3 页 · AI 应用开发全景
+版式：horizontal
+组件：milestone_timeline
+16 个月独立开发 30+ 系统，并全部稳定运行。
+- 2024 秋：AI 翻译；AI 转录；本地 A100 部署
+- 2024.11：AI 应用平台上线；招生 AI 审核；AI 组卷助手
+- 2025.5：AI 修业导师；评教系统；研小知智能体
+- 2025-2026：教学运行监控；查重系统；AI 知识库 / AIPPT
+
+## 第 4 页 · 代表性项目
+版式：horizontal
+组件：project_showcase
+国家级、省部级平台输出，并沉淀为自研产品。
+- AI 组卷助手：上线国家智慧教育平台；中小学大规模使用
+- 研小知智能体：为教育部学位中心建设；获得官方感谢信
+- 研招自命题查重：保密环境独立开发；600+ 套试卷解析
+- AI 知识库平台：高质量 RAG 引擎；教学与学科大模型底座
+
+## 第 5 页 · AI 知识库平台
+版式：horizontal
+组件：media_explain
+支撑：AI 知识库首页 / 笔记 / 检索界面截图。
+对标腾讯 ima，沉淀教学与学科大模型的基础底座。
+- 定位：自研高质量知识库平台，把文档做 RAG 处理，沉淀为可复用知识资产
+- 学科大模型建设：向上支撑学科模型
+- AI 教学材料与课程：服务教师制作和学生学习
+- AI 知识库底座：提供 RAG 引擎和检索能力
+""",
+    )
+
+    assert deck.slides[1].visual == "metric_strip"
+    assert deck.slides[2].visual == "milestone_timeline"
+    assert deck.slides[3].visual == "project_showcase"
+    assert deck.slides[4].visual == "media_explain"
+    assert validate_deck(deck) == []
+
+    output = build_pptx(deck, tmp_path / "report-components.pptx")
+    with zipfile.ZipFile(output) as pptx:
+        slide_xml = "\n".join(
+            pptx.read(name).decode("utf-8")
+            for name in pptx.namelist()
+            if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+        )
+
+    assert "30+" in slide_xml
+    assert "2024 秋" in slide_xml
+    assert "AI 组卷助手" in slide_xml
+    assert "AI 知识库首页" in slide_xml
+    assert "建议配图" in slide_xml
+
+
 def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:
     deck = outline_to_deck("请制作五六页 PPT，关于机器学习的科普啊")
     output = build_pptx(deck, tmp_path / "ml.pptx")
