@@ -439,8 +439,8 @@ def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> No
         if shape.has_text_frame and shape.text_frame.text.strip()
     )
     assert "单击此处添加文本" not in thanks_text
-    assert Inches(0.85) < thanks.left < Inches(1.05)
-    assert Inches(2.25) < thanks.top < Inches(2.45)
+    assert Inches(3.05) < thanks.left < Inches(3.25)
+    assert Inches(2.85) < thanks.top < Inches(3.05)
 
 
 def test_explicit_page_outline_prefers_document_title_over_job_label() -> None:

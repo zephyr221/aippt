@@ -66,7 +66,7 @@ TEMPLATE_LAYOUTS = {
 }
 TEMPLATE_CONTENT_LAYOUT = "常规样式（1）"
 COVER_TITLE_LIMIT = 18
-COVER_SUBTITLE_LIMIT = 18
+COVER_SUBTITLE_LIMIT = 28
 
 
 def rgb(hex_color: str) -> RGBColor:
@@ -233,6 +233,13 @@ def _render_template_toc(slide, slide_data: Slide) -> None:
 
 
 def _render_template_thanks(slide, slide_data: Slide) -> None:
+    placeholder = _placeholder(slide, 11)
+    if placeholder is not None:
+        placeholder.left = Inches(3.15)
+        placeholder.top = Inches(2.95)
+        placeholder.width = Inches(2.54)
+        placeholder.height = Inches(0.86)
+        placeholder.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     _set_placeholder_lines(
         slide,
         11,
@@ -240,6 +247,7 @@ def _render_template_thanks(slide, slide_data: Slide) -> None:
         size=36,
         color=WHITE,
         bold=True,
+        align=PP_ALIGN.CENTER,
     )
 
 
@@ -291,6 +299,7 @@ def _set_placeholder_lines(
     color: str,
     bold: bool = False,
     font_name: str = FONT,
+    align: PP_ALIGN | None = None,
 ) -> None:
     placeholder = _placeholder(slide, idx)
     if placeholder is None:
@@ -301,7 +310,7 @@ def _set_placeholder_lines(
     for line_idx, line in enumerate(lines):
         p = frame.paragraphs[0] if line_idx == 0 else frame.add_paragraph()
         p.text = line
-        _style_paragraph(p, size, color, bold=bold, font_name=font_name)
+        _style_paragraph(p, size, color, bold=bold, font_name=font_name, align=align)
         p.line_spacing = 1.06
 
 
