@@ -100,6 +100,7 @@ Use the user's authored structure first. When choosing slide rhythms:
 - Date-heavy content -> timeline.
 - `→` loops or "how it works" -> process cards.
 - Multiple key-value rows -> fact cards.
+- Core vocabulary with relationships -> `concept_diagram`.
 - Mixed takeaways and support -> card grid.
 - Dense table-like content -> table or fact cards.
 - A long paragraph -> lead takeaway + 3-4 short supporting cards.

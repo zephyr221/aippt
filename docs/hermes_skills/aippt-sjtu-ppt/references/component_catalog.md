@@ -36,6 +36,7 @@ rich_cards
 fact_grid
 timeline
 process
+concept_diagram
 example_walkthrough
 stat_callout
 quote_block
@@ -57,6 +58,8 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
 - `timeline`: two or more dated events.
 - `process`: workflow, agent loop, model training, validation pipeline, or any
   `A -> B -> C` sequence.
+- `concept_diagram`: core vocabulary where 3-4 concepts relate to each other,
+  such as input, model, output, loss, feedback, or boundary.
 - `example_walkthrough`: one worked teaching example with input, model/action,
   formula or result, and validation.
 - `stat_callout`: 2-4 key metrics or counts that should be read first.
@@ -92,6 +95,21 @@ each card should carry 2-3 short points rather than a paragraph.
 ## Content Grammar
 
 Use `标签：要点一；要点二；要点三` for structured cards. Examples:
+
+For concept maps, use `concept_diagram` and order the bullets as the diagram
+should read:
+
+```text
+## 第 3 页 · 核心思想：从数据中学习规律
+版式：horizontal
+组件：concept_diagram
+支撑：输入、模型、预测和损失四个概念构成学习闭环。
+机器学习的核心不是记忆答案，而是学习能迁移到新样本的映射关系。
+- 输入 x：图片、文字、表格或传感器记录；需要转成特征；质量决定学习上限
+- 模型 fθ：把输入映射成预测；参数 θ 会在训练中更新；复杂度要匹配任务难度
+- 预测 ŷ：模型给出对新样本的估计；可以是类别、数值或排序；需要和真实标签比较
+- 损失 J：衡量预测与目标的差距；训练让损失变小；验证检查是否只是在背题
+```
 
 ```text
 ## 第 3 页 · 它如何工作

@@ -395,6 +395,8 @@ def render_body(slide, slide_data: Slide) -> None:
         _render_stat_callouts(slide, items, support)
     elif visual == "quote_block":
         _render_quote_block_slide(slide, items, support)
+    elif visual == "concept_diagram":
+        _render_concept_diagram(slide, items, support)
     elif visual == "example_walkthrough":
         _render_example_walkthrough(slide, items)
     elif slide_data.layout == Layout.TABLE or visual == "table":
@@ -886,6 +888,101 @@ def _render_process(slide, items: list[str]) -> None:
 
     if len(items) > len(process) + 1:
         _insight(slide, items[-1], top=5.75)
+
+
+def _render_concept_diagram(slide, items: list[str], support: str | None) -> None:
+    lead, rest = _split_lead(items)
+    _lead_callout(slide, lead, compact=True)
+    nodes = _concept_nodes(rest, support)
+
+    _concept_connector(slide, 4.17, 3.48, 5.05, 3.48)
+    _concept_connector(slide, 8.3, 3.48, 9.05, 3.48)
+    _concept_connector(slide, 6.67, 4.66, 6.67, 5.02)
+
+    positions = [
+        (0.92, 2.52, 3.25, 1.92, SJTU_RED, False),
+        (5.05, 2.34, 3.25, 2.28, GOLD, True),
+        (9.05, 2.52, 3.25, 1.92, BROWN, False),
+        (4.35, 5.02, 4.65, 0.82, SJTU_RED, False),
+    ]
+    for (title, body), (left, top, width, height, accent, emphasis) in zip(nodes, positions, strict=False):
+        _concept_node(slide, left, top, width, height, title, body, accent, emphasis=emphasis)
+
+
+def _concept_nodes(items: list[str], support: str | None) -> list[tuple[str, str]]:
+    nodes: list[tuple[str, str]] = []
+    for item in items:
+        if _is_formula_item(item):
+            continue
+        title, body = _split_key_value(item)
+        if not body:
+            title, body = _trim(item, 18), item
+        nodes.append((_trim(title, 14), _normalize_formula_text(body)))
+    fallbacks = [
+        ("输入", "先明确对象、材料和可观察信号。"),
+        ("模型", "把输入转成判断、预测或行动。"),
+        ("输出", "得到可检查的结果，再和目标比较。"),
+        ("反馈", support or "根据误差或评价结果，回到前一步继续改进。"),
+    ]
+    for fallback in fallbacks:
+        if len(nodes) >= 4:
+            break
+        nodes.append(fallback)
+    return nodes[:4]
+
+
+def _concept_connector(slide, x1: float, y1: float, x2: float, y2: float) -> None:
+    if abs(x2 - x1) >= abs(y2 - y1):
+        left = min(x1, x2)
+        _rect(slide, left, y1, max(abs(x2 - x1), 0.04), 0.035, GOLD)
+    else:
+        top = min(y1, y2)
+        _rect(slide, x1, top, 0.035, max(abs(y2 - y1), 0.04), GOLD)
+
+
+def _concept_node(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    title: str,
+    body: str,
+    accent: str,
+    emphasis: bool = False,
+) -> None:
+    fill = GOLD_PALE if emphasis else WHITE
+    border = accent if emphasis else WARM_GRAY_2
+    _round_rect(slide, left, top, width, height, fill, border=border, radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, accent)
+    if height <= 1.1:
+        label_box = slide.shapes.add_textbox(Inches(left + 0.28), Inches(top + 0.16), Inches(1.15), Inches(0.28))
+        p = label_box.text_frame.paragraphs[0]
+        p.text = _trim(title, 8)
+        _style_paragraph(p, 12, accent, bold=True)
+        body_box = slide.shapes.add_textbox(Inches(left + 1.48), Inches(top + 0.14), Inches(width - 1.75), Inches(0.46))
+        body_box.text_frame.word_wrap = True
+        body_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = body_box.text_frame.paragraphs[0]
+        p.text = _trim(body, 70)
+        _style_paragraph(p, 10.6, TEXT_BODY, font_name=MATH_FONT if _looks_like_formula_text(body) else FONT)
+        return
+
+    label_box = slide.shapes.add_textbox(Inches(left + 0.3), Inches(top + 0.25), Inches(width - 0.6), Inches(0.38))
+    label_box.text_frame.word_wrap = True
+    label_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = label_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 16)
+    _style_paragraph(p, 14 if emphasis else 13.2, TEXT_PRIMARY, bold=True, align=PP_ALIGN.CENTER)
+    _draw_card_points(
+        slide,
+        left + 0.3,
+        top + 0.83,
+        width - 0.6,
+        height - 1.0,
+        _split_card_points(body),
+        compact=True,
+    )
 
 
 def _render_example_walkthrough(slide, items: list[str]) -> None:

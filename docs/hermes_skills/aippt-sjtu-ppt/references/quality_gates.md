@@ -46,6 +46,7 @@ Use these repairs:
 too many dates         -> timeline
 too many arrows        -> process cards
 many key-value facts   -> fact cards
+core terms feel abstract -> concept_diagram
 long prose             -> lead takeaway + 3 cards
 dense comparison       -> two_column or table
 page feels empty       -> add support object, example, quote, or process structure

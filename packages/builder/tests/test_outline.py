@@ -129,9 +129,11 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     assert "规则难以手写" in body_text
     assert "房价预测" in body_text
     assert "J(θ)=1/m" in body_text
+    assert "预测 ŷ" in body_text
     assert "监督学习" in body_text
     assert len(deck.slides[1].bullets) == 4
     assert deck.slides[1].support == "规则系统的局限、数据中的规律和学习目标。"
+    assert deck.slides[2].visual == "concept_diagram"
     assert deck.slides[3].visual == "example_walkthrough"
     assert all("：" in bullet for bullet in deck.slides[1].bullets[1:])
     assert all("；" in bullet for bullet in deck.slides[1].bullets[1:])
@@ -152,6 +154,7 @@ def test_brief_machine_learning_intro_defaults_to_micro_lesson() -> None:
         "常见误区与下一步",
     ]
     assert deck.slides[1].layout == "three_column"
+    assert deck.slides[2].visual == "concept_diagram"
     assert deck.slides[3].visual == "example_walkthrough"
     assert deck.slides[6].visual == "summary"
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
@@ -281,6 +284,7 @@ def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:
 
     assert "J(θ)=1/m" in slide_xml
     assert "Cambria Math" in slide_xml
+    assert "预测 ŷ" in slide_xml
     assert "板书" in slide_xml
     assert "把误差变小" in slide_xml
 

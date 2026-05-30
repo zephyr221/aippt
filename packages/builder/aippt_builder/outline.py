@@ -90,6 +90,14 @@ VISUAL_ALIASES = {
     "process_cards": "process",
     "流程卡": "process",
     "流程图": "process",
+    "concept_diagram": "concept_diagram",
+    "concept_map": "concept_diagram",
+    "diagram": "concept_diagram",
+    "map": "concept_diagram",
+    "概念图": "concept_diagram",
+    "结构图": "concept_diagram",
+    "图解": "concept_diagram",
+    "关系图": "concept_diagram",
     "example_walkthrough": "example_walkthrough",
     "worked_example": "example_walkthrough",
     "case_walkthrough": "example_walkthrough",
@@ -331,12 +339,13 @@ def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]
             (
                 "核心思想：从数据中学习规律",
                 [
-                    "版式：three_column",
-                    "组件：rich_cards",
-                    "支撑：输入、模型、损失三个概念共同展开。",
+                    "版式：horizontal",
+                    "组件：concept_diagram",
+                    "支撑：输入、模型、预测和损失四个概念构成学习闭环。",
                     "机器学习的核心不是记忆答案，而是学习能迁移到新样本的映射关系。",
                     "输入 x：图片、文字、表格或传感器记录；需要转成特征；质量决定学习上限",
                     "模型 fθ：把输入映射成预测；参数 θ 会在训练中更新；复杂度要匹配任务难度",
+                    "预测 ŷ：模型给出对新样本的估计；可以是类别、数值或排序；需要和真实标签比较",
                     "损失 J：衡量预测与目标的差距；训练让损失变小；验证检查是否只是在背题",
                     "洞察：导论课要先建立词汇表，后面的算法才讲得动。",
                 ],
@@ -411,13 +420,14 @@ def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]
             (
                 "核心概念",
                 [
-                    "版式：three_column",
-                    "组件：rich_cards",
-                    "支撑：用关键词、定义和例子建立共同语言。",
+                    "版式：horizontal",
+                    "组件：concept_diagram",
+                    "支撑：用关键词、关系和边界建立共同语言。",
                     f"学习 {topic} 之前，需要先把几个基础词汇放到同一张地图里。",
                     "关键词一：给出短定义；说明它解决的问题；配一个日常例子",
                     "关键词二：说明它和前一个概念的区别；指出常见混淆；补一个反例",
                     "关键词三：解释它在流程中的作用；说明输入输出；提示后续学习路径",
+                    "边界条件：说明什么时候不适用；需要哪些前提；如何检查理解是否正确",
                 ],
             ),
             (
@@ -715,7 +725,7 @@ def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
         layout = Layout.COMPARISON if layout == Layout.COMPARISON else Layout.TWO_COLUMN
     elif visual == "three_column":
         layout = Layout.THREE_COLUMN
-    elif visual in {"horizontal", "process", "example_walkthrough"} and layout == Layout.ONE_COLUMN:
+    elif visual in {"horizontal", "process", "example_walkthrough", "concept_diagram"} and layout == Layout.ONE_COLUMN:
         layout = Layout.HORIZONTAL
     elif visual == "summary" and layout == Layout.ONE_COLUMN:
         layout = Layout.SUMMARY

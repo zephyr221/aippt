@@ -170,7 +170,7 @@ def _check_layout_rhythm(slides: list[dict[str, Any]], suggestions: list[str]) -
         if slide.get("layout") not in {"cover", "thanks"}
     ]
     if len(content_layouts) >= 4 and len(set(content_layouts)) <= 1:
-        suggestions.append("版式节奏偏单一，建议加入 timeline、process cards 或 fact cards。")
+        suggestions.append("版式节奏偏单一，建议加入 concept_diagram、timeline、process cards 或 fact cards。")
     rhythms = [
         str(slide.get("visual") or slide.get("layout") or "")
         for slide in slides
@@ -179,7 +179,7 @@ def _check_layout_rhythm(slides: list[dict[str, Any]], suggestions: list[str]) -
     for idx in range(0, max(0, len(rhythms) - 2)):
         if rhythms[idx] and len({rhythms[idx], rhythms[idx + 1], rhythms[idx + 2]}) == 1:
             suggestions.append(
-                f"第 {idx + 1}-{idx + 3} 张视觉节奏连续重复，可换成 stat_callout、quote_block、example_walkthrough、table 或 process。"
+                f"第 {idx + 1}-{idx + 3} 张视觉节奏连续重复，可换成 concept_diagram、stat_callout、quote_block、example_walkthrough、table 或 process。"
             )
             break
 

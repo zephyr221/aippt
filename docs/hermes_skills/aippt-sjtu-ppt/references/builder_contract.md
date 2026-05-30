@@ -142,6 +142,7 @@ rich_cards
 fact_grid
 timeline
 process
+concept_diagram
 example_walkthrough
 stat_callout
 quote_block
@@ -167,6 +168,17 @@ Use `stat_callout` for 2-4 key metrics:
 ```text
 - 设计覆盖：100% / 内容页都要求组件信号
 - 展开对象：每页 1 个 / 定义、步骤、案例、数据或公式
+```
+
+Use `concept_diagram` for core vocabulary or system relationships:
+
+```text
+版式：horizontal
+组件：concept_diagram
+- 输入 x：样本、特征和可观察信号
+- 模型 fθ：把输入映射成预测
+- 预测 ŷ：输出类别、数值或排序
+- 损失 J：衡量预测与目标的差距，并反馈到训练
 ```
 
 Use `example_walkthrough` for one worked teaching example:
@@ -195,6 +207,7 @@ The current builder chooses visual rhythm from content cues:
 ```text
 timeline      multiple date anchors
 process       arrows, loops, "how it works"
+concept map   3-4 related concepts, vocabulary, input/model/output/loss
 walkthrough   one concrete teaching example
 fact cards    several key-value rows
 card grid     mixed takeaways and supporting points

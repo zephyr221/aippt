@@ -410,6 +410,7 @@ def test_worker_expands_brief_prompt_to_intro_deck(app_context) -> None:
         "三类经典任务",
     ]
     assert deck_ir["slides"][1]["support"] == "规则系统的局限、数据中的规律和学习目标。"
+    assert deck_ir["slides"][2]["visual"] == "concept_diagram"
     assert deck_ir["slides"][3]["visual"] == "example_walkthrough"
 
 
