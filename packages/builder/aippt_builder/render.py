@@ -395,6 +395,8 @@ def render_body(slide, slide_data: Slide) -> None:
         _render_stat_callouts(slide, items, support)
     elif visual == "quote_block":
         _render_quote_block_slide(slide, items, support)
+    elif visual == "example_walkthrough":
+        _render_example_walkthrough(slide, items)
     elif slide_data.layout == Layout.TABLE or visual == "table":
         _render_table_slide(slide, slide_data.table, items)
     elif slide_data.layout in {Layout.TWO_COLUMN, Layout.COMPARISON} or visual == "two_column":
@@ -886,6 +888,31 @@ def _render_process(slide, items: list[str]) -> None:
         _insight(slide, items[-1], top=5.75)
 
 
+def _render_example_walkthrough(slide, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    _lead_callout(slide, lead, compact=True)
+    formula_items = [item for item in rest if _is_formula_item(item)]
+    non_formula_items = [item for item in rest if item not in formula_items]
+    cards = non_formula_items[:3] or rest[:3] or items[1:4]
+    if not cards:
+        cards = ["输入：先明确样本和标签", "模型：写出预测关系", "验证：检查是否能迁移"]
+
+    left = 0.9
+    top = 2.34
+    width = 11.55
+    gap = 0.32
+    card_w = (width - gap * 2) / 3
+    colors = [SJTU_RED, GOLD, BROWN]
+    for idx, item in enumerate(cards[:3], start=1):
+        x = left + (idx - 1) * (card_w + gap)
+        _example_walkthrough_card(slide, x, top, card_w, 2.25, idx, item, colors[idx - 1])
+
+    if formula_items:
+        _formula_panel(slide, _normalize_formula_text(formula_items[0]), top=5.18)
+    elif len(non_formula_items) > 3:
+        _insight(slide, non_formula_items[3], top=5.38)
+
+
 def _lead_callout(slide, text: str, compact: bool = False) -> None:
     text = text or "核心结论"
     h = 0.88 if compact else 1.05
@@ -954,6 +981,40 @@ def _rich_content_card(slide, left: float, top: float, width: float, height: flo
         height - 1.08,
         _split_card_points(body),
         compact=width < 4.2,
+    )
+
+
+def _example_walkthrough_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    idx: int,
+    text: str,
+    accent: str,
+) -> None:
+    _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, accent)
+    _number_badge(slide, left + 0.2, top + 0.22, str(idx), size=0.36, color=accent)
+    title, body = _split_process_text(text)
+
+    title_box = slide.shapes.add_textbox(Inches(left + 0.68), Inches(top + 0.18), Inches(width - 0.92), Inches(0.45))
+    title_box.text_frame.word_wrap = True
+    title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 18)
+    _style_paragraph(p, 13.4 if len(title) <= 10 else 12.7, TEXT_PRIMARY, bold=True)
+
+    points = _split_card_points(body)
+    _draw_card_points(
+        slide,
+        left + 0.28,
+        top + 0.82,
+        width - 0.56,
+        height - 0.98,
+        points,
+        compact=True,
     )
 
 

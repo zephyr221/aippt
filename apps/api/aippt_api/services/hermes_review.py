@@ -179,7 +179,7 @@ def _check_layout_rhythm(slides: list[dict[str, Any]], suggestions: list[str]) -
     for idx in range(0, max(0, len(rhythms) - 2)):
         if rhythms[idx] and len({rhythms[idx], rhythms[idx + 1], rhythms[idx + 2]}) == 1:
             suggestions.append(
-                f"第 {idx + 1}-{idx + 3} 张视觉节奏连续重复，可换成 stat_callout、quote_block、table 或 process。"
+                f"第 {idx + 1}-{idx + 3} 张视觉节奏连续重复，可换成 stat_callout、quote_block、example_walkthrough、table 或 process。"
             )
             break
 

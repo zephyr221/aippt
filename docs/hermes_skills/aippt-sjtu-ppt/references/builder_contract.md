@@ -142,6 +142,7 @@ rich_cards
 fact_grid
 timeline
 process
+example_walkthrough
 stat_callout
 quote_block
 two_column
@@ -168,6 +169,17 @@ Use `stat_callout` for 2-4 key metrics:
 - 展开对象：每页 1 个 / 定义、步骤、案例、数据或公式
 ```
 
+Use `example_walkthrough` for one worked teaching example:
+
+```text
+版式：horizontal
+组件：example_walkthrough
+- 准备数据：输入、标签、异常检查
+- 建立模型：预测关系与参数含义
+- 公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))
+- 验证泛化：留出新样本测试
+```
+
 Use `quote_block` for one strong sourced conclusion:
 
 ```text
@@ -183,6 +195,7 @@ The current builder chooses visual rhythm from content cues:
 ```text
 timeline      multiple date anchors
 process       arrows, loops, "how it works"
+walkthrough   one concrete teaching example
 fact cards    several key-value rows
 card grid     mixed takeaways and supporting points
 ```

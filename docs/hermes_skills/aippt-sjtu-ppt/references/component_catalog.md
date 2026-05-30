@@ -36,6 +36,7 @@ rich_cards
 fact_grid
 timeline
 process
+example_walkthrough
 stat_callout
 quote_block
 two_column
@@ -56,6 +57,8 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
 - `timeline`: two or more dated events.
 - `process`: workflow, agent loop, model training, validation pipeline, or any
   `A -> B -> C` sequence.
+- `example_walkthrough`: one worked teaching example with input, model/action,
+  formula or result, and validation.
 - `stat_callout`: 2-4 key metrics or counts that should be read first.
 - `quote_block`: one strong conclusion, cited example, warning, or principle.
 - `two_column`: input/output, before/after, problem/solution, theory/practice.
@@ -99,6 +102,20 @@ Use `标签：要点一；要点二；要点三` for structured cards. Examples:
 - 模型训练：用 ŷ=fθ(x) 产生预测；根据误差调整参数 θ
 - 效果评估：保留测试集；比较指标；回到数据继续迭代
 - 公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))
+```
+
+For worked examples, use `example_walkthrough`:
+
+```text
+## 第 4 页 · 最小例子：房价预测
+版式：horizontal
+组件：example_walkthrough
+支撑：用房屋面积预测价格，把抽象术语落到一个可算例子。
+用房价预测可以串起输入、标签、模型、损失和泛化这五个关键词。
+- 准备数据：输入是面积、位置和房龄；标签是成交价；先检查缺失值
+- 建立模型：从线性关系开始；预测值写作 ŷ=fθ(x)；参数代表特征影响
+- 公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))，损失越小代表整体预测越接近标签
+- 验证泛化：留出新房源测试；看误差是否稳定；失败样例提示数据问题
 ```
 
 For metric slides, make the first segment a large number:

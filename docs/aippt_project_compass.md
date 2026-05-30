@@ -113,8 +113,8 @@ contract is:
 The parser converts those hints into `layout`, `visual`, `columns`, `items`,
 `support`, `table`, and `insight` fields. The renderer honors known signals and
 ignores unknown ones. The current production-safe component set also includes
-`stat_callout` for metric pages and `quote_block` for a sourced principle,
-example, or warning.
+`stat_callout` for metric pages, `quote_block` for a sourced principle,
+example, or warning, and `example_walkthrough` for concrete teaching cases.
 
 The next style improvements should continue at the layout-system level, not by
 manually polishing one generated deck.

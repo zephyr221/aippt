@@ -90,6 +90,12 @@ VISUAL_ALIASES = {
     "process_cards": "process",
     "流程卡": "process",
     "流程图": "process",
+    "example_walkthrough": "example_walkthrough",
+    "worked_example": "example_walkthrough",
+    "case_walkthrough": "example_walkthrough",
+    "案例讲解": "example_walkthrough",
+    "案例拆解": "example_walkthrough",
+    "例题讲解": "example_walkthrough",
     "two_column": "two_column",
     "双栏": "two_column",
     "three_column": "three_column",
@@ -339,7 +345,7 @@ def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]
                 "最小例子：房价预测",
                 [
                     "版式：horizontal",
-                    "组件：process",
+                    "组件：example_walkthrough",
                     "支撑：用房屋面积预测价格，把抽象术语落到一个可算例子。",
                     "用房价预测可以串起输入、标签、模型、损失和泛化这五个关键词。",
                     "准备数据：输入是面积、位置和房龄；标签是成交价；先检查缺失值和异常样本",
@@ -709,7 +715,7 @@ def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
         layout = Layout.COMPARISON if layout == Layout.COMPARISON else Layout.TWO_COLUMN
     elif visual == "three_column":
         layout = Layout.THREE_COLUMN
-    elif visual in {"horizontal", "process"} and layout == Layout.ONE_COLUMN:
+    elif visual in {"horizontal", "process", "example_walkthrough"} and layout == Layout.ONE_COLUMN:
         layout = Layout.HORIZONTAL
     elif visual == "summary" and layout == Layout.ONE_COLUMN:
         layout = Layout.SUMMARY

@@ -85,7 +85,7 @@ turn it into slide titles, support objects, and component signals.
 - Teaching/training: learning goal and motivation -> core concepts -> smallest
   worked example -> categories or process -> common mistakes -> summary and
   practice. For "机器学习导论", prefer a house-price prediction walkthrough
-  before listing model families.
+  with `example_walkthrough` before listing model families.
 - Project report: current conclusion -> progress and milestones -> blockers ->
   risks -> decisions needed -> owner/action table.
 - Research report: question -> gap -> method -> experiment -> results ->
@@ -104,7 +104,8 @@ Use the user's authored structure first. When choosing slide rhythms:
 - Dense table-like content -> table or fact cards.
 - A long paragraph -> lead takeaway + 3-4 short supporting cards.
 - A course concept -> definition/example/mistake cards.
-- A worked example -> process cards.
+- A worked example -> `example_walkthrough`; use process cards for broader
+  workflows.
 
 Do not produce pages that are only large bullet boxes when a stronger structure
 is available.
