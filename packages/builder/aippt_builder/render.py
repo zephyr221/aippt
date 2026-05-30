@@ -903,14 +903,23 @@ def _render_example_walkthrough(slide, items: list[str]) -> None:
     gap = 0.32
     card_w = (width - gap * 2) / 3
     colors = [SJTU_RED, GOLD, BROWN]
+    _example_relation_line(slide, left, top + 1.12, card_w, gap, len(cards[:3]))
     for idx, item in enumerate(cards[:3], start=1):
         x = left + (idx - 1) * (card_w + gap)
         _example_walkthrough_card(slide, x, top, card_w, 2.25, idx, item, colors[idx - 1])
 
     if formula_items:
-        _formula_panel(slide, _normalize_formula_text(formula_items[0]), top=5.18)
+        _example_formula_board(slide, _normalize_formula_text(formula_items[0]), top=5.12)
     elif len(non_formula_items) > 3:
         _insight(slide, non_formula_items[3], top=5.38)
+
+
+def _example_relation_line(slide, left: float, top: float, card_w: float, gap: float, count: int) -> None:
+    if count < 2:
+        return
+    for idx in range(count - 1):
+        x = left + (idx + 1) * card_w + idx * gap + 0.03
+        _rect(slide, x, top, max(0.05, gap - 0.06), 0.035, GOLD)
 
 
 def _lead_callout(slide, text: str, compact: bool = False) -> None:
@@ -1159,6 +1168,32 @@ def _formula_panel(slide, text: str, top: float = 4.88) -> None:
     p = formula_box.text_frame.paragraphs[0]
     p.text = _trim(_normalize_formula_text(formula), 118)
     _style_paragraph(p, 15 if len(formula) <= 70 else 12.5, TEXT_PRIMARY, font_name=MATH_FONT)
+
+
+def _example_formula_board(slide, text: str, top: float = 5.08) -> None:
+    title, formula = _split_key_value(text)
+    if not formula:
+        title, formula = "板书", text
+    label = "板书" if title in {"公式", "损失函数", "目标函数"} else title
+    formula = _normalize_formula_text(formula)
+    _round_rect(slide, 0.9, top, 11.55, 0.98, GOLD_PALE, border=GOLD, radius=0.035, shadow=True)
+    _rect(slide, 0.9, top, 0.06, 0.98, SJTU_RED)
+
+    label_box = slide.shapes.add_textbox(Inches(1.18), Inches(top + 0.16), Inches(1.35), Inches(0.32))
+    p = label_box.text_frame.paragraphs[0]
+    p.text = _trim(label, 8)
+    _style_paragraph(p, 13, SJTU_RED, bold=True)
+
+    formula_box = slide.shapes.add_textbox(Inches(2.55), Inches(top + 0.15), Inches(9.0), Inches(0.38))
+    formula_box.text_frame.word_wrap = True
+    p = formula_box.text_frame.paragraphs[0]
+    p.text = _trim(formula, 92)
+    _style_paragraph(p, 16 if len(formula) <= 62 else 13.6, TEXT_PRIMARY, font_name=MATH_FONT)
+
+    note_box = slide.shapes.add_textbox(Inches(2.55), Inches(top + 0.58), Inches(9.3), Inches(0.24))
+    p = note_box.text_frame.paragraphs[0]
+    p.text = "把误差变小，就是让模型参数更适合这批训练样本。"
+    _style_paragraph(p, 10.8, TEXT_BODY)
 
 
 def render_footer(slide, page_num: int) -> None:

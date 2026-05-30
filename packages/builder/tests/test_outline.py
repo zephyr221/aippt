@@ -281,6 +281,8 @@ def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:
 
     assert "J(θ)=1/m" in slide_xml
     assert "Cambria Math" in slide_xml
+    assert "板书" in slide_xml
+    assert "把误差变小" in slide_xml
 
 
 def test_builder_uses_sjtu_template_when_configured(tmp_path, monkeypatch) -> None:
