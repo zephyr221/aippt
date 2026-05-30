@@ -36,6 +36,7 @@ class Slide(BaseModel):
     layout: Layout
     title: str = Field(default="", max_length=120)
     subtitle: str = ""
+    visual: str | None = Field(default=None, max_length=40)
     bullets: list[str] = Field(default_factory=list)
     columns: list[Column] = Field(default_factory=list)
     items: list[HorizontalItem] = Field(default_factory=list)
@@ -48,4 +49,3 @@ class Deck(BaseModel):
     subtitle: str = ""
     author: str = ""
     slides: list[Slide] = Field(min_length=1)
-

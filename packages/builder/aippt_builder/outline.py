@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 
 from .constants import MAX_BULLET_CHARS, MAX_BULLETS, MAX_TITLE_CHARS
-from .schema import Deck, Layout, Slide
+from .schema import Column, Deck, HorizontalItem, Layout, Slide, TableData
 
 
 HEADING_RE = re.compile(r"^(#{1,3})\s+(.+?)\s*$")
@@ -13,6 +13,15 @@ HORIZONTAL_RULE_RE = re.compile(r"^(?:-{3,}|\*{3,}|_{3,})$")
 TABLE_SEPARATOR_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
 SPEAKER_NOTES_RE = re.compile(r"^(?:\*\*)?\s*(?:讲者备注|演讲者备注|备注)\s*(?:\*\*)?\s*[：:]")
 CONTENT_LABEL_RE = re.compile(r"^(?:一句话|核心判断|核心结论|本页核心判断)\s*[：:]\s*")
+LAYOUT_LABEL_RE = re.compile(r"^(?:版式|布局|layout)\s*[：:]\s*(.+?)\s*$", re.IGNORECASE)
+VISUAL_LABEL_RE = re.compile(
+    r"^(?:组件|视觉|visual|component)\s*[：:]\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
+INSIGHT_LABEL_RE = re.compile(
+    r"^(?:洞察|insight|核心提示|页面提示|底部提示)\s*[：:]\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
 COVER_HEADINGS = {"封面", "首页", "标题页"}
 CHINESE_NUMBERS = {
     "一": 1,
@@ -26,6 +35,67 @@ CHINESE_NUMBERS = {
     "八": 8,
     "九": 9,
     "十": 10,
+}
+LAYOUT_ALIASES = {
+    "cover": Layout.COVER,
+    "封面": Layout.COVER,
+    "section": Layout.SECTION,
+    "章节": Layout.SECTION,
+    "目录": Layout.TOC,
+    "toc": Layout.TOC,
+    "one_column": Layout.ONE_COLUMN,
+    "single": Layout.ONE_COLUMN,
+    "单栏": Layout.ONE_COLUMN,
+    "正文": Layout.ONE_COLUMN,
+    "two_column": Layout.TWO_COLUMN,
+    "two-columns": Layout.TWO_COLUMN,
+    "双栏": Layout.TWO_COLUMN,
+    "左右栏": Layout.TWO_COLUMN,
+    "three_column": Layout.THREE_COLUMN,
+    "three-columns": Layout.THREE_COLUMN,
+    "三栏": Layout.THREE_COLUMN,
+    "horizontal": Layout.HORIZONTAL,
+    "横向": Layout.HORIZONTAL,
+    "流程": Layout.HORIZONTAL,
+    "阶段": Layout.HORIZONTAL,
+    "comparison": Layout.COMPARISON,
+    "对比": Layout.COMPARISON,
+    "table": Layout.TABLE,
+    "表格": Layout.TABLE,
+    "summary": Layout.SUMMARY,
+    "总结": Layout.SUMMARY,
+    "thanks": Layout.THANKS,
+    "致谢": Layout.THANKS,
+}
+VISUAL_ALIASES = {
+    "cards": "card_grid",
+    "card_grid": "card_grid",
+    "卡片": "card_grid",
+    "卡片组": "card_grid",
+    "rich_cards": "rich_cards",
+    "rich_card_grid": "rich_cards",
+    "详实卡片": "rich_cards",
+    "多要点卡片": "rich_cards",
+    "fact_grid": "fact_grid",
+    "facts": "fact_grid",
+    "事实块": "fact_grid",
+    "事实卡": "fact_grid",
+    "timeline": "timeline",
+    "时间线": "timeline",
+    "process": "process",
+    "process_cards": "process",
+    "流程卡": "process",
+    "流程图": "process",
+    "two_column": "two_column",
+    "双栏": "two_column",
+    "three_column": "three_column",
+    "三栏": "three_column",
+    "horizontal": "horizontal",
+    "横向": "horizontal",
+    "table": "table",
+    "表格": "table",
+    "summary": "summary",
+    "总结": "summary",
 }
 
 
@@ -55,16 +125,10 @@ def outline_to_deck(markdown: str, title: str | None = None, author: str = "") -
             )
         )
     for section_title, bullets in parsed.sections:
-        chunks = [bullets[:MAX_BULLETS]] if parsed.explicit_pages else _chunks(bullets or ["请补充这一页的要点。"], MAX_BULLETS)
+        chunks = [bullets] if parsed.explicit_pages else _chunks(bullets or ["请补充这一页的要点。"], MAX_BULLETS)
         for idx, chunk in enumerate(chunks):
             slide_title = section_title if idx == 0 else f"{section_title}（续）"
-            slides.append(
-                Slide(
-                    layout=Layout.ONE_COLUMN,
-                    title=_clip(slide_title, MAX_TITLE_CHARS),
-                    bullets=[_clip(item, MAX_BULLET_CHARS) for item in chunk],
-                )
-            )
+            slides.append(_slide_from_section(slide_title, chunk))
     if len(slides) == 1:
         slides.append(
             Slide(
@@ -256,6 +320,214 @@ def _prompt_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]]
         ),
     ]
     return candidates[:body_pages]
+
+
+def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
+    layout_hint: Layout | None = None
+    visual_hint: str | None = None
+    insight: str | None = None
+    content_items: list[str] = []
+
+    for item in raw_items:
+        layout_match = LAYOUT_LABEL_RE.match(item)
+        if layout_match:
+            layout_hint = _layout_from_hint(layout_match.group(1)) or layout_hint
+            visual_hint = _visual_from_hint(layout_match.group(1)) or visual_hint
+            continue
+
+        visual_match = VISUAL_LABEL_RE.match(item)
+        if visual_match:
+            visual_hint = _visual_from_hint(visual_match.group(1)) or visual_hint
+            continue
+
+        insight_match = INSIGHT_LABEL_RE.match(item)
+        if insight_match:
+            insight = _clip(_clean_inline(insight_match.group(1)), MAX_BULLET_CHARS)
+            continue
+
+        content_items.append(item)
+
+    layout = layout_hint or Layout.ONE_COLUMN
+    visual = visual_hint or _default_visual_for_layout(layout)
+    bullets = [_clip(_clean_content_line(item), MAX_BULLET_CHARS) for item in content_items[:MAX_BULLETS]]
+    bullets = [item for item in bullets if item]
+    if not bullets:
+        bullets = ["请补充这一页的要点。"]
+
+    columns: list[Column] = []
+    items: list[HorizontalItem] = []
+    table: TableData | None = None
+
+    if visual == "table":
+        layout = Layout.TABLE
+    elif visual == "two_column":
+        layout = Layout.COMPARISON if layout == Layout.COMPARISON else Layout.TWO_COLUMN
+    elif visual == "three_column":
+        layout = Layout.THREE_COLUMN
+    elif visual in {"horizontal", "process"} and layout == Layout.ONE_COLUMN:
+        layout = Layout.HORIZONTAL
+    elif visual == "summary" and layout == Layout.ONE_COLUMN:
+        layout = Layout.SUMMARY
+
+    if layout in {Layout.TWO_COLUMN, Layout.COMPARISON}:
+        columns = _columns_from_items(bullets, 2)
+    elif layout == Layout.THREE_COLUMN:
+        columns = _columns_from_items(bullets, 3)
+    elif layout in {Layout.HORIZONTAL, Layout.SUMMARY}:
+        items = _horizontal_items_from_items(bullets)
+    elif layout == Layout.TABLE:
+        table = _table_from_items(bullets)
+
+    return Slide(
+        layout=layout,
+        title=_clip(section_title, MAX_TITLE_CHARS),
+        visual=visual,
+        bullets=bullets,
+        columns=columns,
+        items=items,
+        table=table,
+        insight=insight,
+    )
+
+
+def _layout_from_hint(value: str) -> Layout | None:
+    token = _design_token(value)
+    for alias, layout in LAYOUT_ALIASES.items():
+        alias_token = _design_token(alias)
+        if token == alias_token:
+            return layout
+    for alias, layout in LAYOUT_ALIASES.items():
+        if _design_token(alias) in token:
+            return layout
+    return None
+
+
+def _visual_from_hint(value: str) -> str | None:
+    token = _design_token(value)
+    for alias, visual in VISUAL_ALIASES.items():
+        alias_token = _design_token(alias)
+        if token == alias_token:
+            return visual
+    for alias, visual in VISUAL_ALIASES.items():
+        if _design_token(alias) in token:
+            return visual
+    return None
+
+
+def _design_token(value: str) -> str:
+    value = _clean_inline(value).lower()
+    return re.sub(r"[\s\-_/]+", "_", value)
+
+
+def _default_visual_for_layout(layout: Layout) -> str | None:
+    if layout in {Layout.TWO_COLUMN, Layout.COMPARISON}:
+        return "two_column"
+    if layout == Layout.THREE_COLUMN:
+        return "three_column"
+    if layout == Layout.HORIZONTAL:
+        return "horizontal"
+    if layout == Layout.TABLE:
+        return "table"
+    if layout == Layout.SUMMARY:
+        return "summary"
+    return None
+
+
+def _columns_from_items(items: list[str], count: int) -> list[Column]:
+    keyed = [_split_key_value_line(item) for item in items]
+    keyed = [(heading, body) for heading, body in keyed if body]
+    if len(keyed) >= count:
+        return [
+            Column(
+                heading=_clip(heading, 60),
+                bullets=[_clip(point, MAX_BULLET_CHARS) for point in _split_structured_points(body)[:4]],
+            )
+            for heading, body in keyed[:count]
+        ]
+
+    columns: list[Column] = []
+    for idx in range(count):
+        chunk = items[idx::count]
+        heading = f"要点 {idx + 1}"
+        body_items = chunk[:4]
+        if chunk:
+            heading_candidate, body = _split_key_value_line(chunk[0])
+            if body:
+                heading = heading_candidate
+                body_items = _split_structured_points(body)[:4]
+            elif len(chunk[0]) <= 18:
+                heading = chunk[0]
+                body_items = chunk[1:5] or [chunk[0]]
+        columns.append(
+            Column(
+                heading=_clip(heading, 60),
+                bullets=[_clip(item, MAX_BULLET_CHARS) for item in body_items],
+            )
+        )
+    return columns
+
+
+def _horizontal_items_from_items(items: list[str]) -> list[HorizontalItem]:
+    horizontal_items: list[HorizontalItem] = []
+    for item in items[:5]:
+        heading, body = _split_key_value_line(item)
+        if body:
+            horizontal_items.append(
+                HorizontalItem(heading=_clip(heading, 40), desc=_clip(body, 80))
+            )
+        else:
+            horizontal_items.append(HorizontalItem(heading=_clip(item, 40), desc=""))
+    return horizontal_items
+
+
+def _table_from_items(items: list[str]) -> TableData:
+    rows = [_table_cells_from_item(item) for item in items]
+    rows = [row for row in rows if len(row) >= 2]
+    if len(rows) >= 2:
+        headers = _fit_table_row(rows[0])
+        data_rows = [_fit_table_row(row, len(headers)) for row in rows[1:6]]
+        return TableData(headers=headers, rows=data_rows)
+
+    fallback_rows = [
+        [_clip(_split_key_value_line(item)[0], 40), _clip(_split_key_value_line(item)[1] or item, 90)]
+        for item in items[:5]
+    ]
+    return TableData(headers=["项目", "说明"], rows=fallback_rows)
+
+
+def _table_cells_from_item(item: str) -> list[str]:
+    heading, body = _split_key_value_line(item)
+    if body:
+        return [heading, *_split_table_cells(body)]
+    return _split_table_cells(item)
+
+
+def _split_table_cells(text: str) -> list[str]:
+    parts = re.split(r"\s*(?:\||/|；|;)\s*", text)
+    return [_clean_inline(part.strip(" 。")) for part in parts if part.strip(" 。")]
+
+
+def _fit_table_row(row: list[str], width: int | None = None) -> list[str]:
+    target_width = min(width or len(row), 4)
+    fitted = [_clip(cell, 42) for cell in row[:target_width]]
+    while len(fitted) < target_width:
+        fitted.append("")
+    return fitted
+
+
+def _split_key_value_line(text: str) -> tuple[str, str]:
+    match = re.match(r"^([^：:]{1,24})[：:]\s*(.+)$", text)
+    if match:
+        return _clean_inline(match.group(1)), _clean_inline(match.group(2))
+    return _clip(_clean_inline(text), 28), ""
+
+
+def _split_structured_points(text: str) -> list[str]:
+    text = _clean_inline(text)
+    parts = [part.strip(" 。；;") for part in re.split(r"\s*[；;]\s*", text)]
+    if len(parts) == 1 and "。" in text:
+        parts = [part.strip(" 。") for part in re.split(r"\s*。\s*", text)]
+    return [part for part in parts if part] or [text]
 
 
 def _parse_standard_sections(markdown: str) -> ParsedOutline:
@@ -479,9 +751,7 @@ def _extract_page_bullets(lines: list[str]) -> list[str]:
         cleaned = _clean_inline(line.lstrip("> "))
         if cleaned and not _is_low_value_content_line(cleaned):
             _append_unique(bullets, _clean_content_line(cleaned))
-        if len(bullets) >= MAX_BULLETS:
-            break
-    return bullets[:MAX_BULLETS]
+    return bullets
 
 
 def _table_row_text(line: str) -> str | None:

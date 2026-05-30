@@ -41,6 +41,9 @@ Implemented and verified:
 - Explicit `第 N 页` Markdown mode: one authored page maps to one slide.
 - SJTU Wine Red + Gold renderer with timeline, fact-card, card-grid, process,
   cover, thanks, and TOC rhythms.
+- Hermes-authored page design signals in Markdown: `版式：...`、`组件：...` and
+  `洞察：...` now flow into Deck IR so the model can choose safe slide rhythms
+  while the builder keeps deterministic geometry.
 - Server API and worker managed by systemd.
 - GitHub private and SJTU GitLab private remotes.
 - Hermes/MiMo research probes for outline planning and modular SJTU-template
@@ -96,6 +99,19 @@ contact sheet by choosing layout rhythms from content cues:
 - Fact cards when several key-value rows exist.
 - Card grid for mixed claims and supporting points.
 
+Hermes can now make that choice explicitly in the planned Markdown. The safe
+contract is:
+
+```text
+版式：three_column
+组件：rich_cards
+洞察：底部一句总结
+```
+
+The parser converts those hints into `layout`, `visual`, `columns`, `items`,
+`table`, and `insight` fields. The renderer honors known signals and ignores
+unknown ones.
+
 The next style improvements should continue at the layout-system level, not by
 manually polishing one generated deck.
 
@@ -107,6 +123,7 @@ MiMo/Hermes are useful for:
 - Audience/tone/density decisions.
 - Reducing verbose bullet text.
 - Choosing among allowed page types.
+- Choosing among allowed visual components.
 - Reviewing validation and QA failures.
 
 They should not freely calculate all PPT coordinates or modify production

@@ -16,7 +16,7 @@ from .constants import (
     SJTU_RED,
     WHITE,
 )
-from .schema import Deck, Layout, Slide
+from .schema import Column, Deck, Layout, Slide
 
 
 SLIDE_W_IN = 13.333
@@ -384,11 +384,26 @@ def render_body(slide, slide_data: Slide) -> None:
     if not items:
         items = ["请补充这一页的核心结论。"]
 
-    if _looks_like_timeline(items):
+    visual = slide_data.visual or ""
+    if slide_data.layout == Layout.TABLE or visual == "table":
+        _render_table_slide(slide, slide_data.table, items)
+    elif slide_data.layout in {Layout.TWO_COLUMN, Layout.COMPARISON} or visual == "two_column":
+        _render_column_cards(slide, slide_data.columns, items, count=2)
+    elif slide_data.layout == Layout.THREE_COLUMN or visual == "three_column":
+        _render_column_cards(slide, slide_data.columns, items, count=3)
+    elif slide_data.layout == Layout.HORIZONTAL and visual != "process":
+        _render_horizontal_items(slide, slide_data.items, items)
+    elif slide_data.layout == Layout.SUMMARY or visual == "summary":
+        _render_summary(slide, items)
+    elif slide_data.layout == Layout.SECTION:
+        _render_section_break(slide, slide_data.title, items)
+    elif visual == "timeline" or _looks_like_timeline(items):
         _render_timeline(slide, items)
-    elif _looks_like_process(slide_data.title, items):
+    elif visual == "process" or _looks_like_process(slide_data.title, items):
         _render_process(slide, items)
-    elif _looks_like_rich_cards(items):
+    elif visual == "fact_grid":
+        _render_fact_grid(slide, items)
+    elif visual == "rich_cards" or _looks_like_rich_cards(items):
         _render_rich_card_grid(slide, items)
     elif _looks_like_fact_grid(items):
         _render_fact_grid(slide, items)
@@ -397,6 +412,207 @@ def render_body(slide, slide_data: Slide) -> None:
 
     if slide_data.insight:
         _insight(slide, slide_data.insight)
+
+
+def _render_column_cards(slide, columns, items: list[str], count: int) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+        top = 2.12
+        height = 3.72
+    else:
+        rest = items
+        top = 1.35
+        height = 4.7
+
+    if not columns:
+        columns = _fallback_columns(rest, count)
+
+    if count == 2:
+        positions = [(0.92, top, 5.55, height), (6.82, top, 5.55, height)]
+    else:
+        positions = [
+            (0.92, top, 3.64, height),
+            (4.84, top, 3.64, height),
+            (8.76, top, 3.64, height),
+        ]
+
+    for idx, column in enumerate(columns[:count], start=1):
+        left, card_top, width, card_h = positions[idx - 1]
+        accent = SJTU_RED if idx % 2 else GOLD
+        _round_rect(slide, left, card_top, width, card_h, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
+        _rect(slide, left, card_top, width, 0.05, accent)
+        _number_badge(slide, left + 0.24, card_top + 0.24, str(idx), size=0.38, color=accent)
+
+        heading = column.heading or f"要点 {idx}"
+        title_box = slide.shapes.add_textbox(
+            Inches(left + 0.74),
+            Inches(card_top + 0.2),
+            Inches(width - 1.02),
+            Inches(0.42),
+        )
+        title_box.text_frame.word_wrap = True
+        title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = title_box.text_frame.paragraphs[0]
+        p.text = _trim(heading, 24 if width >= 5 else 16)
+        _style_paragraph(p, 13 if width >= 5 else 11.8, TEXT_PRIMARY, bold=True)
+
+        points = column.bullets or [_trim(heading, 44)]
+        _draw_card_points(
+            slide,
+            left + 0.32,
+            card_top + 0.86,
+            width - 0.62,
+            card_h - 1.08,
+            points,
+            compact=count == 3,
+        )
+
+
+def _fallback_columns(items: list[str], count: int) -> list[Column]:
+    columns: list[Column] = []
+    for idx in range(count):
+        chunk = items[idx::count] or [f"要点 {idx + 1}"]
+        heading, body = _split_key_value(chunk[0])
+        if body:
+            points = _split_card_points(body)
+        else:
+            heading = heading if len(heading) <= 16 else f"要点 {idx + 1}"
+            points = chunk[:4]
+        columns.append(Column(heading=heading, bullets=points))
+    return columns
+
+
+def _render_horizontal_items(slide, horizontal_items, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+        top = 2.36
+    else:
+        rest = items
+        top = 1.72
+
+    if horizontal_items:
+        process_items = [
+            f"{item.heading}：{item.desc}" if item.desc else item.heading
+            for item in horizontal_items[:5]
+        ]
+    else:
+        process_items = rest[:5] or items[:5]
+
+    left = 0.9
+    width = 11.55
+    gap = width / max(len(process_items), 1)
+    colors = [SJTU_RED, GOLD, BROWN, TEXT_PRIMARY, SJTU_RED]
+    for idx, item in enumerate(process_items, start=1):
+        x = left + (idx - 1) * gap
+        card_w = max(gap - 0.22, 2.0)
+        _process_card(slide, x, top, card_w, 2.25, idx, item, colors[(idx - 1) % len(colors)])
+
+    if len(items) > len(process_items) + 1:
+        _insight(slide, items[-1], top=5.82)
+
+
+def _render_summary(slide, items: list[str]) -> None:
+    lead, rest = _split_lead(items)
+    _lead_callout(slide, lead or "最后可以带走三句话。", compact=True)
+    cards = (rest or items)[:3]
+    positions = [
+        (0.92, 2.35, 3.64, 3.05),
+        (4.84, 2.35, 3.64, 3.05),
+        (8.76, 2.35, 3.64, 3.05),
+    ]
+    for idx, item in enumerate(cards, start=1):
+        left, top, width, height = positions[idx - 1]
+        _rich_content_card(slide, left, top, width, height, idx, item)
+
+
+def _render_section_break(slide, title: str, items: list[str]) -> None:
+    _rect(slide, 0.9, 2.12, 0.08, 2.1, GOLD)
+    box = slide.shapes.add_textbox(Inches(1.18), Inches(2.08), Inches(10.6), Inches(0.85))
+    p = box.text_frame.paragraphs[0]
+    p.text = title
+    _style_paragraph(p, 31 if len(title) <= 18 else 26, TEXT_PRIMARY, bold=True)
+    note = items[0] if items else ""
+    if note:
+        note_box = slide.shapes.add_textbox(Inches(1.22), Inches(3.12), Inches(9.4), Inches(0.7))
+        note_box.text_frame.word_wrap = True
+        p = note_box.text_frame.paragraphs[0]
+        p.text = _trim(note, 96)
+        _style_paragraph(p, 15, TEXT_BODY)
+
+
+def _render_table_slide(slide, table_data, items: list[str]) -> None:
+    if table_data and table_data.headers and table_data.rows:
+        headers = table_data.headers[:4]
+        rows = [row[: len(headers)] for row in table_data.rows[:5]]
+    else:
+        headers, rows = _fallback_table(items)
+
+    rows_count = min(6, len(rows) + 1)
+    cols_count = min(4, len(headers))
+    table_height = min(4.45, 0.46 * rows_count + 0.2)
+    shape = slide.shapes.add_table(
+        rows_count,
+        cols_count,
+        Inches(0.92),
+        Inches(1.42),
+        Inches(11.55),
+        Inches(table_height),
+    )
+    table = shape.table
+    for col_idx in range(cols_count):
+        table.columns[col_idx].width = Inches(11.55 / cols_count)
+
+    for col_idx, header in enumerate(headers[:cols_count]):
+        _style_table_cell(table.cell(0, col_idx), header, 11.5, WHITE, fill=SJTU_RED, bold=True, center=True)
+
+    for row_idx, row in enumerate(rows[: rows_count - 1], start=1):
+        for col_idx in range(cols_count):
+            value = row[col_idx] if col_idx < len(row) else ""
+            fill = WARM_GRAY_1 if row_idx % 2 == 0 else WHITE
+            _style_table_cell(
+                table.cell(row_idx, col_idx),
+                value,
+                10.6,
+                TEXT_PRIMARY if col_idx == 0 else TEXT_BODY,
+                fill=fill,
+                bold=col_idx == 0,
+                center=False,
+            )
+
+
+def _style_table_cell(
+    cell,
+    text: str,
+    size: float,
+    color: str,
+    fill: str,
+    bold: bool = False,
+    center: bool = False,
+) -> None:
+    cell.fill.solid()
+    cell.fill.fore_color.rgb = rgb(fill)
+    cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+    cell.margin_left = Pt(6)
+    cell.margin_right = Pt(6)
+    cell.margin_top = Pt(4)
+    cell.margin_bottom = Pt(4)
+    frame = cell.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    p = frame.paragraphs[0]
+    p.text = _trim(text, 44)
+    _style_paragraph(p, size, color, bold=bold, align=PP_ALIGN.CENTER if center else PP_ALIGN.LEFT)
+
+
+def _fallback_table(items: list[str]) -> tuple[list[str], list[list[str]]]:
+    headers = ["项目", "说明"]
+    rows: list[list[str]] = []
+    for item in items[:5]:
+        label, value = _split_key_value(item)
+        rows.append([label, value or item])
+    return headers, rows
 
 
 def _render_card_grid(slide, items: list[str]) -> None:

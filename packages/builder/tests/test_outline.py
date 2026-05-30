@@ -146,6 +146,50 @@ def test_brief_prompt_handles_intro_deck_for_enterprise_audience() -> None:
     assert validate_deck(deck) == []
 
 
+def test_explicit_page_design_signals_create_structured_ir() -> None:
+    deck = outline_to_deck(
+        """# 结构化设计测试
+
+## 第 1 页 · 封面
+
+主标题：结构化设计测试
+副标题：让 Hermes 选择页面组件
+
+## 第 2 页 · 三类能力协同
+版式：three_column
+组件：rich_cards
+三类能力共同决定 AI PPT 初稿是否可用。
+- 规划能力：识别受众；建立主线；压缩标题
+- 结构能力：选择版式；组织卡片；控制页面密度
+- 验证能力：检查字数；渲染预览；反馈到下一轮
+洞察：Hermes 负责设计选择，builder 负责稳定落地。
+
+## 第 3 页 · 评估矩阵
+版式：table
+组件：table
+- 维度：输入 / 输出 / 验证信号
+- 内容规划：用户需求 / 页级大纲 / 标题是判断句
+- 视觉设计：版式信号 / Deck IR / 组件节奏不重复
+""",
+    )
+
+    card_slide = deck.slides[1]
+    assert card_slide.layout == "three_column"
+    assert card_slide.visual == "rich_cards"
+    assert len(card_slide.columns) == 3
+    assert card_slide.columns[0].heading == "规划能力"
+    assert card_slide.columns[0].bullets == ["识别受众", "建立主线", "压缩标题"]
+    assert card_slide.insight == "Hermes 负责设计选择，builder 负责稳定落地。"
+
+    table_slide = deck.slides[2]
+    assert table_slide.layout == "table"
+    assert table_slide.visual == "table"
+    assert table_slide.table is not None
+    assert table_slide.table.headers == ["维度", "输入", "输出", "验证信号"]
+    assert table_slide.table.rows[0] == ["内容规划", "用户需求", "页级大纲", "标题是判断句"]
+    assert validate_deck(deck) == []
+
+
 def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:
     deck = outline_to_deck("请制作五六页 PPT，关于机器学习的科普啊")
     output = build_pptx(deck, tmp_path / "ml.pptx")

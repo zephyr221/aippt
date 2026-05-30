@@ -50,6 +50,7 @@ Read `manifest.json`, `AGENTS.md`, and `input/outline.md` before changing
 anything. If references are needed, load:
 
 - `references/builder_contract.md` for Markdown/IR/builder rules.
+- `references/component_catalog.md` for allowed layout/component design signals.
 - `references/quality_gates.md` for review and repair checks.
 - `references/memory_policy.md` for preference memory rules.
 
@@ -60,12 +61,13 @@ anything. If references are needed, load:
 2. Read the job manifest and input outline.
 3. Preserve explicit page contracts such as `## 第 3 页 · 标题`.
 4. Build or check a claim spine: each non-cover slide needs one clear claim.
-5. Keep content within the builder contract: short titles, limited bullets,
+5. Choose a safe layout/component signal when it improves the page rhythm.
+6. Keep content within the builder contract: short titles, limited bullets,
    whitelisted layouts, no free-form coordinates.
-6. Prefer concrete fixes over advice.
-7. If you do not have image input, do not claim direct visual inspection.
+7. Prefer concrete fixes over advice.
+8. If you do not have image input, do not claim direct visual inspection.
    Reason from `qa/qa.json`, Deck IR, and any text visual review report instead.
-8. Write results to the job workspace:
+9. Write results to the job workspace:
    - `ir/deck.repaired.json` for machine-readable IR repair.
    - `logs/hermes_review.md` for human-readable findings.
    - `logs/hermes_repair.md` for repair rationale.
@@ -83,6 +85,17 @@ Use the user's authored structure first. When choosing slide rhythms:
 
 Do not produce pages that are only large bullet boxes when a stronger structure
 is available.
+
+When planning Markdown, prefer explicit design signals that the builder can
+honor:
+
+```text
+版式：three_column
+组件：rich_cards
+洞察：底部一句总结
+```
+
+Use `references/component_catalog.md` for the allowed values and examples.
 
 ## Repair Priorities
 

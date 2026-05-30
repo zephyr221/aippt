@@ -74,6 +74,7 @@ Common slide fields:
   "layout": "one_column",
   "title": "slide title",
   "subtitle": "",
+  "visual": "rich_cards",
   "bullets": [],
   "columns": [],
   "items": [],
@@ -98,6 +99,54 @@ Prefer shorter text than the hard limits. A good academic slide normally has:
 - One claim line.
 - Three to four supporting points.
 - One proof object or structured layout.
+
+## Markdown Design Signals
+
+Hermes may choose safe page design signals in Markdown. Put them directly under
+the page heading:
+
+```text
+版式：two_column
+组件：rich_cards
+洞察：本页一句底部总结
+```
+
+Allowed `版式` values:
+
+```text
+one_column
+two_column
+three_column
+horizontal
+comparison
+table
+summary
+```
+
+Allowed `组件` values:
+
+```text
+card_grid
+rich_cards
+fact_grid
+timeline
+process
+two_column
+three_column
+horizontal
+table
+summary
+```
+
+For structured cards, write bullets as:
+
+```text
+- 标签：要点一；要点二；要点三
+```
+
+The builder turns these into `columns`, `items`, or `table` fields when the
+layout requests it. Unknown signals are ignored; do not emit arbitrary PPTX
+coordinates or generated scripts.
 
 ## Renderer Rhythms
 
