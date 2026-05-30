@@ -12,6 +12,7 @@ the page heading:
 ```text
 版式：three_column
 组件：rich_cards
+证据：用于证明本页判断的数据、案例、流程、公式或来源
 洞察：底部一句总结
 ```
 
@@ -35,6 +36,8 @@ rich_cards
 fact_grid
 timeline
 process
+stat_callout
+quote_block
 two_column
 three_column
 horizontal
@@ -53,6 +56,8 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
 - `timeline`: two or more dated events.
 - `process`: workflow, agent loop, model training, validation pipeline, or any
   `A -> B -> C` sequence.
+- `stat_callout`: 2-4 key metrics or counts that should be read first.
+- `quote_block`: one strong conclusion, cited example, warning, or principle.
 - `two_column`: input/output, before/after, problem/solution, theory/practice.
 - `three_column`: three capabilities, stages, risks, audiences, or methods.
 - `horizontal`: 3-5 ordered stages when sequence matters but arrows are not
@@ -73,6 +78,31 @@ Use `标签：要点一；要点二；要点三` for structured cards. Examples:
 - 模型训练：用 ŷ=fθ(x) 产生预测；根据误差调整参数 θ
 - 效果评估：保留测试集；比较指标；回到数据继续迭代
 - 公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))
+```
+
+For metric slides, make the first segment a large number:
+
+```text
+## 第 2 页 · 质量提升先看三项指标
+版式：one_column
+组件：stat_callout
+证据：QA 报告、预览渲染与用户反馈会进入同一轮改写。
+用指标约束生成质量，比只调 prompt 更可靠。
+- 设计覆盖：100% / 内容页都要求组件信号
+- 证据对象：每页 1 个 / 数据、流程、案例或公式
+- 节奏重复：≤2 页 / 连续同版式会被 QA 提醒
+```
+
+For quote slides, put the conclusion after a short label:
+
+```text
+## 第 5 页 · 设计原则
+版式：one_column
+组件：quote_block
+证据：来自当前 AIPPT 生成链路的稳定性约束。
+模型做设计决策，builder 做稳定渲染。
+- 原则：Hermes 负责版式和证据对象，Python 只执行白名单组件
+- 落地：任何 repair 都必须先 validation，再 build，再 QA
 ```
 
 ```text
@@ -104,7 +134,7 @@ docs/SJTU PPT 模板/SKILL_SJTU.md
 docs/SJTU PPT 模板/generate_claudecode_ppt.py
 ```
 
-Those files contain richer component ideas such as `stat_callout`,
-`quote_block`, `icon_label_row`, and `chevron_flow`. Treat them as a design
-backlog. Production Hermes should only emit the safe signals listed above until
-the deterministic builder and QA tests support more components.
+Those files contain richer component ideas such as `icon_label_row` and
+`chevron_flow`. Treat them as a design backlog. Production Hermes should only
+emit the safe signals listed above until the deterministic builder and QA tests
+support more components.

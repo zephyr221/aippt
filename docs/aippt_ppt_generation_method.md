@@ -12,9 +12,9 @@ AIPPT 不是把一段 prompt 直接丢给模型，然后期待模型一次性吐
 - 确定性 builder 负责解析大纲、选择版式、套用 SJTU 模板并生成可编辑 PPTX。
 
 现在 Hermes 还可以负责受控的页面设计选择：它不直接写 PPTX 坐标或脚本，而是在
-Markdown 中输出 `版式：...`、`组件：...`、`洞察：...` 这样的安全信号。Builder
+Markdown 中输出 `版式：...`、`组件：...`、`证据：...`、`洞察：...` 这样的安全信号。Builder
 会把这些信号转换成白名单 Deck IR 字段，例如 `three_column`、`rich_cards`、
-`table`、`process`，再用可测试的 Python 渲染。
+`stat_callout`、`quote_block`、`table`、`process`，再用可测试的 Python 渲染。
 
 这样做的好处是：模型可以发挥规划能力，但最终 PPTX 的几何位置、模板页、文件
 权限和产物记录仍由可测试的后端代码控制。
@@ -51,6 +51,7 @@ Hermes/MiMo 当前主要承担深度规划：
 - 为每一页建立一个清楚的核心判断。
 - 把正文组织成 2-3 个主题方向，每个方向有 2-4 个具体要点。
 - 为每页选择安全版式和组件，例如三栏卡片、双栏对比、时间线、流程卡片、事实块或表格。
+- 为每页补一个证据对象，例如数据、案例、流程、公式、时间线或来源。
 - 用 `标签：要点一；要点二；要点三` 这样的结构化 bullet 帮 builder 生成卡片内容。
 - 避免整页都是稀疏 bullet，优先让 builder 渲染成卡片、流程、事实块或公式块。
 - 识别公式内容并保留为可编辑文本，例如 `J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))`。
@@ -66,8 +67,8 @@ Builder 是生产稳定性的核心。它把 Hermes 的 Markdown 规划稿变成
 
 - `outline.py` 解析标题、页码、封面、正文、公式和 bullet。
 - 解析结果会转换为受约束的 Deck IR，而不是自由坐标脚本。
-- `版式/组件/洞察` 信号会进入 Deck IR 的 `layout`、`visual`、`columns`、`items`、
-  `table` 和 `insight` 字段。
+- `版式/组件/证据/洞察` 信号会进入 Deck IR 的 `layout`、`visual`、`proof`、
+  `columns`、`items`、`table` 和 `insight` 字段。
 - `render.py` 读取 SJTU 模板，使用模板封面、内容页 header 和结束页。
 - 内容页优先按 Hermes 给出的设计信号渲染；没有信号时，再按日期、箭头、key-value
   等内容线索自动选择卡片、流程、三栏、公式提示框等版式。

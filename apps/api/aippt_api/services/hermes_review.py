@@ -107,6 +107,7 @@ def _build_qa(
     if slides:
         _check_slide_text(slides, issues, suggestions)
         _check_layout_rhythm(slides, suggestions)
+        _check_design_signals(slides, suggestions)
     else:
         issues.append(_issue("medium", "deck_ir", "Deck IR 中没有可审阅的 slides。"))
 
@@ -169,6 +170,52 @@ def _check_layout_rhythm(slides: list[dict[str, Any]], suggestions: list[str]) -
     ]
     if len(content_layouts) >= 4 and len(set(content_layouts)) <= 1:
         suggestions.append("版式节奏偏单一，建议加入 timeline、process cards 或 fact cards。")
+    rhythms = [
+        str(slide.get("visual") or slide.get("layout") or "")
+        for slide in slides
+        if slide.get("layout") not in {"cover", "thanks"}
+    ]
+    for idx in range(0, max(0, len(rhythms) - 2)):
+        if rhythms[idx] and len({rhythms[idx], rhythms[idx + 1], rhythms[idx + 2]}) == 1:
+            suggestions.append(
+                f"第 {idx + 1}-{idx + 3} 张视觉节奏连续重复，可换成 stat_callout、quote_block、table 或 process。"
+            )
+            break
+
+
+def _check_design_signals(slides: list[dict[str, Any]], suggestions: list[str]) -> None:
+    content_slides = [
+        slide
+        for slide in slides
+        if slide.get("layout") not in {"cover", "toc", "section", "thanks"}
+    ]
+    if not content_slides:
+        return
+
+    missing_visual = [idx for idx, slide in _numbered_content_slides(slides) if not slide.get("visual")]
+    if missing_visual:
+        shown = "、".join(str(idx) for idx in missing_visual[:4])
+        suggestions.append(f"第 {shown} 张缺少组件信号；建议 Hermes 明确写 `组件：...`。")
+
+    missing_proof = [
+        idx
+        for idx, slide in _numbered_content_slides(slides)
+        if not slide.get("proof") and slide.get("visual") not in {"table", "timeline", "stat_callout"}
+    ]
+    if missing_proof:
+        shown = "、".join(str(idx) for idx in missing_proof[:4])
+        suggestions.append(f"第 {shown} 张缺少证据对象；建议补 `证据：数据、案例、流程或来源`。")
+
+
+def _numbered_content_slides(slides: list[dict[str, Any]]) -> list[tuple[int, dict[str, Any]]]:
+    numbered: list[tuple[int, dict[str, Any]]] = []
+    content_index = 0
+    for slide in slides:
+        if slide.get("layout") in {"cover", "toc", "section", "thanks"}:
+            continue
+        content_index += 1
+        numbered.append((content_index, slide))
+    return numbered
 
 
 def _check_preview(

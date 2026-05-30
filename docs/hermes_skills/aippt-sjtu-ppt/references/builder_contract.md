@@ -75,6 +75,7 @@ Common slide fields:
   "title": "slide title",
   "subtitle": "",
   "visual": "rich_cards",
+  "proof": "source, data point, workflow, formula, or case",
   "bullets": [],
   "columns": [],
   "items": [],
@@ -108,6 +109,7 @@ the page heading:
 ```text
 版式：two_column
 组件：rich_cards
+证据：本页使用的数据、案例、流程、公式或来源
 洞察：本页一句底部总结
 ```
 
@@ -131,6 +133,8 @@ rich_cards
 fact_grid
 timeline
 process
+stat_callout
+quote_block
 two_column
 three_column
 horizontal
@@ -147,6 +151,21 @@ For structured cards, write bullets as:
 The builder turns these into `columns`, `items`, or `table` fields when the
 layout requests it. Unknown signals are ignored; do not emit arbitrary PPTX
 coordinates or generated scripts.
+
+Use `stat_callout` for 2-4 key metrics:
+
+```text
+- 设计覆盖：100% / 内容页都要求组件信号
+- 证据对象：每页 1 个 / 数据、流程、案例或公式
+```
+
+Use `quote_block` for one strong sourced conclusion:
+
+```text
+组件：quote_block
+证据：来自 QA 报告和用户反馈。
+- 原则：模型做设计决策，builder 做稳定渲染
+```
 
 ## Renderer Rhythms
 

@@ -41,9 +41,10 @@ Implemented and verified:
 - Explicit `第 N 页` Markdown mode: one authored page maps to one slide.
 - SJTU Wine Red + Gold renderer with timeline, fact-card, card-grid, process,
   cover, thanks, and TOC rhythms.
-- Hermes-authored page design signals in Markdown: `版式：...`、`组件：...` and
-  `洞察：...` now flow into Deck IR so the model can choose safe slide rhythms
-  while the builder keeps deterministic geometry.
+- Hermes-authored page design signals in Markdown: `版式：...`、`组件：...`,
+  `证据：...`, and `洞察：...` now flow into Deck IR so the model can choose
+  safe slide rhythms and proof objects while the builder keeps deterministic
+  geometry.
 - Server API and worker managed by systemd.
 - GitHub private and SJTU GitLab private remotes.
 - Hermes/MiMo research probes for outline planning and modular SJTU-template
@@ -105,12 +106,15 @@ contract is:
 ```text
 版式：three_column
 组件：rich_cards
+证据：数据、案例、流程、公式或来源
 洞察：底部一句总结
 ```
 
 The parser converts those hints into `layout`, `visual`, `columns`, `items`,
-`table`, and `insight` fields. The renderer honors known signals and ignores
-unknown ones.
+`proof`, `table`, and `insight` fields. The renderer honors known signals and
+ignores unknown ones. The current production-safe component set also includes
+`stat_callout` for metric pages and `quote_block` for a sourced principle or
+warning.
 
 The next style improvements should continue at the layout-system level, not by
 manually polishing one generated deck.

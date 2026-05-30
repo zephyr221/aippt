@@ -92,6 +92,7 @@ honor:
 ```text
 版式：three_column
 组件：rich_cards
+证据：数据、案例、流程、公式或来源
 洞察：底部一句总结
 ```
 

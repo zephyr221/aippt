@@ -195,8 +195,12 @@ def _render_template_content(slide, slide_data: Slide) -> None:
         Slide(
             title=slide_data.title,
             layout=slide_data.layout,
+            visual=slide_data.visual,
+            proof=slide_data.proof,
             bullets=items,
             columns=slide_data.columns,
+            items=slide_data.items,
+            table=slide_data.table,
             insight=slide_data.insight,
         ),
     )
@@ -385,7 +389,11 @@ def render_body(slide, slide_data: Slide) -> None:
         items = ["请补充这一页的核心结论。"]
 
     visual = slide_data.visual or ""
-    if slide_data.layout == Layout.TABLE or visual == "table":
+    if visual == "stat_callout":
+        _render_stat_callouts(slide, items, slide_data.proof)
+    elif visual == "quote_block":
+        _render_quote_block_slide(slide, items, slide_data.proof)
+    elif slide_data.layout == Layout.TABLE or visual == "table":
         _render_table_slide(slide, slide_data.table, items)
     elif slide_data.layout in {Layout.TWO_COLUMN, Layout.COMPARISON} or visual == "two_column":
         _render_column_cards(slide, slide_data.columns, items, count=2)
@@ -410,7 +418,7 @@ def render_body(slide, slide_data: Slide) -> None:
     else:
         _render_card_grid(slide, items)
 
-    if slide_data.insight:
+    if slide_data.insight and not (visual == "stat_callout" and slide_data.proof):
         _insight(slide, slide_data.insight)
 
 
@@ -613,6 +621,138 @@ def _fallback_table(items: list[str]) -> tuple[list[str], list[list[str]]]:
         label, value = _split_key_value(item)
         rows.append([label, value or item])
     return headers, rows
+
+
+def _render_stat_callouts(slide, items: list[str], proof: str | None) -> None:
+    lead, rest = _split_lead(items)
+    _lead_callout(slide, lead or "用几个关键指标先建立判断。", compact=True)
+    metrics = [_metric_from_item(item) for item in (rest or items)[:4]]
+    if len(metrics) <= 2:
+        positions = [
+            (0.92, 2.25, 5.55, 2.45),
+            (6.82, 2.25, 5.55, 2.45),
+        ]
+    elif len(metrics) == 3:
+        positions = [
+            (0.92, 2.25, 3.64, 2.55),
+            (4.84, 2.25, 3.64, 2.55),
+            (8.76, 2.25, 3.64, 2.55),
+        ]
+    else:
+        positions = [
+            (0.92, 2.18, 5.55, 1.75),
+            (6.82, 2.18, 5.55, 1.75),
+            (0.92, 4.22, 5.55, 1.75),
+            (6.82, 4.22, 5.55, 1.75),
+        ]
+
+    for idx, metric in enumerate(metrics, start=1):
+        left, top, width, height = positions[idx - 1]
+        _stat_card(slide, left, top, width, height, *metric, accent=SJTU_RED if idx % 2 else GOLD)
+
+    if proof:
+        _insight(slide, f"证据：{proof}", top=6.08)
+
+
+def _metric_from_item(item: str) -> tuple[str, str, str, str]:
+    label, value = _split_key_value(item)
+    if not value:
+        return "指标", _trim(item, 16), "", ""
+    parts = [part.strip(" 。") for part in re.split(r"\s*/\s*|\s*[；;]\s*", value) if part.strip(" 。")]
+    number = parts[0] if parts else value
+    unit = ""
+    desc_parts = parts[1:] if len(parts) > 1 else []
+    number_match = re.match(r"^([~≈]?\d+(?:\.\d+)?)([%％A-Za-z一-龥]*)$", number)
+    if number_match:
+        number = number_match.group(1)
+        unit = number_match.group(2)
+    return _trim(label, 16), _trim(number, 18), _trim(unit, 8), _trim("；".join(desc_parts), 64)
+
+
+def _stat_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    label: str,
+    number: str,
+    unit: str,
+    desc: str,
+    accent: str,
+) -> None:
+    _round_rect(slide, left, top, width, height, WHITE, border=WARM_GRAY_2, radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, accent)
+    label_box = slide.shapes.add_textbox(Inches(left + 0.24), Inches(top + 0.18), Inches(width - 0.48), Inches(0.28))
+    p = label_box.text_frame.paragraphs[0]
+    p.text = label
+    _style_paragraph(p, 10.8, TEXT_CAPTION, bold=True)
+
+    number_box = slide.shapes.add_textbox(Inches(left + 0.22), Inches(top + 0.54), Inches(width - 0.44), Inches(0.72))
+    p = number_box.text_frame.paragraphs[0]
+    p.text = f"{number}{unit}"
+    _style_paragraph(p, 27 if width < 4 else 32, accent, bold=True)
+
+    if desc:
+        desc_box = slide.shapes.add_textbox(Inches(left + 0.25), Inches(top + 1.28), Inches(width - 0.5), Inches(height - 1.46))
+        desc_box.text_frame.word_wrap = True
+        p = desc_box.text_frame.paragraphs[0]
+        p.text = desc
+        _style_paragraph(p, 10.8 if width < 4 else 11.5, TEXT_BODY)
+        p.line_spacing = 1.12
+
+
+def _render_quote_block_slide(slide, items: list[str], proof: str | None) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+    quote = rest[0] if rest else lead or items[0]
+    quote_title, quote_body = _split_key_value(quote)
+    if not quote_body:
+        quote_title, quote_body = "核心判断", quote
+
+    _quote_block_wide(slide, 0.92, 2.08, 11.55, 2.15, quote_body, quote_title, proof)
+
+    support = rest[1:3] if rest else items[1:3]
+    for idx, item in enumerate(support, start=1):
+        left = 0.92 if idx == 1 else 6.82
+        _content_card(slide, left, 4.75, 5.55, 1.26, idx, item)
+
+
+def _quote_block_wide(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    text: str,
+    label: str,
+    source: str | None,
+) -> None:
+    _round_rect(slide, left, top, width, height, GOLD_PALE, border=GOLD, radius=0.035, shadow=True)
+    _rect(slide, left, top, 0.06, height, GOLD)
+    mark = slide.shapes.add_textbox(Inches(left + 0.22), Inches(top + 0.18), Inches(0.55), Inches(0.58))
+    p = mark.text_frame.paragraphs[0]
+    p.text = '"'
+    _style_paragraph(p, 30, GOLD, bold=True, align=PP_ALIGN.CENTER)
+
+    label_box = slide.shapes.add_textbox(Inches(left + 0.86), Inches(top + 0.28), Inches(2.2), Inches(0.28))
+    p = label_box.text_frame.paragraphs[0]
+    p.text = _trim(label, 18)
+    _style_paragraph(p, 10.5, SJTU_RED, bold=True)
+
+    body_box = slide.shapes.add_textbox(Inches(left + 0.86), Inches(top + 0.68), Inches(width - 1.35), Inches(0.72))
+    body_box.text_frame.word_wrap = True
+    p = body_box.text_frame.paragraphs[0]
+    p.text = _trim(text, 92)
+    _style_paragraph(p, 19 if len(text) < 52 else 15.5, TEXT_PRIMARY, bold=True)
+    p.line_spacing = 1.08
+
+    if source:
+        source_box = slide.shapes.add_textbox(Inches(left + 0.86), Inches(top + 1.58), Inches(width - 1.35), Inches(0.28))
+        p = source_box.text_frame.paragraphs[0]
+        p.text = f"证据：{_trim(source, 80)}"
+        _style_paragraph(p, 10.2, TEXT_CAPTION)
 
 
 def _render_card_grid(slide, items: list[str]) -> None:

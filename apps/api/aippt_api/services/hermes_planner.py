@@ -185,8 +185,9 @@ SJTU PPT 生成器的 Markdown 大纲。
 - 避免整页只有稀疏 bullet；优先组织成可被渲染为卡片、流程、事实块、公式块的内容。
 - 你需要承担页面设计：为内容页选择安全白名单里的版式和组件，让后端按你的设计信号渲染。
 - 可用版式：one_column、two_column、three_column、horizontal、comparison、table、summary。
-- 可用组件：rich_cards、fact_grid、timeline、process、card_grid、two_column、three_column、horizontal、table、summary。
+- 可用组件：rich_cards、fact_grid、timeline、process、stat_callout、quote_block、card_grid、two_column、three_column、horizontal、table、summary。
 - 版式/组件写成普通正文行，例如 `版式：three_column`、`组件：rich_cards`、`洞察：...`；不要写代码或 JSON。
+- 每个内容页尽量写 `证据：...`，说明该页靠什么证明标题；可以是数据、案例、流程、公式、时间线或来源。
 - 结构化页面优先用 `标签：要点一；要点二；要点三`，这样 builder 能生成卡片、双栏、三栏和表格。
 - bullet 尽量具体，说明“为什么/怎么做/注意什么”，不要只写名词。
 - 如需公式，请保留为可编辑文本，例如：公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))。
@@ -204,7 +205,8 @@ SJTU PPT 生成器的 Markdown 大纲。
 
 ## 第 2 页 · {{页面标题}}
 版式：{{one_column / two_column / three_column / horizontal / comparison / table / summary}}
-组件：{{rich_cards / fact_grid / timeline / process / card_grid / table，可省略}}
+组件：{{rich_cards / fact_grid / timeline / process / stat_callout / quote_block / card_grid / table，可省略}}
+证据：{{数据、案例、流程、公式、时间线或来源；可省略但建议保留}}
 {{本页核心判断，直接写内容，不加标签}}
 - {{主题一}}：{{2-3 句具体展开}}
 - {{主题二}}：{{2-3 句具体展开}}
