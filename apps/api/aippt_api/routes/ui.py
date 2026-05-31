@@ -294,7 +294,11 @@ def workbench(
     .side-deck {
       font-size: 14px;
       min-height: 38px;
-      grid-template-columns: 16px minmax(0, 1fr);
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+    }
+
+    .side-deck em {
+      font-variant-numeric: tabular-nums;
     }
 
     .side-empty {
@@ -844,6 +848,22 @@ def workbench(
       gap: 8px;
     }
 
+    .task-card.is-generating {
+      position: relative;
+      border-color: #e6eaf0;
+    }
+
+    .task-card.is-generating::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border: 1px solid rgba(49, 87, 200, 0.18);
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0.15;
+      animation: cardBreath 2.8s ease-in-out infinite;
+    }
+
     .task-head {
       display: grid;
       grid-template-columns: 30px minmax(0, 1fr) auto;
@@ -927,6 +947,31 @@ def workbench(
       grid-template-columns: 16px minmax(0, 1fr);
       gap: 8px;
       align-items: center;
+    }
+
+    .log-line.is-active {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background: rgba(49, 87, 200, 0.035);
+      margin: 0 -5px;
+      padding: 5px;
+    }
+
+    .log-line.is-active::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -40%;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(49, 87, 200, 0.08),
+        transparent
+      );
+      animation: shimmer 2.4s ease-in-out infinite;
     }
 
     .log-line::before {
@@ -1191,6 +1236,18 @@ def workbench(
       color: var(--accent);
       border-color: var(--accent-line);
       background: var(--accent-soft);
+    }
+
+    .pill.running::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      display: inline-block;
+      flex: 0 0 auto;
+      margin-right: 6px;
+      animation: statusPulse 1.6s ease-in-out infinite;
     }
 
     .pill.ready {
@@ -1543,7 +1600,7 @@ def workbench(
       width: 120px;
       height: 4px;
       border-radius: 999px;
-      overflow: hidden;
+      overflow: visible;
       background: #dfe5ef;
     }
 
@@ -1552,11 +1609,79 @@ def workbench(
       height: 100%;
       border-radius: inherit;
       background: var(--accent);
+      position: relative;
+    }
+
+    .mini-progress span::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(49, 87, 200, 0.35);
+      transform: translateY(-50%) scale(0.85);
+      animation: progressDotBreath 1.8s ease-in-out infinite;
     }
 
     .mini-percent {
       color: var(--ink-3);
       font-size: 13px;
+    }
+
+    @keyframes cardBreath {
+      0%, 100% {
+        opacity: 0.15;
+        box-shadow: 0 0 0 rgba(49, 87, 200, 0);
+      }
+      50% {
+        opacity: 0.72;
+        box-shadow: 0 0 22px rgba(49, 87, 200, 0.1);
+      }
+    }
+
+    @keyframes statusPulse {
+      0%, 100% {
+        opacity: 0.35;
+        transform: scale(0.9);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.15);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        left: -40%;
+      }
+      60%, 100% {
+        left: 120%;
+      }
+    }
+
+    @keyframes progressDotBreath {
+      0%, 100% {
+        opacity: 0.45;
+        transform: translateY(-50%) scale(0.85);
+      }
+      50% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.15);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .task-card.is-generating::after,
+      .pill.running::before,
+      .log-line.is-active::after,
+      .mini-progress span::after,
+      .flow-step.active .flow-dot,
+      .flow-step.active .flow-dot::before {
+        animation: none;
+      }
     }
 
     @media (max-width: 900px) {
@@ -1996,11 +2121,14 @@ def workbench(
     function renderSidebarDecks() {
       const visible = filteredDecks().slice(0, 8);
       if (!visible.length) return `<div class="side-empty">${searchQuery.trim() ? "没有匹配的 PPT" : "暂无 PPT"}</div>`;
-      return visible.map((deck) => `
-        <button class="side-deck" type="button" data-jump="deck-list" title="${escapeHtml(deck.title)}">
-          ${icon("file")}<span>${escapeHtml(deck.title)}</span>
-        </button>
-      `).join("");
+      return visible.map((deck) => {
+        const updated = formatSidebarTime(deck.updated_at || deck.created_at);
+        return `
+          <button class="side-deck" type="button" data-jump="deck-list" title="${escapeHtml(deck.title)}">
+            ${icon("file")}<span>${escapeHtml(deck.title)}</span><em>${escapeHtml(updated)}</em>
+          </button>
+        `;
+      }).join("");
     }
 
     function renderDeckShelf() {
@@ -2107,8 +2235,10 @@ def workbench(
           </article>
         `;
       }
+      const runningClass = state.isRunning && !state.isFailed ? " is-generating" : "";
+      const activeLogIndex = runningClass ? logLines.length - 1 : -1;
       return `
-        <article class="task-card">
+        <article class="task-card${runningClass}">
           <div class="task-head">
             <span class="task-icon is-running">${icon("file")}</span>
             <div class="task-title-wrap">
@@ -2120,7 +2250,7 @@ def workbench(
           <div class="task-summary">正在生成第 ${state.activeIndex + 1} 步：${escapeHtml(state.activeLabel)}</div>
           <div class="task-sub">已完成 ${state.completeCount}/5 步，预计剩余约 ${state.remainingMinutes} 分钟</div>
           <div class="task-log">
-            ${logLines.map((line) => `<div class="log-line">${escapeHtml(line)}</div>`).join("")}
+            ${logLines.map((line, index) => `<div class="log-line${index === activeLogIndex ? " is-active" : ""}">${escapeHtml(line)}</div>`).join("")}
           </div>
           <div class="task-details" id="task-detail-panel" hidden>
             <pre>${escapeHtml(state.fullLog || deck.outline_md || "暂无更多细节")}</pre>
@@ -2295,6 +2425,28 @@ def workbench(
       }).format(date);
       const time = formatTime(value);
       return current === today ? `今天 ${time}` : `${current} ${time}`;
+    }
+
+    function formatSidebarTime(value) {
+      const date = parseApiTime(value);
+      const today = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date());
+      const current = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(date);
+      if (current === today) return formatTime(value);
+      return new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(date).split("/").join("-");
     }
 
     function statusClass(status) {
