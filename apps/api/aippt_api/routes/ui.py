@@ -52,26 +52,27 @@ def workbench(
   <style>
     :root {
       color-scheme: light;
-      --canvas: #ffffff;
-      --rail: #fbfcff;
+      --canvas: #f7f8fb;
+      --rail: #ffffff;
       --surface: #ffffff;
-      --subtle: #f5f6f8;
-      --line: rgba(15, 18, 28, 0.075);
-      --line-soft: rgba(15, 18, 28, 0.045);
-      --line-hard: rgba(15, 18, 28, 0.14);
-      --ink: #0e1117;
-      --ink-2: #3f4654;
-      --ink-3: #6b7280;
-      --ink-4: #a1a6b0;
-      --accent: #1f62ff;
-      --accent-2: #174ed2;
-      --accent-soft: rgba(31, 98, 255, 0.08);
-      --accent-line: rgba(31, 98, 255, 0.22);
-      --ready: #17966a;
-      --ready-soft: rgba(23, 150, 106, 0.09);
-      --warn: #a03a16;
-      --warn-soft: rgba(160, 58, 22, 0.08);
-      --shadow-soft: 0 1px 2px rgba(15, 18, 28, 0.04), 0 20px 52px -32px rgba(31, 98, 255, 0.28);
+      --subtle: #f6f8fb;
+      --line: #e8ecf3;
+      --line-soft: #f0f3f8;
+      --line-hard: #d7dde8;
+      --ink: #111827;
+      --ink-2: #475467;
+      --ink-3: #667085;
+      --ink-4: #98a2b3;
+      --accent: #3157c8;
+      --accent-2: #2448b8;
+      --accent-soft: #eef3ff;
+      --accent-line: #dce6ff;
+      --ready: #22a06b;
+      --ready-soft: #eaf8f1;
+      --ready-line: #cfefdd;
+      --warn: #b42318;
+      --warn-soft: #fff1f0;
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.04);
       --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
     }
 
@@ -126,7 +127,7 @@ def workbench(
       min-width: 0;
       height: 100vh;
       background: var(--rail);
-      box-shadow: 1px 0 0 var(--line);
+      box-shadow: 1px 0 0 #eef1f5;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -251,7 +252,7 @@ def workbench(
 
     .side-row:hover,
     .side-deck:hover {
-      background: rgba(31, 98, 255, 0.055);
+      background: var(--accent-soft);
       color: var(--ink);
     }
 
@@ -259,7 +260,7 @@ def workbench(
       background: var(--accent-soft);
       color: var(--accent);
       font-weight: 650;
-      box-shadow: inset 0 0 0 1px rgba(31, 98, 255, 0.08);
+      box-shadow: inset 0 0 0 1px var(--accent-line);
     }
 
     .side-row span,
@@ -284,7 +285,7 @@ def workbench(
       border-radius: 8px;
       display: inline-grid;
       place-items: center;
-      background: #edf1f7;
+      background: #eef0f4;
       color: var(--ink-3);
       padding: 0 7px;
       font-weight: 650;
@@ -313,7 +314,7 @@ def workbench(
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--surface);
-      box-shadow: 0 8px 24px -22px rgba(15, 18, 28, 0.28);
+      box-shadow: none;
     }
 
     .avatar {
@@ -533,19 +534,17 @@ def workbench(
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 18px 20px;
-      box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(15, 18, 28, 0.04),
-        0 22px 46px -32px rgba(31, 98, 255, 0.34);
+      box-shadow: var(--shadow-soft);
       transition: box-shadow 0.18s ease;
     }
 
     .prompt-card:hover {
-      box-shadow: 0 0 0 1px var(--line-hard), 0 1px 3px rgba(15, 18, 28, 0.06),
-        0 18px 34px -24px rgba(15, 18, 28, 0.24);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
     }
 
     .prompt-card:focus-within {
-      box-shadow: 0 0 0 1px var(--accent-line), 0 0 0 4px var(--accent-soft),
-        0 1px 3px rgba(15, 18, 28, 0.06);
+      box-shadow: 0 0 0 1px var(--accent-line), 0 0 0 4px rgba(49, 87, 200, 0.06),
+        var(--shadow-soft);
     }
 
     .prompt-card textarea::placeholder {
@@ -587,6 +586,7 @@ def workbench(
       font-size: 13px;
       font-weight: 620;
       white-space: nowrap;
+      border: 1px solid var(--line);
     }
 
     .insight-chip svg {
@@ -601,7 +601,7 @@ def workbench(
 
     .prompt-footer {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, max-content)) minmax(120px, 1fr);
+      grid-template-columns: repeat(2, minmax(0, max-content)) minmax(120px, 1fr);
       align-items: center;
       gap: 10px;
     }
@@ -632,7 +632,7 @@ def workbench(
 
     .primary-action {
       justify-self: end;
-      min-height: 38px;
+      min-height: 42px;
       border: 0;
       border-radius: 8px;
       background: var(--accent);
@@ -644,7 +644,7 @@ def workbench(
       padding: 0 15px;
       font-weight: 680;
       cursor: pointer;
-      box-shadow: 0 8px 20px -16px rgba(44, 62, 120, 0.8);
+      box-shadow: none;
     }
 
     .primary-action:hover {
@@ -729,10 +729,10 @@ def workbench(
     .flow-step:not(:last-child)::after {
       content: "";
       position: absolute;
-      left: calc(50% + 28px);
-      right: calc(-50% + 28px);
-      top: 21px;
-      border-top: 2px dashed #d7dce6;
+      left: calc(50% + 24px);
+      right: calc(-50% + 24px);
+      top: 17px;
+      border-top: 1.5px dashed #d7dde8;
       z-index: 0;
     }
 
@@ -742,8 +742,8 @@ def workbench(
     }
 
     .flow-dot {
-      width: 42px;
-      height: 42px;
+      width: 34px;
+      height: 34px;
       border-radius: 999px;
       display: inline-grid;
       place-items: center;
@@ -762,7 +762,7 @@ def workbench(
     .flow-step.done .flow-dot {
       background: var(--ready);
       color: #fff;
-      box-shadow: 0 0 0 6px rgba(23, 150, 106, 0.1);
+      box-shadow: 0 0 0 5px var(--ready-soft);
     }
 
     .flow-step.active {
@@ -773,17 +773,15 @@ def workbench(
     .flow-step.active .flow-dot {
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 0 0 7px rgba(31, 98, 255, 0.12), 0 0 0 14px rgba(31, 98, 255, 0.055);
+      box-shadow: 0 0 0 6px rgba(49, 87, 200, 0.1);
     }
 
     .flow-step.active .flow-dot::before {
       content: "";
       position: absolute;
-      inset: -9px;
+      inset: -8px;
       border-radius: 999px;
-      border: 2px solid rgba(31, 98, 255, 0.18);
-      border-top-color: var(--accent);
-      animation: spin 1.2s linear infinite;
+      border: 1px solid rgba(49, 87, 200, 0.25);
     }
 
     .flow-stars::before,
@@ -792,21 +790,21 @@ def workbench(
       position: absolute;
       border-radius: 999px;
       background: #72adff;
-      box-shadow: 26px 9px 0 -1px #72adff, -18px 16px 0 -1px #a9ceff;
+      box-shadow: 22px 8px 0 -1px #a9c4ff;
     }
 
     .flow-stars::before {
-      width: 5px;
-      height: 5px;
-      top: -10px;
-      left: -18px;
+      width: 4px;
+      height: 4px;
+      top: -8px;
+      left: -14px;
     }
 
     .flow-stars::after {
-      width: 4px;
-      height: 4px;
-      right: -20px;
-      bottom: 2px;
+      width: 3px;
+      height: 3px;
+      right: -14px;
+      bottom: 3px;
     }
 
     .flow-step.failed {
@@ -847,7 +845,7 @@ def workbench(
 
     .task-icon.is-running {
       background: var(--accent);
-      box-shadow: 0 0 0 5px rgba(31, 98, 255, 0.1);
+      box-shadow: 0 0 0 5px rgba(49, 87, 200, 0.1);
     }
 
     .task-title-wrap {
@@ -898,7 +896,7 @@ def workbench(
       margin-top: 2px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcff;
+      background: #f8fafd;
       padding: 9px 11px;
       display: grid;
       gap: 5px;
@@ -942,10 +940,6 @@ def workbench(
       background: #fbfcfd;
       padding: 10px;
       font: 12px/1.55 var(--mono);
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
 
     .deck-section {
@@ -1458,11 +1452,12 @@ def workbench(
 
     .deck-cover-fallback {
       background:
-        linear-gradient(135deg, rgba(31, 98, 255, 0.92), rgba(19, 137, 209, 0.88)),
-        radial-gradient(circle at 75% 20%, rgba(255, 255, 255, 0.5), transparent 34%);
+        linear-gradient(135deg, #eef4ff, #f8faff),
+        radial-gradient(circle at 76% 12%, rgba(49, 87, 200, 0.11), transparent 34%);
       padding: 10px;
       align-items: end;
       justify-items: start;
+      color: var(--ink-2);
     }
 
     .deck-cover-fallback span {
@@ -1840,9 +1835,6 @@ def workbench(
                     <button class="prompt-control" type="button" title="模板">
                       ${icon("folder")}<span>模板</span><strong>SJTU 模板</strong>
                     </button>
-                    <button class="prompt-control" type="button" title="页数">
-                      ${icon("file")}<span>页数</span><strong id="page-control-label">${escapeHtml(inferPageLabel(draftOutline))}</strong>
-                    </button>
                     <button class="prompt-control" type="button" title="风格">
                       ${icon("spark")}<span>风格</span><strong id="style-control-label">${escapeHtml(inferStyleLabel(draftOutline))}</strong>
                     </button>
@@ -1933,10 +1925,8 @@ def workbench(
 
     function updatePromptInsights() {
       const insights = document.getElementById("prompt-insights");
-      const page = document.getElementById("page-control-label");
       const style = document.getElementById("style-control-label");
       if (insights) insights.innerHTML = renderInsightChips(draftOutline);
-      if (page) page.textContent = inferPageLabel(draftOutline);
       if (style) style.textContent = inferStyleLabel(draftOutline);
     }
 
