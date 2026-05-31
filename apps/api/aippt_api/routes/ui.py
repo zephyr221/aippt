@@ -702,7 +702,6 @@ def workbench(
     .prompt-control:focus-visible,
     .deck-toggle:focus-visible,
     .row-action:focus-visible,
-    .row-more:focus-visible,
     .icon-link:focus-visible {
       outline: 2px solid rgba(49, 87, 200, 0.28);
       outline-offset: 2px;
@@ -1608,14 +1607,14 @@ def workbench(
       color: var(--ink-4);
       display: grid;
       place-items: center;
-      cursor: pointer;
+      cursor: default;
       font-size: 20px;
       line-height: 1;
     }
 
     .row-more:hover {
-      background: var(--line-soft);
-      color: var(--ink);
+      background: transparent;
+      color: var(--ink-4);
     }
 
     .mini-progress {
@@ -1700,6 +1699,7 @@ def workbench(
       .pill.running::before,
       .log-line.is-active::after,
       .mini-progress span::after,
+      .primary-action[aria-busy="true"] svg,
       .flow-step.active .flow-dot,
       .flow-step.active .flow-dot::before {
         animation: none;
@@ -1936,6 +1936,7 @@ def workbench(
 
     async function refreshDecksQuietly() {
       if (busy) return;
+      if (isPromptActive()) return;
       const hasActive = decks.some((deck) => deck.status === "generating");
       if (!hasActive && decks.length > 0) return;
       try {
@@ -1994,7 +1995,7 @@ def workbench(
                 </div>
               </section>
 
-              <div id="notice" class="notice ${noticeText ? "show" : ""}">${escapeHtml(noticeText)}</div>
+              <div id="notice" class="notice ${noticeText ? "show" : ""}" role="status">${escapeHtml(noticeText)}</div>
 
               <div class="prompt-wrap">
                 <form id="deck-form" class="prompt-card" autocomplete="off">
@@ -2200,7 +2201,7 @@ def workbench(
           <div class="deck-actions">
             ${state.isRunning ? progress : renderPreviewAction(preview)}
             ${pptx ? `<a class="row-action primary" href="${api}/files/${pptx.id}/download">${icon("download")}下载 PPTX</a>` : ""}
-            <button class="row-more" type="button" aria-label="更多操作">⋮</button>
+            <span class="row-more" aria-hidden="true">⋮</span>
           </div>
         </article>
       `;
@@ -2525,6 +2526,7 @@ def workbench(
       busy = true;
       setBusy(true);
       noticeText = "";
+      hideNotice();
       try {
         const outline = document.getElementById("outline").value;
         if (!outline.trim()) throw new Error("请先写下需求或大纲");
@@ -2559,6 +2561,11 @@ def workbench(
       submit.innerHTML = `${icon(value ? "spark" : "arrowUp")}${value ? "生成中" : "生成 PPT"}`;
     }
 
+    function isPromptActive() {
+      const active = document.activeElement;
+      return Boolean(active && active.closest && active.closest("#deck-form"));
+    }
+
     function formatTime(value) {
       return new Intl.DateTimeFormat("zh-CN", {
         timeZone: "Asia/Shanghai",
@@ -2590,6 +2597,13 @@ def workbench(
       if (!notice) return;
       notice.textContent = text;
       notice.classList.add("show");
+    }
+
+    function hideNotice() {
+      const notice = document.getElementById("notice");
+      if (!notice) return;
+      notice.textContent = "";
+      notice.classList.remove("show");
     }
 
     boot();
