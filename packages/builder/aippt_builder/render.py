@@ -45,7 +45,7 @@ OFFICE_PURPLE = "6B5BD7"
 OFFICE_PURPLE_SOFT = "F0EEFF"
 DATE_RE = re.compile(r"(?:20\d{2}[./-]\d{1,2}[./-]\d{1,2}|20\d{2}\s*年|三年前|上周)")
 TABLE_RULE_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
-KEY_VALUE_RE = re.compile(r"^([^：:]{1,14})[：:]\s*(.+)$")
+KEY_VALUE_RE = re.compile(r"^([^：:]{1,32})[：:]\s*(.+)$")
 FORMULA_RE = re.compile(r"(\$[^$]+\$|\\\(|\\\[|[=∑∫√≤≥≈θλμσᵢŷ])")
 LATEX_REPLACEMENTS = {
     r"\theta": "θ",
@@ -1226,7 +1226,7 @@ def _render_learning_modes(slide, items: list[str], support: str | None) -> None
     lead, rest = _split_lead(items)
     if lead:
         _lead_callout(slide, lead, compact=True)
-        panel_top = 2.18
+        panel_top = 2.22
     else:
         rest = items
         panel_top = 1.42
@@ -1237,27 +1237,18 @@ def _render_learning_modes(slide, items: list[str], support: str | None) -> None
         "半监督/自监督学习：少量标签或自造信号；适合预训练表征",
         "强化学习：通过奖励学习策略；适合连续决策任务",
     ]
-    _round_rect(slide, 0.9, panel_top, 11.55, 3.82, OFFICE_BLUE_PALE, border="DCE7F7", radius=0.035)
-    _rect(slide, 6.66, panel_top + 0.22, 0.018, 3.38, "D7E4F7")
-    _rect(slide, 1.16, panel_top + 1.91, 11.02, 0.018, "D7E4F7")
-    _axis_label(slide, 5.82, panel_top + 0.18, "标签明确")
-    _axis_label(slide, 5.72, panel_top + 3.38, "反馈稀疏")
-    _axis_label(slide, 1.12, panel_top + 1.72, "发现结构")
-    _axis_label(slide, 10.72, panel_top + 1.72, "优化行动")
+    _round_rect(slide, 0.9, panel_top, 11.55, 3.76, OFFICE_BLUE_PALE, border="DCE7F7", radius=0.035)
+    _rect(slide, 6.66, panel_top + 0.26, 0.014, 3.24, "D7E4F7")
+    _rect(slide, 1.16, panel_top + 1.88, 11.02, 0.014, "D7E4F7")
 
     positions = [
-        (1.18, panel_top + 0.42, 4.92, 1.34, OFFICE_BLUE, OFFICE_BLUE_SOFT),
-        (7.12, panel_top + 0.42, 4.92, 1.34, OFFICE_MINT, OFFICE_MINT_SOFT),
-        (1.18, panel_top + 2.06, 4.92, 1.34, OFFICE_PURPLE, OFFICE_PURPLE_SOFT),
-        (7.12, panel_top + 2.06, 4.92, 1.34, GOLD, GOLD_PALE),
+        (1.18, panel_top + 0.38, 4.92, 1.46, OFFICE_BLUE, OFFICE_BLUE_SOFT),
+        (7.12, panel_top + 0.38, 4.92, 1.46, OFFICE_MINT, OFFICE_MINT_SOFT),
+        (1.18, panel_top + 2.0, 4.92, 1.46, OFFICE_PURPLE, OFFICE_PURPLE_SOFT),
+        (7.12, panel_top + 2.0, 4.92, 1.46, GOLD, GOLD_PALE),
     ]
     for idx, mode in enumerate(modes[:4], start=1):
         _learning_mode_card(slide, *positions[idx - 1], idx, mode)
-
-def _axis_label(slide, left: float, top: float, text: str) -> None:
-    pill = _round_rect(slide, left, top, 1.05, 0.26, WHITE, border="D8E2F0", radius=0.12)
-    _shape_text(pill, text, 8.2, TEXT_CAPTION, bold=True, align=PP_ALIGN.CENTER)
-
 
 def _learning_mode_card(
     slide,
@@ -1273,6 +1264,7 @@ def _learning_mode_card(
     title, body = _split_key_value(text)
     if not body:
         title, body = _trim(text, 16), text
+    title = _compact_card_title(title)
     _round_rect(slide, left, top, width, height, WHITE, border="DDE6F2", radius=0.035, shadow=True)
     _rect(slide, left, top, 0.08, height, accent)
     _circle(slide, left + width - 0.56, top + 0.12, 0.34, fill, border="D7E3F2")
@@ -1284,17 +1276,21 @@ def _learning_mode_card(
     title_box.text_frame.word_wrap = True
     title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = title_box.text_frame.paragraphs[0]
-    p.text = _trim(title, 18)
-    _style_paragraph(p, 13.4, TEXT_PRIMARY, bold=True)
+    p.text = _trim(title, 16)
+    _style_paragraph(p, 12.6 if len(title) > 10 else 13.2, TEXT_PRIMARY, bold=True)
 
     _draw_card_points(
         slide,
         left + 0.32,
-        top + 0.66,
+        top + 0.7,
         width - 0.66,
-        height - 0.78,
+        height - 0.82,
         _split_card_points(body),
         compact=True,
+        max_points=2,
+        trim_chars=34,
+        point_font_size=10.2,
+        space_after=3,
     )
 
 
@@ -1326,7 +1322,17 @@ def _render_numbered_cards(slide, items: list[str], support: str | None) -> None
     fills = [OFFICE_BLUE_SOFT, OFFICE_MINT_SOFT, OFFICE_PURPLE_SOFT, GOLD_PALE]
     for idx, card in enumerate(cards[: len(positions)], start=1):
         left, top, width, height = positions[idx - 1]
-        _numbered_content_card(slide, left, top, width, height, idx, card, accents[(idx - 1) % 4], fills[(idx - 1) % 4])
+        _numbered_content_card(
+            slide,
+            left,
+            top,
+            width,
+            height,
+            idx,
+            card,
+            accents[(idx - 1) % 4],
+            fills[(idx - 1) % 4],
+        )
 
 def _numbered_content_card(
     slide,
@@ -1342,6 +1348,7 @@ def _numbered_content_card(
     title, body = _split_key_value(text)
     if not body:
         title, body = _trim(text, 18), text
+    title = _compact_card_title(title)
     _round_rect(slide, left, top, width, height, WHITE, border="E0E7F1", radius=0.035, shadow=True)
     _rect(slide, left, top, width, 0.05, accent)
     _circle(slide, left + width - 0.72, top + 0.14, 0.46, fill)
@@ -1364,6 +1371,10 @@ def _numbered_content_card(
         height - 0.9,
         _split_card_points(body),
         compact=True,
+        max_points=2 if height < 2.0 else 3,
+        trim_chars=34 if width < 4.2 else 40,
+        point_font_size=10.4,
+        space_after=3,
     )
 
 
@@ -1415,6 +1426,7 @@ def _comparison_matrix_card(
     title, body = _split_key_value(text)
     if not body:
         title, body = _trim(text, 18), text
+    title = _compact_card_title(title)
     _round_rect(slide, left, top, width, height, WHITE, border="DFE7F0", radius=0.035, shadow=True)
     _rect(slide, left, top, 0.06, height, accent)
     _number_badge(slide, left + 0.25, top + 0.22, str(idx), size=0.34, color=accent)
@@ -1432,6 +1444,10 @@ def _comparison_matrix_card(
         height - 0.72,
         _split_card_points(body),
         compact=True,
+        max_points=2,
+        trim_chars=38,
+        point_font_size=10.2,
+        space_after=3,
     )
 
 
@@ -1439,7 +1455,7 @@ def _render_loop_flow(slide, items: list[str], support: str | None) -> None:
     lead, rest = _split_lead(items)
     if lead:
         _lead_callout(slide, lead, compact=True)
-        panel_top = 2.12
+        panel_top = 2.16
     else:
         rest = items
         panel_top = 1.42
@@ -1450,23 +1466,23 @@ def _render_loop_flow(slide, items: list[str], support: str | None) -> None:
         "效果验证：比较新样本误差；复盘失败案例；检查泛化",
         "迭代上线：补充数据；监控漂移；保留回滚机制",
     ]
-    _round_rect(slide, 0.9, panel_top, 11.55, 3.92, "F7FAFD", border="DFE7F0", radius=0.035)
-    _rect(slide, 5.12, panel_top + 0.88, 3.1, 0.035, "BBD0EE")
-    _rect(slide, 10.18, panel_top + 1.54, 0.035, 0.95, "BBD0EE")
-    _rect(slide, 5.12, panel_top + 3.1, 3.1, 0.035, "BBD0EE")
-    _rect(slide, 3.1, panel_top + 1.54, 0.035, 0.95, "BBD0EE")
-    _circle(slide, 5.75, panel_top + 1.44, 1.38, OFFICE_BLUE_SOFT, border="CFE0F6")
-    _circle(slide, 6.03, panel_top + 1.72, 0.82, OFFICE_BLUE, border=OFFICE_BLUE_DARK)
-    center_box = slide.shapes.add_textbox(Inches(5.82), Inches(panel_top + 1.83), Inches(1.22), Inches(0.34))
+    _round_rect(slide, 0.9, panel_top, 11.55, 3.78, "F7FAFD", border="DFE7F0", radius=0.035)
+    _rect(slide, 5.16, panel_top + 0.84, 3.02, 0.03, "BBD0EE")
+    _rect(slide, 10.12, panel_top + 1.44, 0.03, 0.88, "BBD0EE")
+    _rect(slide, 5.16, panel_top + 2.92, 3.02, 0.03, "BBD0EE")
+    _rect(slide, 3.16, panel_top + 1.44, 0.03, 0.88, "BBD0EE")
+    _circle(slide, 5.76, panel_top + 1.42, 1.3, OFFICE_BLUE_SOFT, border="CFE0F6")
+    _circle(slide, 6.02, panel_top + 1.68, 0.78, OFFICE_BLUE, border=OFFICE_BLUE_DARK)
+    center_box = slide.shapes.add_textbox(Inches(5.84), Inches(panel_top + 1.79), Inches(1.16), Inches(0.32))
     p = center_box.text_frame.paragraphs[0]
     p.text = "反馈"
     _style_paragraph(p, 14.4, WHITE, bold=True, align=PP_ALIGN.CENTER)
 
     positions = [
-        (1.14, panel_top + 0.42, 4.18, 1.28),
-        (8.0, panel_top + 0.42, 4.18, 1.28),
-        (8.0, panel_top + 2.52, 4.18, 1.28),
-        (1.14, panel_top + 2.52, 4.18, 1.28),
+        (1.14, panel_top + 0.38, 4.24, 1.48),
+        (7.96, panel_top + 0.38, 4.24, 1.48),
+        (7.96, panel_top + 2.12, 4.24, 1.48),
+        (1.14, panel_top + 2.12, 4.24, 1.48),
     ]
     accents = [OFFICE_BLUE, OFFICE_MINT, OFFICE_PURPLE, GOLD]
     for idx, step in enumerate(steps[:4], start=1):
@@ -1485,6 +1501,7 @@ def _loop_step_card(
     title, body = _split_key_value(text)
     if not body:
         title, body = _trim(text, 16), text
+    title = _compact_card_title(title)
     _round_rect(slide, left, top, width, height, WHITE, border="DFE7F0", radius=0.035, shadow=True)
     _rect(slide, left, top, width, 0.05, accent)
     _number_badge(slide, left + 0.24, top + 0.22, str(idx), size=0.34, color=accent)
@@ -1492,12 +1509,24 @@ def _loop_step_card(
     p = title_box.text_frame.paragraphs[0]
     p.text = _trim(title, 18)
     _style_paragraph(p, 12.8, TEXT_PRIMARY, bold=True)
-    _draw_card_points(slide, left + 0.3, top + 0.58, width - 0.58, height - 0.66, _split_card_points(body), compact=True)
+    _draw_card_points(
+        slide,
+        left + 0.3,
+        top + 0.58,
+        width - 0.58,
+        height - 0.68,
+        _split_card_points(body),
+        compact=True,
+        max_points=2,
+        trim_chars=38,
+        point_font_size=10.3,
+        space_after=3,
+    )
 
 
 def _lead_callout(slide, text: str, compact: bool = False) -> None:
     text = text or "核心结论"
-    h = 0.88 if compact else 1.05
+    h = 0.96 if compact else 1.05
     card_left, card_top, card_width = 0.9, 1.16, 11.55
     _round_rect(slide, card_left, card_top, card_width, h, WHITE, border=WARM_GRAY_2, radius=0.04, shadow=True)
     _rect(slide, card_left, card_top, 0.06, h, GOLD)
@@ -1508,9 +1537,14 @@ def _lead_callout(slide, text: str, compact: bool = False) -> None:
     frame.margin_top = Pt(0)
     frame.margin_bottom = Pt(0)
     p = frame.paragraphs[0]
-    p.text = _trim(text, 104)
-    _style_paragraph(p, 17.6 if len(text) < 58 else 15.2, TEXT_PRIMARY, bold=True)
-    p.line_spacing = 1.08
+    text = _trim(text, 88 if compact else 104)
+    p.text = _avoid_orphan_punctuation(text)
+    if compact:
+        size = 16.8 if len(text) < 42 else 14.2 if len(text) < 70 else 12.8
+    else:
+        size = 17.6 if len(text) < 58 else 15.2
+    _style_paragraph(p, size, TEXT_PRIMARY, bold=True)
+    p.line_spacing = 1.04
 
 
 def _content_card(slide, left: float, top: float, width: float, height: float, idx: int, text: str) -> None:
@@ -1675,6 +1709,10 @@ def _draw_card_points(
     height: float,
     points: list[str],
     compact: bool = False,
+    max_points: int | None = None,
+    trim_chars: int | None = None,
+    point_font_size: float | None = None,
+    space_after: int | None = None,
 ) -> None:
     box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
     frame = box.text_frame
@@ -1684,9 +1722,14 @@ def _draw_card_points(
     frame.margin_right = Pt(0)
     frame.margin_top = Pt(0)
     frame.margin_bottom = Pt(0)
-    max_points = 3 if compact else 4
-    point_font_size = 11.4 if compact and width < 2.35 else 11.8 if compact else 12.1
-    trim_chars = 32 if compact and width < 2.35 else 36 if compact else 54
+    max_points = max_points or (3 if compact else 4)
+    point_font_size = (
+        point_font_size
+        if point_font_size is not None
+        else 11.4 if compact and width < 2.35 else 11.8 if compact else 12.1
+    )
+    trim_chars = trim_chars or (32 if compact and width < 2.35 else 36 if compact else 54)
+    space_after = space_after if space_after is not None else 6 if compact else 8
     for idx, point in enumerate(points[:max_points]):
         p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
         text = _normalize_formula_text(point)
@@ -1699,7 +1742,7 @@ def _draw_card_points(
             font_name=font_name,
         )
         p.line_spacing = 1.08
-        p.space_after = Pt(6 if compact else 8)
+        p.space_after = Pt(space_after)
 
 
 def _draw_check_points(
@@ -2159,6 +2202,13 @@ def _split_process_text(text: str) -> tuple[str, str]:
     return _trim(text, 20), text
 
 
+def _compact_card_title(text: str) -> str:
+    text = re.sub(r"\s+", " ", text).strip()
+    if re.search(r"[\u4e00-\u9fff]", text):
+        text = re.sub(r"\s*[（(][A-Za-z][^）)]{2,}[）)]", "", text)
+    return text.strip()
+
+
 def _split_card_points(text: str) -> list[str]:
     text = _normalize_formula_text(text)
     if not text:
@@ -2167,6 +2217,12 @@ def _split_card_points(text: str) -> list[str]:
     if len(parts) == 1 and "。" in text:
         parts = [part.strip(" 。") for part in re.split(r"\s*。\s*", text) if part.strip(" 。")]
     return parts or [text]
+
+
+def _avoid_orphan_punctuation(text: str) -> str:
+    if len(text) >= 2 and text[-1] in "。.!！?？" and text[-2] not in "。.!！?？":
+        return text[:-1]
+    return text
 
 
 def _title_size(title: str) -> float:

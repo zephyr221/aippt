@@ -219,6 +219,8 @@ SJTU PPT 生成器的 Markdown 大纲。
 - 避免整页只有稀疏 bullet；优先组织成可被渲染为卡片、流程、事实块、公式块、数字卡、四象限和对比矩阵的内容。
 - 避免连续三页使用同一种卡片样式；穿插 `concept_diagram`、`example_walkthrough`、`learning_modes`、`loop_flow`、`numbered_cards`、`compare_matrix`、`summary`，让页面节奏像成熟办公模板而不是同一组件复制。
 - 投影可读性优先：内容页通常 2-3 个卡片/步骤，每个卡片 2-3 个短点；不要为了显得丰富而塞满四五行长句。
+- 卡片标题要短，中文优先；不要把 `监督学习（Supervised Learning）` 这类中英长标题塞进卡片标题，英文术语可以放入第一条短要点。
+- 小卡片每格最多 2 条短要点，每条尽量 18-28 个中文字符；宁可少露一点，也不要让文字溢出边框。
 - 你需要承担页面设计：为内容页选择安全白名单里的版式和组件，让后端按你的设计信号渲染。
 - 可用版式：one_column、two_column、three_column、horizontal、comparison、table、summary。
 - 可用组件：rich_cards、fact_grid、timeline、process、loop_flow、concept_diagram、example_walkthrough、learning_modes、numbered_cards、compare_matrix、metric_strip、milestone_timeline、project_showcase、media_explain、stat_callout、quote_block、card_grid、two_column、three_column、horizontal、table、summary。
@@ -231,6 +233,7 @@ SJTU PPT 生成器的 Markdown 大纲。
 - 如需公式，请保留为可编辑文本，例如：公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))。
 - 严禁给核心判断添加固定标签和冒号；核心判断直接写成普通正文或页面标题。
 - 不要输出 JSON、代码块、解释文字或寒暄；只输出 Markdown 大纲。
+- 不要在结尾输出 "Here is the complete outline"、"That's the complete..." 这类英文完成说明。
 
 输出格式：
 # {{PPT 标题}}

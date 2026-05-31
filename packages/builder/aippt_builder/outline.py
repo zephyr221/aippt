@@ -13,6 +13,10 @@ HORIZONTAL_RULE_RE = re.compile(r"^(?:-{3,}|\*{3,}|_{3,})$")
 TABLE_SEPARATOR_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
 SPEAKER_NOTES_RE = re.compile(r"^(?:\*\*)?\s*(?:讲者备注|演讲者备注|备注)\s*(?:\*\*)?\s*[：:]")
 CONTENT_LABEL_RE = re.compile(r"^(?:一句话|核心判断|核心结论|本页核心判断)\s*[：:]\s*")
+GENERATION_TAIL_RE = re.compile(
+    r"^(?:that[’']?s|this is|here is)\s+(?:the\s+)?(?:complete|final).*(?:outline|deck|ppt)",
+    re.IGNORECASE,
+)
 LAYOUT_LABEL_RE = re.compile(r"^(?:版式|布局|layout)\s*[：:]\s*(.+?)\s*$", re.IGNORECASE)
 VISUAL_LABEL_RE = re.compile(
     r"^(?:组件|视觉|visual|component)\s*[：:]\s*(.+?)\s*$",
@@ -1420,7 +1424,10 @@ def _clean_inline(text: str) -> str:
 
 
 def _clean_content_line(text: str) -> str:
-    return CONTENT_LABEL_RE.sub("", _clean_inline(text)).strip()
+    text = CONTENT_LABEL_RE.sub("", _clean_inline(text)).strip()
+    if GENERATION_TAIL_RE.match(text):
+        return ""
+    return text
 
 
 def _clip(text: str, max_chars: int) -> str:

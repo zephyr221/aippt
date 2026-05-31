@@ -395,6 +395,43 @@ def test_ml_rich_teaching_components_render_as_editable_text(tmp_path) -> None:
     assert "MAE" in slide_xml
 
 
+def test_dense_component_text_is_compacted_for_projection(tmp_path) -> None:
+    deck = outline_to_deck(
+        """# 机器学习科普
+
+## 第 1 页 · 封面
+主标题：机器学习科普
+副标题：短课件
+
+## 第 2 页 · 四类学习范式
+版式：horizontal
+组件：learning_modes
+机器学习按数据有没有标签和有没有奖励信号分为四种主要范式。
+- 监督学习（Supervised Learning）：数据有标签；典型任务是分类与回归；例子是邮件识别
+- 无监督学习（Unsupervised Learning）：数据没有标签；模型自己发现结构；例子是客户分群
+- 强化学习（Reinforcement Learning）：通过奖励学习行动策略；常见于机器人和游戏
+- 半监督与自监督：少量标签加大量无标签；常用于大模型预训练
+- That's the complete 5-page outline.
+""",
+    )
+
+    body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
+    assert "That's the complete" not in body_text
+    assert validate_deck(deck) == []
+
+    output = build_pptx(deck, tmp_path / "compact-learning-modes.pptx")
+    with zipfile.ZipFile(output) as pptx:
+        slide_xml = "\n".join(
+            pptx.read(name).decode("utf-8")
+            for name in pptx.namelist()
+            if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+        )
+
+    assert "监督学习" in slide_xml
+    assert "Supervised Learning" not in slide_xml
+    assert "That's the complete" not in slide_xml
+
+
 def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:
     deck = outline_to_deck("请制作五六页 PPT，关于机器学习的科普啊")
     output = build_pptx(deck, tmp_path / "ml.pptx")

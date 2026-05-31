@@ -130,6 +130,10 @@ throughline and transitions clear.
 For classroom projection, prefer fewer stronger objects over many tiny boxes:
 2-3 cards or steps per content slide are usually more readable than five, and
 each card should carry 2-3 short points rather than a paragraph.
+For dense grids such as `learning_modes`, `loop_flow`, `numbered_cards`, and
+`compare_matrix`, keep the title short, use Chinese labels first, and show at
+most two compact points in each card. Put extra nuance in `洞察：...` rather than
+inside the card.
 
 ## Content Grammar
 

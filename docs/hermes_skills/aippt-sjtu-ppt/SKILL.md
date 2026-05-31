@@ -71,6 +71,9 @@ anything. If references are needed, load:
    whitelisted layouts, no free-form coordinates.
 8. Protect projection readability: prefer 2-3 cards or steps per content
    slide, with 2-3 short points per card.
+   For dense component grids, keep each card title short and show at most two
+   compact points; text should feel intentionally clipped rather than spilling
+   beyond a card.
 9. Prefer concrete fixes over advice.
 10. If you do not have image input, do not claim direct visual inspection.
    Reason from `qa/qa.json`, Deck IR, and any text visual review report instead.
