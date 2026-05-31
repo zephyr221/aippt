@@ -360,7 +360,7 @@ def workbench(request: Request) -> HTMLResponse:
       max-width: 760px;
       min-height: 100vh;
       margin: 0 auto;
-      padding: 92px 32px 54px;
+      padding: 70px 32px 28px;
       display: flex;
       flex-direction: column;
     }
@@ -370,7 +370,7 @@ def workbench(request: Request) -> HTMLResponse:
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 0 0 36px;
+      margin: 0 0 26px;
     }
 
     .scope-eyebrow {
@@ -397,7 +397,7 @@ def workbench(request: Request) -> HTMLResponse:
     }
 
     .scope-tabs {
-      margin-top: 24px;
+      margin-top: 20px;
       padding: 4px;
       border-radius: 9px;
       background: var(--subtle);
@@ -470,44 +470,20 @@ def workbench(request: Request) -> HTMLResponse:
         0 1px 3px rgba(15, 18, 28, 0.06);
     }
 
-    .title-field {
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr);
-      align-items: center;
-      gap: 10px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--line-soft);
-      color: var(--ink-4);
-      font-size: 13px;
-      font-weight: 550;
-    }
-
-    .title-field input {
-      min-width: 0;
-      width: 100%;
-      border: 0;
-      outline: 0;
-      background: transparent;
-      color: var(--ink);
-      font-weight: 650;
-      padding: 4px 0;
-    }
-
-    .title-field input::placeholder,
     .prompt-card textarea::placeholder {
       color: var(--ink-4);
     }
 
     .prompt-card textarea {
       width: 100%;
-      min-height: 148px;
-      max-height: 320px;
+      min-height: 118px;
+      max-height: 280px;
       border: 0;
       outline: 0;
       resize: vertical;
       background: transparent;
       color: var(--ink);
-      padding: 16px 0 8px;
+      padding: 4px 0 8px;
       font-size: 16px;
       line-height: 1.58;
     }
@@ -573,7 +549,7 @@ def workbench(request: Request) -> HTMLResponse:
     }
 
     .suggestions {
-      margin-top: 20px;
+      margin-top: 16px;
       display: flex;
       gap: 8px;
       justify-content: center;
@@ -617,10 +593,37 @@ def workbench(request: Request) -> HTMLResponse:
     }
 
     .deck-section {
-      margin-top: 42px;
+      margin-top: 22px;
       display: grid;
-      gap: 10px;
-      padding-bottom: 28px;
+      gap: 0;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .deck-section::before,
+    .deck-section::after {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      height: 24px;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: #fbfcfd;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .deck-section::before {
+      top: 10px;
+      transform: translateY(14px) scale(0.985);
+      opacity: 0.72;
+    }
+
+    .deck-section::after {
+      top: 24px;
+      transform: translateY(14px) scale(0.955);
+      opacity: 0.48;
     }
 
     .deck-section-head {
@@ -628,16 +631,136 @@ def workbench(request: Request) -> HTMLResponse:
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 0 2px;
+      min-height: 44px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      border-radius: 8px 8px 0 0;
+      background: var(--surface);
       color: var(--ink-3);
       font-size: 13px;
       font-weight: 560;
+    }
+
+    .deck-section-title {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--ink-2);
+      font-weight: 650;
     }
 
     .deck-section-count {
       color: var(--ink-4);
       font-size: 12px;
       white-space: nowrap;
+    }
+
+    .deck-section-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .deck-toggle {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--ink-4);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.16s ease, color 0.16s ease, background 0.16s ease;
+    }
+
+    .deck-toggle:hover {
+      background: var(--line-soft);
+      color: var(--ink);
+    }
+
+    .deck-section.is-open .deck-toggle {
+      transform: rotate(180deg);
+    }
+
+    .deck-shelf {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 0 0 8px 8px;
+      background: var(--surface);
+      padding: 10px;
+      box-shadow: 0 10px 26px -24px rgba(15, 18, 28, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .deck-section.is-collapsed .deck-shelf {
+      max-height: 96px;
+      cursor: pointer;
+    }
+
+    .deck-section.is-collapsed .deck-shelf::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 28px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--surface));
+      pointer-events: none;
+    }
+
+    .deck-section.is-open .deck-shelf {
+      max-height: min(45vh, 420px);
+      overflow-y: auto;
+    }
+
+    .deck-peek {
+      min-width: 0;
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 9px;
+      border-radius: 7px;
+      background: #fbfcfd;
+      color: var(--ink-3);
+    }
+
+    .deck-peek-main {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .deck-peek-title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 680;
+    }
+
+    .deck-peek-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      color: var(--ink-4);
+      font-size: 12px;
+    }
+
+    .deck-peek.empty {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      color: var(--ink-4);
+      background: transparent;
     }
 
     .deck-list {
@@ -884,15 +1007,6 @@ def workbench(request: Request) -> HTMLResponse:
       font: 12px/1.5 var(--mono);
     }
 
-    .empty {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 18px;
-      color: var(--ink-3);
-      background: var(--surface);
-      text-align: center;
-    }
-
     .login-shell {
       min-height: 100vh;
       display: grid;
@@ -985,7 +1099,7 @@ def workbench(request: Request) -> HTMLResponse:
 
       .hero {
         min-height: 0;
-        padding: 46px 14px 34px;
+        padding: 40px 14px 26px;
       }
 
       .scope-head {
@@ -999,11 +1113,6 @@ def workbench(request: Request) -> HTMLResponse:
       .prompt-card {
         border-radius: 14px;
         padding: 15px;
-      }
-
-      .title-field {
-        grid-template-columns: 1fr;
-        gap: 3px;
       }
 
       .prompt-card textarea {
@@ -1072,6 +1181,7 @@ def workbench(request: Request) -> HTMLResponse:
     let busy = false;
     let searchQuery = "";
     let noticeText = "";
+    let decksExpanded = false;
 
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -1250,10 +1360,6 @@ def workbench(request: Request) -> HTMLResponse:
 
               <div class="prompt-wrap">
                 <form id="deck-form" class="prompt-card" autocomplete="off">
-                  <label class="title-field">
-                    <span>标题</span>
-                    <input id="title" name="title" maxlength="160" value="${escapeHtml(draftTitle)}" placeholder="输入 PPT 标题" required>
-                  </label>
                   <textarea id="outline" name="outline" required placeholder="告诉我主题、页数、使用场景，或直接粘贴 Markdown 大纲...">${escapeHtml(draftOutline)}</textarea>
                   <div class="prompt-tools">
                     <button class="prompt-chip suggestion-fill" type="button" data-title="课程汇报" data-outline="请制作 8 页 PPT，用于课程汇报。要求结构清晰，包含背景、核心概念、案例、总结与讨论问题。">
@@ -1274,12 +1380,17 @@ def workbench(request: Request) -> HTMLResponse:
                 </div>
               </div>
 
-              <section class="deck-section" id="deck-list" aria-labelledby="deck-list-title">
+              <section class="deck-section ${decksExpanded ? "is-open" : "is-collapsed"}" id="deck-list" aria-labelledby="deck-list-title">
                 <div class="deck-section-head">
-                  <span id="deck-list-title">最近 · 我的 PPT</span>
-                  <span class="deck-section-count" id="deck-section-count">${deckCountLabel()}</span>
+                  <span class="deck-section-title" id="deck-list-title">${icon("deck")}最近 · 我的 PPT</span>
+                  <span class="deck-section-actions">
+                    <span class="deck-section-count" id="deck-section-count">${deckCountLabel()}</span>
+                    <button class="deck-toggle" id="toggle-decks" type="button" aria-expanded="${decksExpanded}" title="${decksExpanded ? "收起" : "展开"}" aria-label="${decksExpanded ? "收起最近 PPT" : "展开最近 PPT"}">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                  </span>
                 </div>
-                <div id="deck-list-body">${renderDeckList()}</div>
+                <div class="deck-shelf" id="deck-list-body">${renderDeckShelf()}</div>
               </section>
             </main>
           </section>
@@ -1296,11 +1407,9 @@ def workbench(request: Request) -> HTMLResponse:
         await loadDecks();
         renderWorkbench(user);
       });
-      document.getElementById("title").addEventListener("input", (event) => {
-        draftTitle = event.target.value;
-      });
       document.getElementById("outline").addEventListener("input", (event) => {
         draftOutline = event.target.value;
+        draftTitle = deriveTitle(draftOutline);
         autosizeOutline();
       });
       document.getElementById("deck-search").addEventListener("input", (event) => {
@@ -1316,13 +1425,24 @@ def workbench(request: Request) -> HTMLResponse:
         });
       });
       document.getElementById("show-decks").addEventListener("click", () => {
+        decksExpanded = true;
+        updateDeckViews();
         document.getElementById("deck-list").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      document.getElementById("toggle-decks").addEventListener("click", () => {
+        decksExpanded = !decksExpanded;
+        updateDeckViews();
+      });
+      document.getElementById("deck-list-body").addEventListener("click", () => {
+        if (!decksExpanded && filteredDecks().length > 0) {
+          decksExpanded = true;
+          updateDeckViews();
+        }
       });
       document.querySelectorAll(".suggestion-fill").forEach((button) => {
         button.addEventListener("click", () => {
           draftTitle = button.dataset.title || draftTitle;
           draftOutline = button.dataset.outline || draftOutline;
-          document.getElementById("title").value = draftTitle;
           document.getElementById("outline").value = draftOutline;
           autosizeOutline();
           document.getElementById("outline").focus();
@@ -1334,17 +1454,28 @@ def workbench(request: Request) -> HTMLResponse:
       const textarea = document.getElementById("outline");
       if (!textarea) return;
       textarea.style.height = "auto";
-      const nextHeight = Math.min(Math.max(textarea.scrollHeight, 148), 320);
+      const nextHeight = Math.min(Math.max(textarea.scrollHeight, 118), 280);
       textarea.style.height = `${nextHeight}px`;
     }
 
     function updateDeckViews() {
       const list = document.getElementById("deck-list-body");
       const side = document.getElementById("side-recents");
+      const section = document.getElementById("deck-list");
+      const toggle = document.getElementById("toggle-decks");
       const count = document.getElementById("deck-section-count");
       const tabCount = document.getElementById("tab-deck-count");
       const totalCount = document.getElementById("side-total-count");
-      if (list) list.innerHTML = renderDeckList();
+      if (list) list.innerHTML = renderDeckShelf();
+      if (section) {
+        section.classList.toggle("is-open", decksExpanded);
+        section.classList.toggle("is-collapsed", !decksExpanded);
+      }
+      if (toggle) {
+        toggle.setAttribute("aria-expanded", String(decksExpanded));
+        toggle.setAttribute("aria-label", decksExpanded ? "收起最近 PPT" : "展开最近 PPT");
+        toggle.setAttribute("title", decksExpanded ? "收起" : "展开");
+      }
       if (side) side.innerHTML = renderSidebarDecks();
       if (count) count.textContent = deckCountLabel();
       if (tabCount) tabCount.textContent = decks.length;
@@ -1380,12 +1511,29 @@ def workbench(request: Request) -> HTMLResponse:
       `).join("");
     }
 
-    function renderDeckList() {
+    function renderDeckShelf() {
       const visible = filteredDecks();
       if (visible.length === 0) {
-        return `<div class="empty">${searchQuery.trim() ? "没有匹配的 PPT" : "暂无 PPT"}</div>`;
+        return `<div class="deck-peek empty">${searchQuery.trim() ? "没有匹配的 PPT" : "暂无 PPT"}</div>`;
       }
+      if (!decksExpanded) return renderDeckPeek(visible[0], visible.length);
       return `<div class="deck-list">${visible.map(renderDeck).join("")}</div>`;
+    }
+
+    function renderDeckPeek(deck, total) {
+      const updated = formatTime(deck.updated_at || deck.created_at);
+      return `
+        <div class="deck-peek" title="${escapeHtml(deck.title)}">
+          <div class="deck-peek-main">
+            <div class="deck-peek-title">${escapeHtml(deck.title)}</div>
+            <div class="deck-peek-meta">
+              <span class="pill ${statusClass(deck.status)}">${statusLabel(deck.status)}</span>
+              <span>更新 ${escapeHtml(updated)}</span>
+            </div>
+          </div>
+          <span class="deck-section-count">${total > 1 ? `还有 ${total - 1} 个` : "展开"}</span>
+        </div>
+      `;
     }
 
     function renderDeck(deck) {
@@ -1477,6 +1625,25 @@ def workbench(request: Request) -> HTMLResponse:
       }[status] || status;
     }
 
+    function deriveTitle(outline) {
+      const text = String(outline || "").trim();
+      const heading = text.match(/^#{1,3}\\s+(.+)$/m);
+      let raw = (heading ? heading[1] : text)
+        .replace(/^请(帮我|帮忙)?(制作|生成|做|写)?/u, "")
+        .replace(/PPTX?/giu, "PPT")
+        .split(/[。！？!?\\n]/)[0]
+        .replace(/^(一份)?\\s*\\d+\\s*[-~到至]?\\s*\\d*\\s*页\\s*PPT[，,、\\s]*/u, "")
+        .replace(/^(一份)?\\s*PPT[，,、\\s]*/u, "")
+        .replace(/[，,；;：:]+$/u, "")
+        .trim();
+      const about = raw.match(/关于(.+?)(?:的(?:科普|介绍|讲解|汇报)|[，,。]|$)/u);
+      const usage = raw.match(/用于(.+?)(?:[，,。]|$)/u);
+      if (about) raw = about[1].trim();
+      else if (usage) raw = usage[1].trim();
+      if (!raw) return "未命名 PPT";
+      return raw.length > 24 ? `${raw.slice(0, 24)}...` : raw;
+    }
+
     async function createDeck(event) {
       event.preventDefault();
       await createDeckWithJob("plan_outline");
@@ -1487,10 +1654,9 @@ def workbench(request: Request) -> HTMLResponse:
       setBusy(true);
       noticeText = "";
       try {
-        const title = document.getElementById("title").value.trim();
         const outline = document.getElementById("outline").value;
-        if (!title) throw new Error("请先写一个标题");
         if (!outline.trim()) throw new Error("请先写下需求或大纲");
+        const title = deriveTitle(outline);
         draftTitle = title;
         draftOutline = outline;
         const deck = await request("/decks", {
