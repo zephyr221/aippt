@@ -51,19 +51,27 @@ def outline_view(
   <link rel="icon" type="image/x-icon" href="__ROOT_PATH__/static/img/favicons/favicon.ico?v=20260531">
   <style>
     :root {
-      --canvas: #f7f8fb;
+      color-scheme: light;
+      --canvas: #f6f7fa;
       --surface: #ffffff;
-      --line: #e7ebf2;
-      --line-strong: #d7deea;
-      --ink: #111827;
+      --surface-soft: #f8fafd;
+      --line: #e6ebf2;
+      --line-strong: #d5dde8;
+      --ink: #101828;
+      --ink-2: #344054;
       --muted: #667085;
-      --soft: #f1f5fb;
+      --muted-2: #98a2b3;
       --accent: #3157c8;
+      --accent-2: #4778ff;
       --accent-soft: #eef3ff;
       --ready: #22a06b;
-      color-scheme: light;
+      --ready-soft: #eaf8f1;
+      --warn: #b42318;
+      --shadow: 0 16px 40px rgba(15, 23, 42, 0.055);
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -77,19 +85,19 @@ def outline_view(
     button { font: inherit; letter-spacing: 0; }
     .outline-shell {
       display: grid;
-      grid-template-columns: 286px minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) 360px;
       min-height: 100vh;
     }
-    .outline-rail {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      background: #fff;
-      border-right: 1px solid var(--line);
-      padding: 24px 18px;
+    .outline-main {
+      min-width: 0;
+      padding: 30px clamp(22px, 3.6vw, 54px) 86px;
+    }
+    .top-bar {
+      height: 42px;
       display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 22px;
+      grid-template-columns: 120px minmax(0, 1fr) 120px;
+      align-items: center;
+      margin-bottom: 20px;
     }
     .back-link,
     .outline-action {
@@ -100,92 +108,54 @@ def outline_view(
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 7px;
       padding: 0 11px;
       color: #475467;
       font-size: 13px;
       font-weight: 680;
+      white-space: nowrap;
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 18px 0 6px;
-      font-size: 20px;
-      font-weight: 780;
+    .back-link:hover,
+    .outline-action:hover {
+      border-color: var(--line-strong);
+      color: var(--ink);
     }
-    .brand-mark {
-      width: 30px;
-      height: 30px;
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-      font-size: 29px;
-      font-weight: 900;
-      font-style: italic;
-    }
-    .rail-title {
-      display: grid;
-      gap: 4px;
-      margin-top: 8px;
-    }
-    .rail-title strong {
-      font-size: 17px;
-      line-height: 1.3;
-    }
-    .rail-title span {
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .page-nav {
-      min-height: 0;
-      overflow: auto;
-      display: grid;
-      gap: 8px;
-      align-content: start;
-      padding-right: 2px;
-    }
-    .page-nav a {
-      border: 1px solid transparent;
-      border-radius: 8px;
-      padding: 9px 10px;
-      display: grid;
-      grid-template-columns: 30px minmax(0, 1fr);
-      gap: 9px;
-      align-items: center;
-      color: #475467;
-    }
-    .page-nav a:hover {
-      background: var(--accent-soft);
-      border-color: #dbe5ff;
-      color: var(--accent);
-    }
-    .page-no {
-      width: 30px;
-      height: 26px;
-      border-radius: 8px;
-      background: #f2f5fa;
-      display: grid;
-      place-items: center;
-      font-size: 12px;
+    .top-title {
+      text-align: center;
+      font-size: 15px;
       font-weight: 760;
-    }
-    .page-nav-title {
-      min-width: 0;
+      color: var(--ink);
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      font-weight: 680;
     }
-    .outline-main {
-      min-width: 0;
-      padding: 40px clamp(24px, 6vw, 92px) 72px;
+    .view-toggle {
+      justify-self: end;
+      height: 34px;
+      display: inline-flex;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+    }
+    .view-toggle span {
+      width: 30px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+    }
+    .view-toggle span:last-child {
+      background: #e8ebf1;
+      color: var(--ink);
     }
     .outline-hero {
-      max-width: 980px;
-      margin: 0 auto 24px;
+      max-width: 1180px;
+      margin: 0 auto 22px;
+      text-align: center;
       display: grid;
       gap: 12px;
+      justify-items: center;
     }
     .eyebrow {
       color: var(--muted);
@@ -194,14 +164,17 @@ def outline_view(
     }
     h1 {
       margin: 0;
-      font-size: clamp(34px, 5vw, 56px);
+      max-width: 900px;
+      font-size: clamp(32px, 4.2vw, 52px);
       line-height: 1.08;
       letter-spacing: 0;
     }
-    .hero-meta {
+    .hero-meta,
+    .outline-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 9px;
       flex-wrap: wrap;
       color: var(--muted);
       font-size: 13px;
@@ -218,88 +191,344 @@ def outline_view(
     }
     .pill.ready {
       color: var(--ready);
-      background: #eaf8f1;
+      background: var(--ready-soft);
     }
-    .outline-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 4px;
+    .pill.failed {
+      color: var(--warn);
+      background: #fff1f0;
     }
     .outline-action.primary {
+      border-color: transparent;
       background: var(--accent);
       color: #fff;
-      border-color: transparent;
+    }
+    .outline-action.primary:hover {
+      background: #2348b9;
+      color: #fff;
+    }
+    .stage-summary {
+      max-width: 1180px;
+      min-height: 42px;
+      margin: 0 auto 20px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.035);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 0 18px;
+    }
+    .stage-summary strong {
+      color: var(--ink);
     }
     .pages {
-      max-width: 980px;
+      max-width: 1180px;
       margin: 0 auto;
       display: grid;
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px 22px;
+      align-items: start;
     }
     .page-card {
+      position: relative;
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--surface);
-      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.045);
-      padding: 24px 28px 26px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.035);
+      overflow: hidden;
       scroll-margin-top: 28px;
+    }
+    .page-card.is-active {
+      border-color: rgba(49, 87, 200, 0.48);
+      box-shadow: 0 18px 38px rgba(49, 87, 200, 0.12);
+    }
+    .page-card.is-active::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(110deg, transparent 0%, rgba(71, 120, 255, 0.08) 45%, transparent 70%);
+      transform: translateX(-100%);
+      animation: pageSweep 2.6s ease-in-out infinite;
+    }
+    .page-card.is-done {
+      border-color: rgba(34, 160, 107, 0.24);
+    }
+    .page-thumb {
+      aspect-ratio: 16 / 9;
+      padding: 18px 20px;
+      background:
+        radial-gradient(circle at 92% 6%, rgba(71, 120, 255, 0.12), transparent 22%),
+        linear-gradient(145deg, #fff 0%, #f5f8ff 100%);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 10px;
+    }
+    .page-card:nth-child(3n + 1) .page-thumb {
+      background:
+        radial-gradient(circle at 10% 92%, rgba(71, 120, 255, 0.13), transparent 21%),
+        linear-gradient(145deg, #fff 0%, #f7f9ff 100%);
+    }
+    .page-card:nth-child(3n + 2) .page-thumb {
+      background:
+        radial-gradient(circle at 95% 10%, rgba(49, 87, 200, 0.13), transparent 19%),
+        linear-gradient(145deg, #fff 0%, #f4f7fd 100%);
     }
     .page-card-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 12px;
+      font-size: 12px;
     }
     .page-card-head strong {
       color: var(--accent);
-      font-size: 14px;
+      font-size: 12px;
+    }
+    .page-status {
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(214, 222, 235, 0.78);
+      padding: 1px 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 680;
+    }
+    .page-status.active {
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-color: #dbe5ff;
+    }
+    .page-status.done {
+      color: var(--ready);
+      background: var(--ready-soft);
+      border-color: #cfefdd;
+    }
+    .page-status.active::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 1.5s ease-in-out infinite;
     }
     .markdown {
+      min-width: 0;
       color: #1f2937;
+      overflow: hidden;
+      max-height: 196px;
+      mask-image: linear-gradient(#000 76%, transparent);
     }
     .markdown h2,
     .markdown h3,
     .markdown h4 {
-      margin: 14px 0 8px;
-      line-height: 1.25;
+      margin: 3px 0 7px;
+      line-height: 1.2;
       color: var(--ink);
     }
-    .markdown h2 { font-size: 24px; }
-    .markdown h3 { font-size: 18px; }
-    .markdown h4 { font-size: 15px; }
+    .markdown h2 { font-size: 20px; }
+    .markdown h3 { font-size: 16px; }
+    .markdown h4 { font-size: 13px; }
     .markdown p {
-      margin: 8px 0;
+      margin: 4px 0;
       color: #344054;
+      font-size: 11px;
+      line-height: 1.48;
     }
     .markdown ul,
     .markdown ol {
-      margin: 8px 0 10px;
-      padding-left: 22px;
+      margin: 5px 0 0;
+      padding-left: 17px;
       color: #344054;
+      font-size: 11px;
+      line-height: 1.45;
     }
     .markdown li {
-      margin: 5px 0;
+      margin: 2px 0;
     }
     .markdown code {
-      padding: 1px 5px;
-      border-radius: 6px;
+      padding: 1px 4px;
+      border-radius: 5px;
       background: #f2f4f7;
-      font: 0.92em/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+      font: 0.9em/1.4 var(--mono);
     }
     .markdown blockquote {
-      margin: 10px 0;
-      padding: 8px 12px;
+      margin: 6px 0;
+      padding: 6px 8px;
       border-left: 3px solid var(--accent);
-      background: var(--soft);
+      background: rgba(238, 243, 255, 0.75);
       color: #475467;
+      font-size: 11px;
+    }
+    .markdown table {
+      width: 100%;
+      margin: 6px 0;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 6px;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+    .markdown th,
+    .markdown td {
+      border: 1px solid #e6ebf2;
+      padding: 4px 5px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .markdown th {
+      background: rgba(238, 243, 255, 0.92);
+      color: var(--accent);
+      font-weight: 760;
+    }
+    .page-caption {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid #f0f3f7;
+      background: rgba(255, 255, 255, 0.72);
+    }
+    .page-caption strong {
+      color: var(--ink-2);
+    }
+    .outline-rail {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      min-width: 0;
+      background: #fff;
+      border-left: 1px solid var(--line);
+      padding: 22px 20px;
+      display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      gap: 18px;
+      overflow: auto;
+    }
+    .assistant-head {
+      display: grid;
+      gap: 3px;
+    }
+    .assistant-head h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+    .assistant-head span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .assistant-stack {
+      display: grid;
+      gap: 12px;
+    }
+    .assistant-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+    .assistant-card.is-live {
+      border-color: rgba(49, 87, 200, 0.28);
+      background: linear-gradient(180deg, #fff, #f8fbff);
+    }
+    .assistant-card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 760;
+      color: var(--ink);
+    }
+    .assistant-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .mini-progress {
+      height: 5px;
+      border-radius: 999px;
+      background: #e8edf5;
+      overflow: hidden;
+    }
+    .mini-progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+      transition: width 0.4s ease;
+    }
+    .page-nav {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 7px;
+      align-content: start;
+      padding-right: 2px;
+    }
+    .page-nav a {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 8px 9px;
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      color: #475467;
+    }
+    .page-nav a:hover {
+      background: var(--accent-soft);
+      border-color: #dbe5ff;
+      color: var(--accent);
+    }
+    .page-no {
+      width: 30px;
+      height: 25px;
+      border-radius: 8px;
+      background: #f2f5fa;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 760;
+    }
+    .page-nav-title {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-weight: 680;
+      font-size: 13px;
+    }
+    .page-nav-state {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #d0d5dd;
+    }
+    .page-nav-state.active {
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(49, 87, 200, 0.12);
+    }
+    .page-nav-state.done {
+      background: var(--ready);
     }
     .empty {
       max-width: 760px;
-      margin: 80px auto;
+      margin: 86px auto;
       border: 1px dashed var(--line-strong);
       border-radius: 8px;
       background: #fff;
@@ -307,11 +536,58 @@ def outline_view(
       color: var(--muted);
       text-align: center;
     }
-    @media (max-width: 860px) {
-      .outline-shell { grid-template-columns: 1fr; }
+    .generation-toast {
+      position: fixed;
+      left: calc(50% - 180px);
+      bottom: 28px;
+      min-width: 300px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 12px 16px;
+      color: var(--muted);
+      font-weight: 680;
+    }
+    .generation-toast.show {
+      display: inline-flex;
+    }
+    .stop-dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: #101828;
+      display: grid;
+      place-items: center;
+    }
+    .stop-dot::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      background: #fff;
+    }
+    @keyframes pageSweep {
+      0% { transform: translateX(-100%); }
+      60%, 100% { transform: translateX(100%); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.36; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.18); }
+    }
+    @media (max-width: 1080px) {
+      .outline-shell {
+        grid-template-columns: 1fr;
+      }
       .outline-rail {
         position: relative;
         height: auto;
+        border-left: 0;
+        border-top: 1px solid var(--line);
         grid-template-rows: auto;
       }
       .page-nav {
@@ -319,46 +595,69 @@ def outline_view(
         overflow-x: auto;
       }
       .page-nav a {
-        min-width: 160px;
+        min-width: 176px;
       }
+      .generation-toast {
+        left: 16px;
+        right: 16px;
+      }
+    }
+    @media (max-width: 620px) {
       .outline-main {
-        padding: 26px 16px 56px;
+        padding: 22px 14px 60px;
       }
-      .page-card {
-        padding: 20px;
+      .top-bar {
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+      }
+      .view-toggle {
+        display: none;
+      }
+      .pages {
+        grid-template-columns: 1fr;
+        gap: 16px;
       }
     }
   </style>
 </head>
 <body>
   <div class="outline-shell">
-    <aside class="outline-rail">
-      <div>
-        <a class="back-link" href="__ROOT_PATH__/">← 回到工作台</a>
-        <div class="brand"><span class="brand-mark">A</span><span>AIPPT</span></div>
-        <div class="rail-title">
-          <strong id="rail-title">PPT 大纲</strong>
-          <span id="rail-sub">逐页 Markdown 预览</span>
-        </div>
-      </div>
-      <nav class="page-nav" id="page-nav" aria-label="页面列表"></nav>
-      <div class="outline-actions" id="rail-actions"></div>
-    </aside>
     <main class="outline-main">
+      <div class="top-bar">
+        <a class="back-link" href="__ROOT_PATH__/">← 返回</a>
+        <div class="top-title" id="top-title">PPT 大纲</div>
+        <div class="view-toggle" aria-hidden="true"><span>☰</span><span>▦</span></div>
+      </div>
       <section class="outline-hero">
-        <div class="eyebrow">个人 · 我的工作区 · 大纲预览</div>
+        <div class="eyebrow">个人 · 我的工作区</div>
         <h1 id="deck-title">PPT 大纲</h1>
         <div class="hero-meta" id="deck-meta"></div>
         <div class="outline-actions" id="hero-actions"></div>
       </section>
+      <div class="stage-summary" id="stage-summary"></div>
       <section class="pages" id="pages"></section>
     </main>
+
+    <aside class="outline-rail">
+      <div class="assistant-head">
+        <h2>与 AI 一起创作</h2>
+        <span>内容由 AI 生成</span>
+      </div>
+      <div class="assistant-stack" id="assistant-stack"></div>
+      <nav class="page-nav" id="page-nav" aria-label="页面列表"></nav>
+      <div class="outline-actions" id="rail-actions"></div>
+    </aside>
   </div>
+  <div class="generation-toast" id="generation-toast" aria-live="polite"></div>
 
   <script>
     const rootPath = document.documentElement.dataset.rootPath || "";
     const api = rootPath + "/api";
     const deckId = document.documentElement.dataset.deckId;
+    let currentOutline = null;
+    let currentFiles = [];
+    let currentJobs = [];
+    let timersStarted = false;
 
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -377,30 +676,59 @@ def outline_view(
     }
 
     function markdownToHtml(markdown) {
-      const lines = String(markdown || "").split(/\\r?\\n/);
+      const lines = String(markdown || "")
+        .split(/\\r?\\n/)
+        .filter((line) => !/^(版式|组件|支撑)：/.test(line.trim()));
       let html = "";
       let list = "";
+      let tableRows = [];
       const closeList = () => {
         if (list) {
           html += `</${list}>`;
           list = "";
         }
       };
+      const closeTable = () => {
+        if (!tableRows.length) return;
+        const [head, ...body] = tableRows;
+        html += "<table><thead><tr>";
+        html += head.map((cell) => `<th>${inlineMarkdown(cell)}</th>`).join("");
+        html += "</tr></thead>";
+        if (body.length) {
+          html += "<tbody>";
+          html += body.map((row) => `<tr>${row.map((cell) => `<td>${inlineMarkdown(cell)}</td>`).join("")}</tr>`).join("");
+          html += "</tbody>";
+        }
+        html += "</table>";
+        tableRows = [];
+      };
       for (const raw of lines) {
         const line = raw.trim();
         if (!line) {
           closeList();
+          closeTable();
           continue;
         }
         const heading = line.match(/^(#{1,4})\\s+(.+)$/);
         if (heading) {
           closeList();
+          closeTable();
           const level = Math.min(4, Math.max(2, heading[1].length + 1));
           html += `<h${level}>${inlineMarkdown(heading[2])}</h${level}>`;
           continue;
         }
+        const tableLine = line.match(/^\\|(.+)\\|$/);
+        if (tableLine) {
+          closeList();
+          const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+          if (!cells.every((cell) => /^:?-{2,}:?$/.test(cell))) {
+            tableRows.push(cells);
+          }
+          continue;
+        }
         const bullet = line.match(/^[-*]\\s+(.+)$/);
         if (bullet) {
+          closeTable();
           if (list !== "ul") {
             closeList();
             html += "<ul>";
@@ -411,6 +739,7 @@ def outline_view(
         }
         const ordered = line.match(/^\\d+[.)]\\s+(.+)$/);
         if (ordered) {
+          closeTable();
           if (list !== "ol") {
             closeList();
             html += "<ol>";
@@ -422,13 +751,16 @@ def outline_view(
         const quote = line.match(/^>\\s+(.+)$/);
         if (quote) {
           closeList();
+          closeTable();
           html += `<blockquote>${inlineMarkdown(quote[1])}</blockquote>`;
           continue;
         }
         closeList();
+        closeTable();
         html += `<p>${inlineMarkdown(line)}</p>`;
       }
       closeList();
+      closeTable();
       return html;
     }
 
@@ -442,64 +774,239 @@ def outline_view(
       }[status] || status;
     }
 
-    async function request(path) {
-      const response = await fetch(api + path, { credentials: "same-origin" });
-      if (!response.ok) throw new Error(response.statusText);
+    async function request(path, options = {}) {
+      const response = await fetch(api + path, {
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options
+      });
+      if (!response.ok) {
+        let detail = response.statusText;
+        try { detail = (await response.json()).detail || detail; } catch (_) {}
+        throw new Error(detail);
+      }
+      if (response.status === 204) return null;
       return response.json();
     }
 
-    function fileActions(files) {
-      const pptx = files.find((file) => file.kind === "pptx");
-      const preview = files.find((file) => file.kind === "preview");
+    function readyFile(files) {
+      return files.find((file) => file.kind === "pptx");
+    }
+
+    function previewFile(files) {
+      return files.find((file) => file.kind === "preview");
+    }
+
+    function buildJob(jobs) {
+      return jobs.find((job) => job.type === "build_pptx");
+    }
+
+    function isReady(deck, files, jobs) {
+      return Boolean(readyFile(files) || deck.status === "ready" || buildJob(jobs)?.status === "succeeded");
+    }
+
+    function isRendering(deck, files, jobs) {
+      if (isReady(deck, files, jobs) || deck.status === "failed") return false;
+      return deck.status === "generating" || jobs.some((job) => ["queued", "running"].includes(job.status));
+    }
+
+    function completedPages(deck, pages, files, jobs) {
+      if (isReady(deck, files, jobs)) return pages.length;
+      if (!isRendering(deck, files, jobs)) return 0;
+      const job = buildJob(jobs) || jobs[0] || {};
+      const started = Date.parse(job.updated_at || job.created_at || deck.updated_at || deck.created_at || new Date());
+      const elapsed = Math.max(0, Date.now() - (Number.isFinite(started) ? started : Date.now()));
+      const paced = Math.floor(elapsed / 7500);
+      const activeBatchSize = Math.min(3, pages.length);
+      const maxDoneWhileRendering = Math.max(0, pages.length - activeBatchSize);
+      return Math.max(0, Math.min(maxDoneWhileRendering, paced));
+    }
+
+    function pagePhase(index, deck, pages, files, jobs) {
+      if (deck.status === "failed") return { cls: "is-failed", text: "待处理", dot: "" };
+      const done = completedPages(deck, pages, files, jobs);
+      if (isReady(deck, files, jobs) || index < done) {
+        return { cls: "is-done", text: "已生成", dot: "done" };
+      }
+      if (isRendering(deck, files, jobs)) {
+        const batchSize = Math.min(3, Math.max(1, pages.length - done));
+        if (index >= done && index < done + batchSize) {
+          return { cls: "is-active", text: "生成中", dot: "active" };
+        }
+        return { cls: "is-queued", text: "排队中", dot: "" };
+      }
+      return { cls: "is-outline", text: "大纲", dot: "" };
+    }
+
+    function progressPercent(deck, pages, files, jobs) {
+      if (!pages.length) return 0;
+      return Math.round((completedPages(deck, pages, files, jobs) / pages.length) * 100);
+    }
+
+    function fileActions(deck, files, jobs) {
+      const pptx = readyFile(files);
+      const preview = previewFile(files);
+      const rendering = isRendering(deck, files, jobs);
       return `
         ${preview ? `<a class="outline-action" href="${api}/files/${preview.id}/download" target="_blank" rel="noopener">预览</a>` : ""}
         ${pptx ? `<a class="outline-action primary" href="${api}/files/${pptx.id}/download">下载 PPTX</a>` : ""}
+        ${!pptx && !rendering ? `<button class="outline-action primary" type="button" data-start-build>生成 PPT</button>` : ""}
       `;
+    }
+
+    function renderSummary(deck, pages, files, jobs) {
+      const done = completedPages(deck, pages, files, jobs);
+      if (!pages.length) return "正在等待大纲输出";
+      if (isReady(deck, files, jobs)) return `<strong>PPT 已完成</strong><span>${pages.length} 页内容已经生成</span>`;
+      if (isRendering(deck, files, jobs)) {
+        const batchEnd = Math.min(pages.length, done + 3);
+        return `<strong>正在生成 PPT 页面</strong><span>${done}/${pages.length} 已完成 · 第 ${done + 1}-${batchEnd} 页并行处理中</span>`;
+      }
+      return `<strong>大纲已展开</strong><span>${pages.length} 页内容已准备好</span>`;
+    }
+
+    function renderAssistant(deck, pages, files, jobs) {
+      const pct = progressPercent(deck, pages, files, jobs);
+      const rendering = isRendering(deck, files, jobs);
+      const ready = isReady(deck, files, jobs);
+      const planText = pages.length ? `${pages.length} 页大纲已展开，页面结构、标题和要点可直接预览。` : "正在等待大纲内容。";
+      const renderText = ready
+        ? "PPTX 已完成，可以预览或下载。"
+        : rendering
+          ? `页面正在按批次生成，当前约 ${pct}% 完成。`
+          : "大纲已就绪，可以开始渲染 PPTX。";
+      return `
+        <section class="assistant-card">
+          <div class="assistant-card-title"><span>创作意图</span><span class="pill">${escapeHtml(statusLabel(deck.status))}</span></div>
+          <p>${escapeHtml(deck.title || "PPT 大纲")}</p>
+        </section>
+        <section class="assistant-card">
+          <div class="assistant-card-title"><span>PPT 大纲</span><span class="pill ready">已完成</span></div>
+          <p>${escapeHtml(planText)}</p>
+        </section>
+        <section class="assistant-card ${rendering ? "is-live" : ""}">
+          <div class="assistant-card-title"><span>生成 PPT 页面</span><span>${ready ? "完成" : rendering ? "进行中" : "待开始"}</span></div>
+          <div class="mini-progress"><span style="width: ${ready ? 100 : pct}%"></span></div>
+          <p>${escapeHtml(renderText)}</p>
+        </section>
+      `;
+    }
+
+    function renderPages(deck, pages, files, jobs) {
+      const container = document.getElementById("pages");
+      if (!pages.length) {
+        container.innerHTML = `<div class="empty">大纲还在生成中，稍等几秒刷新后就能看到逐页内容。</div>`;
+        return;
+      }
+      container.innerHTML = pages.map((page, index) => {
+        const phase = pagePhase(index, deck, pages, files, jobs);
+        return `
+          <article class="page-card ${phase.cls}" id="page-${page.number}">
+            <div class="page-thumb">
+              <div class="page-card-head">
+                <strong>第 ${page.number} 页</strong>
+                <span class="page-status ${phase.dot}">${escapeHtml(phase.text)}</span>
+              </div>
+              <div class="markdown">${markdownToHtml(page.markdown)}</div>
+            </div>
+            <div class="page-caption"><strong>第 ${page.number} 页</strong><span>${escapeHtml(page.title)}</span></div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderNav(deck, pages, files, jobs) {
+      const nav = document.getElementById("page-nav");
+      nav.innerHTML = pages.map((page, index) => {
+        const phase = pagePhase(index, deck, pages, files, jobs);
+        return `
+          <a href="#page-${page.number}">
+            <span class="page-no">${page.number}</span>
+            <span class="page-nav-title">${escapeHtml(page.title)}</span>
+            <span class="page-nav-state ${phase.dot}" aria-hidden="true"></span>
+          </a>
+        `;
+      }).join("");
+    }
+
+    function renderToast(deck, pages, files, jobs) {
+      const toast = document.getElementById("generation-toast");
+      if (!isRendering(deck, files, jobs) || !pages.length) {
+        toast.classList.remove("show");
+        toast.innerHTML = "";
+        return;
+      }
+      const done = completedPages(deck, pages, files, jobs);
+      toast.innerHTML = `<span>AI 正在生成 PPT...</span><span>(${done}/${pages.length})</span><span class="stop-dot" aria-hidden="true"></span>`;
+      toast.classList.add("show");
+    }
+
+    function bindStartBuild() {
+      document.querySelectorAll("[data-start-build]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          button.textContent = "已开始";
+          await request(`/jobs/decks/${deckId}`, {
+            method: "POST",
+            body: JSON.stringify({ type: "build_pptx" })
+          });
+          await refreshData();
+        });
+      });
+    }
+
+    function renderAll() {
+      if (!currentOutline) return;
+      const deck = currentOutline.deck || {};
+      const pages = currentOutline.pages || [];
+      document.title = `AIPPT · ${deck.title || "大纲预览"}`;
+      document.getElementById("deck-title").textContent = deck.title || "PPT 大纲";
+      document.getElementById("top-title").textContent = deck.title || "PPT 大纲";
+      document.getElementById("deck-meta").innerHTML = `
+        <span class="pill ${deck.status === "ready" ? "ready" : deck.status === "failed" ? "failed" : ""}">${escapeHtml(statusLabel(deck.status))}</span>
+        <span>${pages.length || 0} 页</span>
+        <span>SJTU 模板</span>
+      `;
+      const actions = fileActions(deck, currentFiles, currentJobs);
+      document.getElementById("hero-actions").innerHTML = actions;
+      document.getElementById("rail-actions").innerHTML = actions;
+      document.getElementById("stage-summary").innerHTML = renderSummary(deck, pages, currentFiles, currentJobs);
+      document.getElementById("assistant-stack").innerHTML = renderAssistant(deck, pages, currentFiles, currentJobs);
+      renderNav(deck, pages, currentFiles, currentJobs);
+      renderPages(deck, pages, currentFiles, currentJobs);
+      renderToast(deck, pages, currentFiles, currentJobs);
+      bindStartBuild();
+    }
+
+    async function refreshData() {
+      currentOutline = await request(`/decks/${deckId}/outline`);
+      [currentFiles, currentJobs] = await Promise.all([
+        request(`/files/decks/${deckId}`).catch(() => []),
+        request(`/jobs/decks/${deckId}`).catch(() => [])
+      ]);
+      renderAll();
+    }
+
+    function ensureTimers() {
+      if (timersStarted) return;
+      timersStarted = true;
+      window.setInterval(() => {
+        if (!currentOutline) return;
+        const deck = currentOutline.deck || {};
+        const pages = currentOutline.pages || [];
+        if (isRendering(deck, currentFiles, currentJobs)) renderAll();
+      }, 1800);
+      window.setInterval(() => {
+        if (!currentOutline) return;
+        const deck = currentOutline.deck || {};
+        if (isRendering(deck, currentFiles, currentJobs)) refreshData().catch(() => {});
+      }, 6000);
     }
 
     async function boot() {
       try {
-        const [outline, files] = await Promise.all([
-          request(`/decks/${deckId}/outline`),
-          request(`/files/decks/${deckId}`).catch(() => [])
-        ]);
-        const deck = outline.deck || {};
-        const pages = outline.pages || [];
-        document.title = `AIPPT · ${deck.title || "大纲预览"}`;
-        document.getElementById("deck-title").textContent = deck.title || "PPT 大纲";
-        document.getElementById("rail-title").textContent = deck.title || "PPT 大纲";
-        document.getElementById("rail-sub").textContent = `${pages.length || 0} 页 · Markdown 大纲`;
-        document.getElementById("deck-meta").innerHTML = `
-          <span class="pill ${deck.status === "ready" ? "ready" : ""}">${escapeHtml(statusLabel(deck.status))}</span>
-          <span>${pages.length || 0} 页</span>
-          <span>SJTU 模板</span>
-        `;
-        const actions = fileActions(files);
-        document.getElementById("hero-actions").innerHTML = actions;
-        document.getElementById("rail-actions").innerHTML = actions;
-
-        const nav = document.getElementById("page-nav");
-        nav.innerHTML = pages.map((page) => `
-          <a href="#page-${page.number}">
-            <span class="page-no">${page.number}</span>
-            <span class="page-nav-title">${escapeHtml(page.title)}</span>
-          </a>
-        `).join("");
-
-        const container = document.getElementById("pages");
-        if (!pages.length) {
-          container.innerHTML = `<div class="empty">大纲还在生成中，稍等几秒刷新后就能看到逐页内容。</div>`;
-          return;
-        }
-        container.innerHTML = pages.map((page) => `
-          <article class="page-card" id="page-${page.number}">
-            <div class="page-card-head">
-              <strong>第 ${page.number} 页</strong>
-              <span>${escapeHtml(page.title)}</span>
-            </div>
-            <div class="markdown">${markdownToHtml(page.markdown)}</div>
-          </article>
-        `).join("");
+        await refreshData();
+        ensureTimers();
       } catch (error) {
         document.getElementById("pages").innerHTML = `<div class="empty">没有读取到大纲，请回到工作台稍后再试。</div>`;
       }
