@@ -651,6 +651,10 @@ def workbench(
       box-shadow: none;
     }
 
+    .primary-action[aria-busy="true"] svg {
+      animation: spin 1.4s linear infinite;
+    }
+
     .primary-action:hover {
       background: var(--accent-2);
     }
@@ -688,6 +692,20 @@ def workbench(
     .suggestion:hover {
       border-color: var(--line-hard);
       color: var(--ink);
+    }
+
+    .side-row:focus-visible,
+    .side-deck:focus-visible,
+    .scope-tab:focus-visible,
+    .suggestion:focus-visible,
+    .primary-action:focus-visible,
+    .prompt-control:focus-visible,
+    .deck-toggle:focus-visible,
+    .row-action:focus-visible,
+    .row-more:focus-visible,
+    .icon-link:focus-visible {
+      outline: 2px solid rgba(49, 87, 200, 0.28);
+      outline-offset: 2px;
     }
 
     .notice {
@@ -1095,10 +1113,6 @@ def workbench(
       color: var(--ink);
     }
 
-    .deck-section.is-open .deck-toggle {
-      transform: rotate(180deg);
-    }
-
     .deck-shelf {
       min-height: 74px;
       border: 1px solid var(--line);
@@ -1126,7 +1140,7 @@ def workbench(
       pointer-events: none;
     }
 
-    .deck-section.is-open .deck-shelf {
+    .deck-section.is-expanded .deck-shelf {
       max-height: min(45vh, 420px);
       overflow-y: auto;
     }
@@ -1462,7 +1476,7 @@ def workbench(
     }
 
     .deck-shelf,
-    .deck-section.is-open .deck-shelf,
+    .deck-section.is-expanded .deck-shelf,
     .deck-section.is-collapsed .deck-shelf {
       min-height: 0;
       max-height: none;
@@ -1502,6 +1516,14 @@ def workbench(
 
     .deck-row:last-child {
       border-bottom: 0;
+    }
+
+    .deck-row:hover {
+      background: #fbfcff;
+    }
+
+    .deck-row:hover .deck-cover {
+      border-color: var(--accent-line);
     }
 
     .deck-cover {
@@ -1986,8 +2008,8 @@ def workbench(
                     <button class="prompt-control" type="button" title="风格">
                       ${icon("spark")}<span>风格</span><strong id="style-control-label">${escapeHtml(inferStyleLabel(draftOutline))}</strong>
                     </button>
-                    <button id="submit" class="primary-action" type="submit" ${busy ? "disabled" : ""}>
-                      ${icon("arrowUp")}生成 PPT
+                    <button id="submit" class="primary-action" type="submit" ${busy ? "disabled aria-busy=\\"true\\"" : "aria-busy=\\"false\\""}>
+                      ${icon(busy ? "spark" : "arrowUp")}${busy ? "生成中" : "生成 PPT"}
                     </button>
                   </div>
                 </form>
@@ -2001,7 +2023,7 @@ def workbench(
 
               ${renderCurrentWorkflow()}
 
-              <section class="deck-section" id="deck-list" aria-labelledby="deck-list-title">
+              <section class="deck-section ${decksExpanded ? "is-expanded" : "is-collapsed"}" id="deck-list" aria-labelledby="deck-list-title">
                 <div class="deck-section-head">
                   <span class="deck-section-title" id="deck-list-title">${icon("deck")}最近 · 我的 PPT</span>
                   <span class="deck-section-actions">
@@ -2026,6 +2048,12 @@ def workbench(
         draftTitle = deriveTitle(draftOutline);
         autosizeOutline();
         updatePromptInsights();
+      });
+      document.getElementById("outline").addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+          event.preventDefault();
+          if (!busy) document.getElementById("deck-form").requestSubmit();
+        }
       });
       document.querySelectorAll("[data-jump]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -2087,7 +2115,10 @@ def workbench(
       const tabCount = document.getElementById("tab-deck-count");
       const totalCount = document.getElementById("side-total-count");
       if (list) list.innerHTML = renderDeckShelf();
-      if (section) section.classList.toggle("is-expanded", decksExpanded);
+      if (section) {
+        section.classList.toggle("is-expanded", decksExpanded);
+        section.classList.toggle("is-collapsed", !decksExpanded);
+      }
       if (toggle) {
         toggle.setAttribute("aria-expanded", String(decksExpanded));
         toggle.textContent = decksExpanded ? "收起" : "查看全部";
@@ -2522,7 +2553,10 @@ def workbench(
 
     function setBusy(value) {
       const submit = document.getElementById("submit");
-      if (submit) submit.disabled = value;
+      if (!submit) return;
+      submit.disabled = value;
+      submit.setAttribute("aria-busy", String(value));
+      submit.innerHTML = `${icon(value ? "spark" : "arrowUp")}${value ? "生成中" : "生成 PPT"}`;
     }
 
     function formatTime(value) {
