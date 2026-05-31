@@ -745,11 +745,14 @@ def workbench(
       width: 34px;
       height: 34px;
       border-radius: 999px;
-      display: inline-grid;
-      place-items: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       background: #edf1f7;
       color: var(--ink-3);
       font-weight: 760;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
       position: relative;
       z-index: 1;
       box-shadow: 0 0 0 6px var(--canvas);
@@ -771,9 +774,11 @@ def workbench(
     }
 
     .flow-step.active .flow-dot {
-      background: var(--accent);
+      background: linear-gradient(135deg, #2448b8, #5175dc, #3157c8);
+      background-size: 180% 180%;
       color: #fff;
       box-shadow: 0 0 0 6px rgba(49, 87, 200, 0.1);
+      animation: activeNodeGradient 2.4s ease infinite;
     }
 
     .flow-step.active .flow-dot::before {
@@ -781,7 +786,11 @@ def workbench(
       position: absolute;
       inset: -8px;
       border-radius: 999px;
-      border: 1px solid rgba(49, 87, 200, 0.25);
+      background: conic-gradient(from 0deg, rgba(49, 87, 200, 0), rgba(49, 87, 200, 0.5), rgba(49, 87, 200, 0));
+      animation: spin 1.8s linear infinite;
+      z-index: -1;
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
     }
 
     .flow-stars::before,
@@ -814,6 +823,15 @@ def workbench(
     .flow-step.failed .flow-dot {
       background: var(--warn);
       color: #fff;
+    }
+
+    @keyframes activeNodeGradient {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .task-card {
@@ -1670,6 +1688,7 @@ def workbench(
     let filesByDeck = new Map();
     let jobsByDeck = new Map();
     let jobLogs = new Map();
+    let deckSlideCounts = new Map();
     let busy = false;
     let searchQuery = "";
     let noticeText = "";
@@ -1741,12 +1760,16 @@ def workbench(
       filesByDeck = new Map();
       jobsByDeck = new Map();
       jobLogs = new Map();
+      deckSlideCounts = new Map();
       await Promise.all(decks.map(async (deck) => {
+        let files = [];
         try {
-          filesByDeck.set(deck.id, await request(`/files/decks/${deck.id}`));
+          files = await request(`/files/decks/${deck.id}`);
+          filesByDeck.set(deck.id, files);
         } catch (_) {
           filesByDeck.set(deck.id, []);
         }
+        deckSlideCounts.set(deck.id, await loadDeckSlideCount(deck, files));
         try {
           const jobs = await request(`/jobs/decks/${deck.id}`);
           jobsByDeck.set(deck.id, jobs);
@@ -1993,6 +2016,7 @@ def workbench(
       const files = filesByDeck.get(deck.id) || [];
       const pptx = files.find((file) => file.kind === "pptx");
       const preview = files.find((file) => file.kind === "preview");
+      const previewImage = files.find((file) => file.kind === "preview" && String(file.content_type || "").startsWith("image/"));
       const jobs = jobsByDeck.get(deck.id) || [];
       const state = workflowState(deck, jobs, files);
       const updated = formatDeckTime(deck.updated_at || deck.created_at);
@@ -2004,12 +2028,12 @@ def workbench(
       ` : "";
       return `
         <article class="deck-row">
-          ${renderDeckCover(deck, preview)}
+          ${renderDeckCover(deck, previewImage)}
           <div class="deck-main">
             <h2 class="deck-title">${escapeHtml(deck.title)}</h2>
             <div class="deck-meta">
               <span class="pill ${statusClass(deck.status)}">${statusLabel(deck.status)}</span>
-              <span>${escapeHtml(inferPageLabel(deck.outline_md))}</span>
+              <span>${escapeHtml(deckPageLabel(deck))}</span>
               <span>SJTU 模板</span>
               <span>${escapeHtml(updated)}</span>
             </div>
@@ -2063,7 +2087,7 @@ def workbench(
       const pptx = files.find((file) => file.kind === "pptx");
       const preview = files.find((file) => file.kind === "preview");
       const time = formatTime(deck.updated_at || deck.created_at);
-      const meta = `${inferPageLabel(deck.outline_md)} · SJTU 模板 · ${inferStyleLabel(deck.outline_md)}`;
+      const meta = `${deckPageLabel(deck)} · SJTU 模板 · ${inferStyleLabel(deck.outline_md)}`;
       const logLines = taskLogLines(state);
       if (state.isDone) {
         return `
@@ -2178,6 +2202,30 @@ def workbench(
       return `<button class="row-action preview is-disabled" type="button" aria-disabled="true">${icon("search")}预览</button>`;
     }
 
+    async function loadDeckSlideCount(deck, files) {
+      const deckIr = files.find((file) => file.kind === "deck_ir");
+      if (deckIr) {
+        try {
+          const response = await fetch(`${api}/files/${deckIr.id}/download`, {
+            credentials: "same-origin"
+          });
+          if (response.ok) {
+            const payload = await response.json();
+            if (Array.isArray(payload.slides) && payload.slides.length > 0) {
+              return payload.slides.length;
+            }
+          }
+        } catch (_) {}
+      }
+      return inferredSlideCount(deck.outline_md);
+    }
+
+    function deckPageLabel(deck) {
+      const count = deckSlideCounts.get(deck.id);
+      if (Number.isFinite(count) && count > 0) return `${count} 页`;
+      return inferPageLabel(deck.outline_md);
+    }
+
     function renderInsightChips(outline) {
       return promptInsights(outline).map((item) => `
         <span class="insight-chip">${icon(item.icon)}${escapeHtml(item.label)}</span>
@@ -2196,12 +2244,31 @@ def workbench(
     }
 
     function inferPageLabel(outline) {
-      const text = String(outline || "");
-      const range = text.match(/(\\d+)\\s*[-~到至]\\s*(\\d+)\\s*页/u);
-      if (range) return `${range[1]}-${range[2]} 页`;
-      const single = text.match(/(\\d+)\\s*页/u);
-      if (single) return `${single[1]} 页`;
+      const count = inferredSlideCount(outline);
+      if (Number.isFinite(count) && count > 0) return `${count} 页`;
       return "5-6 页";
+    }
+
+    function inferredSlideCount(outline) {
+      const text = String(outline || "");
+      const requested = requestedPageCount(text);
+      if (requested) return requested;
+
+      const pageHeadings = text.match(/^#{1,3}\\s*第\\s*\\d+\\s*页/gmu) || [];
+      if (pageHeadings.length > 1) {
+        const hasThanks = /^#{1,3}\\s*第\\s*\\d+\\s*页\\s*[·:：\\-—]\\s*(谢谢|致谢|结束)/gmu.test(text);
+        return pageHeadings.length + (hasThanks ? 0 : 1);
+      }
+      return null;
+    }
+
+    function requestedPageCount(text) {
+      const normalized = String(text || "").replace(/^#{1,3}\\s*第\\s*\\d+\\s*页.*$/gmu, "");
+      const range = normalized.match(/(?:制作|生成|做|写|一份|共|总共|约|大约|控制在|需要)?\\s*(\\d{1,2})\\s*[-~到至—]\\s*(\\d{1,2})\\s*页\\s*(?:PPT|ppt|幻灯片)?/u);
+      if (range) return Number(range[2]);
+      const single = normalized.match(/(?:制作|生成|做|写|一份|共|总共|约|大约|控制在|需要)?\\s*(\\d{1,2})\\s*页\\s*(?:PPT|ppt|幻灯片)?/u);
+      if (single) return Number(single[1]);
+      return null;
     }
 
     function inferStyleLabel(outline) {

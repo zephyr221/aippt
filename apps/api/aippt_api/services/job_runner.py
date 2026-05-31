@@ -12,6 +12,7 @@ from ..config import Settings
 from ..models import DeckSession, DeckStatus, FileAsset, FileKind, Job, JobStatus, JobType
 from .hermes_planner import write_hermes_plan
 from .hermes_review import write_hermes_review
+from .preview import build_preview_artifacts
 from .workspaces import materialize_job_workspace, write_job_manifest
 
 
@@ -138,6 +139,9 @@ def _run_build_pptx(
     _append_agent_log(workspace, "Deck IR 已生成，开始渲染可编辑 PPTX。")
     _run_builder(settings, workspace, "build", deck_ir_path, pptx_path)
     _append_agent_log(workspace, "PPTX 生成完成，可以下载。")
+    preview = build_preview_artifacts(settings, pptx_path, workspace)
+    if preview.page_paths:
+        _append_agent_log(workspace, "已生成首页封面预览。")
 
     _add_file_asset(session, deck, FileKind.DECK_IR, deck_ir_path, "application/json")
     _add_file_asset(
@@ -147,6 +151,11 @@ def _run_build_pptx(
         pptx_path,
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     )
+    if preview.page_paths:
+        _add_file_asset(session, deck, FileKind.PREVIEW, preview.page_paths[0], "image/png")
+    elif preview.best_download() is not None:
+        preview_path, preview_content_type = preview.best_download()
+        _add_file_asset(session, deck, FileKind.PREVIEW, preview_path, preview_content_type)
     _add_file_asset(session, deck, FileKind.LOG, workspace / "logs" / "job.log", "text/plain")
 
 

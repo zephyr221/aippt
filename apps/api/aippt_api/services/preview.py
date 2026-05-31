@@ -18,6 +18,8 @@ class PreviewArtifacts:
     tools: dict[str, str | bool | None]
 
     def best_download(self) -> tuple[Path, str] | None:
+        if self.page_paths:
+            return self.page_paths[0], "image/png"
         if self.contact_sheet_path is not None:
             return self.contact_sheet_path, "image/png"
         if self.pdf_path is not None:

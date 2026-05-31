@@ -499,7 +499,7 @@ def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]
                 ],
             ),
         ]
-    return candidates[:body_pages]
+    return _fit_section_count(candidates, body_pages, topic)
 
 
 def _is_machine_learning_topic(topic: str) -> bool:
@@ -746,7 +746,69 @@ def _general_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]
             ],
         ),
     ]
-    return candidates[:body_pages]
+    return _fit_section_count(candidates, body_pages, topic)
+
+
+def _fit_section_count(
+    candidates: list[tuple[str, list[str]]],
+    body_pages: int,
+    topic: str,
+) -> list[tuple[str, list[str]]]:
+    sections = list(candidates[:body_pages])
+    extension_templates = [
+        (
+            "关键概念再澄清",
+            [
+                "版式：three_column",
+                "组件：rich_cards",
+                f"支撑：围绕 {topic} 补充定义、反例和边界。",
+                f"这一页补齐 {topic} 中最容易被误解的概念，让听众能准确复述。",
+                "定义：用一句话说明概念；补充一个直观例子；指出适用条件",
+                "反例：说明什么时候不能这样理解；列出常见误用；给出判断标准",
+                "检查：请听众换一个场景复述；确认边界；记录仍不清楚的问题",
+            ],
+        ),
+        (
+            "应用场景与迁移",
+            [
+                "版式：three_column",
+                "组件：rich_cards",
+                f"支撑：用多个场景说明 {topic} 的可迁移性。",
+                f"理解 {topic} 后，关键是能把同一套思路迁移到不同问题。",
+                "学习场景：明确输入材料；设定学习目标；用结果检查理解",
+                "科研场景：把问题拆成数据、方法和验证；记录失败样例；迭代假设",
+                "办公场景：识别重复任务；设计人工复核；把输出纳入工作流",
+            ],
+        ),
+        (
+            "方法流程拆解",
+            [
+                "版式：horizontal",
+                "组件：process",
+                f"支撑：把 {topic} 拆成准备、执行、验证和迭代。",
+                f"讲清流程能让 {topic} 从概念变成可操作步骤。",
+                "准备：明确对象、材料和限制；列出成功标准；准备最小样例",
+                "执行：按顺序完成关键动作；记录中间结果；避免跳过检查点",
+                "验证：用新样例测试；观察失败原因；决定下一轮改进",
+            ],
+        ),
+        (
+            "边界与课堂讨论",
+            [
+                "版式：summary",
+                "组件：summary",
+                f"支撑：把 {topic} 的边界、风险和讨论题收束。",
+                f"最后补一页边界讨论，能让 {topic} 的学习更可信。",
+                "边界：说明依赖哪些前提；什么场景不适合；如何发现异常",
+                "风险：提示误用成本；说明人工判断位置；保留复核机制",
+                "讨论：给出一个开放问题；让听众判断条件；连接下一步学习",
+            ],
+        ),
+    ]
+    while len(sections) < body_pages:
+        template = extension_templates[(len(sections) - len(candidates)) % len(extension_templates)]
+        sections.append(template)
+    return sections
 
 
 def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:

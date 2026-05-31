@@ -142,6 +142,18 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     assert validate_deck(deck) == []
 
 
+def test_brief_prompt_respects_requested_ten_pages() -> None:
+    deck = outline_to_deck("请制作 10 页 PPT，关于机器学习的科普。")
+
+    assert deck.title == "机器学习科普"
+    assert len(deck.slides) == 10
+    assert deck.slides[0].layout == "cover"
+    assert deck.slides[-1].layout == "thanks"
+    assert deck.slides[7].title == "关键概念再澄清"
+    assert deck.slides[8].title == "应用场景与迁移"
+    assert validate_deck(deck) == []
+
+
 def test_brief_machine_learning_intro_defaults_to_micro_lesson() -> None:
     deck = outline_to_deck("机器学习导论 PPT")
 
