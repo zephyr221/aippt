@@ -216,11 +216,14 @@ SJTU PPT 生成器的 Markdown 大纲。
 - 机器学习或 AI 教学页要主动使用更丰富的办公模板节奏：四类学习范式用 `组件：learning_modes`，训练/验证闭环用 `组件：loop_flow`，算法速览用 `组件：numbered_cards`，评估指标或过拟合对比用 `组件：compare_matrix`。
 - 导论型课程时间有限，除非用户明确要求，不要硬塞练习页或检查理解页；更重要的是选一条主例子贯穿始终，例如机器学习导论用房价预测串起输入、模型、预测、损失、任务类型和验证闭环。
 - 汇报/产品类 PPT 不要全做卡片：总览页优先用 `metric_strip`，阶段进展用 `milestone_timeline`，代表项目用 `project_showcase`，平台/系统介绍用 `media_explain`。
+- `metric_strip` 只用于真实数字或短指标，例如 `完成率：96% / ...`；如果没有数字，不要把“完成率、覆盖率、迭代周期...”这种逗号长串放进指标卡，改用 `fact_grid` 或 `compare_matrix`。
+- `milestone_timeline`、`project_showcase` 每项只写 1 个短标题和 1-2 条短点；不要依赖图片占位承载关键信息，图片说明只写短名词。
 - 避免整页只有稀疏 bullet；优先组织成可被渲染为卡片、流程、事实块、公式块、数字卡、四象限和对比矩阵的内容。
 - 避免连续三页使用同一种卡片样式；穿插 `concept_diagram`、`example_walkthrough`、`learning_modes`、`loop_flow`、`numbered_cards`、`compare_matrix`、`summary`，让页面节奏像成熟办公模板而不是同一组件复制。
 - 投影可读性优先：内容页通常 2-3 个卡片/步骤，每个卡片 2-3 个短点；不要为了显得丰富而塞满四五行长句。
 - 卡片标题要短，中文优先；不要把 `监督学习（Supervised Learning）` 这类中英长标题塞进卡片标题，英文术语可以放入第一条短要点。
 - 小卡片每格最多 2 条短要点，每条尽量 18-28 个中文字符；宁可少露一点，也不要让文字溢出边框。
+- 工作汇报页尤其要避免长句、长指标、长英文混排；如果一句话超过 32 个中文字符，请主动拆成两条短点或移到 `洞察：...`。
 - 你需要承担页面设计：为内容页选择安全白名单里的版式和组件，让后端按你的设计信号渲染。
 - 可用版式：one_column、two_column、three_column、horizontal、comparison、table、summary。
 - 可用组件：rich_cards、fact_grid、timeline、process、loop_flow、concept_diagram、example_walkthrough、learning_modes、numbered_cards、compare_matrix、metric_strip、milestone_timeline、project_showcase、media_explain、stat_callout、quote_block、card_grid、two_column、three_column、horizontal、table、summary。

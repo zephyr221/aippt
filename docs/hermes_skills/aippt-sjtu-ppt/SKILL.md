@@ -126,6 +126,13 @@ Use the user's authored structure first. When choosing slide rhythms:
 - Avoid using the same card grid for three consecutive content slides; alternate
   concept map, worked example, learning modes, loop flow, number cards, matrix,
   and summary pages when the topic supports it.
+- Only use `metric_strip` when each metric has a real short number or compact
+  value such as `96%`, `30+`, or `3 项`. If the user gives a comma-separated
+  list of indicators without values, use `fact_grid` or `compare_matrix`
+  instead of putting the long list into a metric number.
+- For `milestone_timeline` and `project_showcase`, each item should have one
+  short title and at most two short points. Do not rely on image placeholders to
+  communicate core content.
 
 Do not produce pages that are only large bullet boxes when a stronger structure
 is available.

@@ -489,6 +489,13 @@ def _render_column_cards(slide, columns, items: list[str], count: int) -> None:
     if not columns:
         columns = _fallback_columns(rest, count)
 
+    visible_columns = columns[:count]
+    max_points = max((len(column.bullets or []) for column in visible_columns), default=0)
+    sparse = max_points <= 2 and len(visible_columns) <= 2
+    if sparse:
+        top += 0.24 if lead else 0.34
+        height = min(height, 2.72)
+
     if count == 2:
         positions = [(0.92, top, 5.55, height), (6.82, top, 5.55, height)]
     else:
@@ -527,6 +534,10 @@ def _render_column_cards(slide, columns, items: list[str], count: int) -> None:
             card_h - 1.08,
             points,
             compact=count == 3,
+            max_points=2 if sparse else None,
+            trim_chars=44 if width >= 5 else 32,
+            point_font_size=11.2 if sparse else None,
+            space_after=4 if sparse else None,
         )
 
 
@@ -711,9 +722,11 @@ def _render_metric_strip(slide, items: list[str], support: str | None) -> None:
     lead, rest = _split_lead(items)
     _lead_callout(slide, lead or "先用关键数字建立汇报判断。", compact=True)
     metrics = [_metric_from_item(item) for item in (rest or items)[:4]]
-    metric_w = 2.72
+    metric_count = max(1, len(metrics))
+    gap = 0.28
+    metric_w = (11.55 - gap * (metric_count - 1)) / metric_count
     for idx, metric in enumerate(metrics, start=1):
-        left = 0.92 + (idx - 1) * 2.94
+        left = 0.92 + (idx - 1) * (metric_w + gap)
         _strip_metric_card(slide, left, 2.18, metric_w, 1.26, *metric)
 
     detail_items = (rest or items)[4:6]
@@ -739,12 +752,20 @@ def _strip_metric_card(
 ) -> None:
     _round_rect(slide, left, top, width, height, "FDF1F1", radius=0.035)
     num_box = slide.shapes.add_textbox(Inches(left + 0.18), Inches(top + 0.22), Inches(width - 0.36), Inches(0.46))
+    num_box.text_frame.word_wrap = True
     p = num_box.text_frame.paragraphs[0]
-    p.text = f"{number}{unit}"
-    _style_paragraph(p, 28 if len(number) <= 5 else 23, SJTU_RED, bold=True)
+    display = f"{number}{unit}".strip() or label
+    has_number = bool(re.search(r"\d", display))
+    display = _trim(display, 13 if has_number else 16)
+    p.text = display
+    if has_number:
+        size = 27 if len(display) <= 6 else 22 if len(display) <= 10 else 17
+    else:
+        size = 18 if len(display) <= 8 else 14
+    _style_paragraph(p, size, SJTU_RED, bold=True)
     label_box = slide.shapes.add_textbox(Inches(left + 0.2), Inches(top + 0.76), Inches(width - 0.4), Inches(0.24))
     p = label_box.text_frame.paragraphs[0]
-    p.text = _trim(desc or label, 28)
+    p.text = _trim(desc or label, 24)
     _style_paragraph(p, 10.6, TEXT_BODY)
 
 
@@ -769,7 +790,18 @@ def _workstream_panel(
     p = title_box.text_frame.paragraphs[0]
     p.text = _trim(title, 26)
     _style_paragraph(p, 14.5, SJTU_RED if active else TEXT_PRIMARY, bold=True)
-    _draw_check_points(slide, left + 0.46, top + 0.78, width - 0.76, height - 0.9, _split_card_points(body), compact=True)
+    _draw_check_points(
+        slide,
+        left + 0.46,
+        top + 0.78,
+        width - 0.76,
+        height - 0.9,
+        _split_card_points(body),
+        compact=True,
+        max_points=2,
+        trim_chars=40,
+        point_font_size=10.6,
+    )
 
 
 def _render_milestone_timeline(slide, items: list[str]) -> None:
@@ -793,13 +825,24 @@ def _render_milestone_timeline(slide, items: list[str]) -> None:
         p = title_box.text_frame.paragraphs[0]
         p.text = _trim(label, 14)
         _style_paragraph(p, 13.4, SJTU_RED, bold=True, align=PP_ALIGN.CENTER)
-        _timeline_stage_card(slide, x + 0.08, axis_y + 0.86, col_w - 0.18, 1.24, body or item)
-        _image_placeholder(slide, x + 0.08, axis_y + 2.36, col_w - 0.18, 1.48, "系统界面截图")
+        _timeline_stage_card(slide, x + 0.08, axis_y + 0.82, col_w - 0.18, 1.12, body or item)
+        _image_placeholder(slide, x + 0.08, axis_y + 2.08, col_w - 0.18, 1.22, "系统界面截图")
 
 
 def _timeline_stage_card(slide, left: float, top: float, width: float, height: float, body: str) -> None:
     _round_rect(slide, left, top, width, height, "FDF1F1", radius=0.035)
-    _draw_check_points(slide, left + 0.22, top + 0.18, width - 0.44, height - 0.24, _split_card_points(body), compact=True)
+    _draw_check_points(
+        slide,
+        left + 0.22,
+        top + 0.16,
+        width - 0.44,
+        height - 0.22,
+        _split_card_points(body),
+        compact=True,
+        max_points=2,
+        trim_chars=32,
+        point_font_size=10.2,
+    )
 
 
 def _render_project_showcase(slide, items: list[str]) -> None:
@@ -807,14 +850,15 @@ def _render_project_showcase(slide, items: list[str]) -> None:
     if lead:
         _lead_callout(slide, lead, compact=True)
     projects = rest[:4] or items[:4]
+    project_count = max(1, min(len(projects), 4))
     top = 2.12 if lead else 1.5
-    card_w = 2.73
-    gap = 0.24
+    gap = 0.28
+    card_w = (11.55 - gap * (project_count - 1)) / project_count
     for idx, item in enumerate(projects[:4], start=1):
         left = 0.92 + (idx - 1) * (card_w + gap)
-        _project_showcase_card(slide, left, top, card_w, 2.28, item)
+        _project_showcase_card(slide, left, top, card_w, 2.02, item)
         title, _body = _split_key_value(item)
-        _image_placeholder(slide, left, top + 2.52, card_w, 1.48, title or f"项目 {idx}")
+        _image_placeholder(slide, left, top + 2.24, card_w, 1.16, title or f"项目 {idx}")
 
 
 def _project_showcase_card(slide, left: float, top: float, width: float, height: float, text: str) -> None:
@@ -827,7 +871,18 @@ def _project_showcase_card(slide, left: float, top: float, width: float, height:
     p.text = _trim(title, 16)
     _style_paragraph(p, 13.2, WHITE, bold=True)
     _rect(slide, left, top + 0.78, width, height - 0.78, WARM_GRAY_1)
-    _draw_check_points(slide, left + 0.28, top + 1.02, width - 0.5, height - 1.08, _split_card_points(body), compact=True)
+    _draw_check_points(
+        slide,
+        left + 0.28,
+        top + 1.0,
+        width - 0.5,
+        height - 1.04,
+        _split_card_points(body),
+        compact=True,
+        max_points=2,
+        trim_chars=34 if width < 3.2 else 42,
+        point_font_size=10.4,
+    )
 
 
 def _render_media_explain(slide, items: list[str], support: str | None) -> None:
@@ -1397,12 +1452,19 @@ def _render_compare_matrix(slide, items: list[str], support: str | None) -> None
         card_top = top_start + 0.35
         card_h = 1.48
 
-    positions = [
-        (1.18, card_top, 5.3, card_h),
-        (6.86, card_top, 5.3, card_h),
-        (1.18, card_top + 1.68, 5.3, card_h),
-        (6.86, card_top + 1.68, 5.3, card_h),
-    ]
+    if len(matrix_items) == 3:
+        positions = [
+            (1.18, card_top, 5.3, card_h),
+            (6.86, card_top, 5.3, card_h),
+            (1.18, card_top + 1.68, 10.98, card_h),
+        ]
+    else:
+        positions = [
+            (1.18, card_top, 5.3, card_h),
+            (6.86, card_top, 5.3, card_h),
+            (1.18, card_top + 1.68, 5.3, card_h),
+            (6.86, card_top + 1.68, 5.3, card_h),
+        ]
     accents = [OFFICE_BLUE, OFFICE_MINT, OFFICE_PURPLE, GOLD]
     for idx, item in enumerate(matrix_items[:4], start=1):
         _comparison_matrix_card(slide, *positions[idx - 1], idx, item, accents[(idx - 1) % 4])
@@ -1753,6 +1815,10 @@ def _draw_check_points(
     height: float,
     points: list[str],
     compact: bool = False,
+    max_points: int | None = None,
+    trim_chars: int | None = None,
+    point_font_size: float | None = None,
+    space_after: int | None = None,
 ) -> None:
     box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
     frame = box.text_frame
@@ -1762,8 +1828,10 @@ def _draw_check_points(
     frame.margin_right = Pt(0)
     frame.margin_top = Pt(0)
     frame.margin_bottom = Pt(0)
-    max_points = 3 if compact else 4
-    trim_chars = 28 if compact and width < 3 else 42 if compact else 58
+    max_points = max_points or (3 if compact else 4)
+    trim_chars = trim_chars or (28 if compact and width < 3 else 42 if compact else 58)
+    point_font_size = point_font_size or (11.2 if compact else 12.2)
+    space_after = 3 if space_after is None and compact else 5 if space_after is None else space_after
     for idx, point in enumerate((points or ["请补充要点"])[:max_points]):
         p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
         text = _normalize_formula_text(point)
@@ -1771,19 +1839,19 @@ def _draw_check_points(
         check = p.add_run()
         check.text = "✓ "
         check.font.name = FONT
-        check.font.size = Pt(11.2 if compact else 12.2)
+        check.font.size = Pt(point_font_size)
         check.font.bold = True
         check.font.color.rgb = rgb(SJTU_RED)
         _set_ea(check)
         run = p.add_run()
         run.text = _trim(text, trim_chars)
         run.font.name = FONT
-        run.font.size = Pt(11.2 if compact else 12.2)
+        run.font.size = Pt(point_font_size)
         run.font.color.rgb = rgb(TEXT_BODY)
         _set_ea(run)
         p.alignment = PP_ALIGN.LEFT
         p.line_spacing = 1.08
-        p.space_after = Pt(5 if compact else 7)
+        p.space_after = Pt(space_after)
 
 
 def _section_heading(slide, left: float, top: float, text: str) -> None:

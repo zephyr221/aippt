@@ -159,6 +159,10 @@ For report overview pages, use `metric_strip`:
 - 主线二：AI 教务信息化；评教系统；教学运行监控；修业导师
 ```
 
+Only use `metric_strip` for real short numbers or compact values. If the page is
+only a list of indicator names such as "完成率、覆盖率、迭代周期、需求吞吐",
+choose `fact_grid` or `compare_matrix` instead.
+
 For dated roadmaps, use `milestone_timeline`:
 
 ```text
@@ -172,6 +176,10 @@ For dated roadmaps, use `milestone_timeline`:
 - 2025-2026：教学运行监控；查重系统；AI 知识库 / AIPPT
 ```
 
+Keep each timeline item to one short title plus one or two short points; the
+builder reserves a lower band for insight text, so long stage cards will be
+trimmed.
+
 For representative projects, use `project_showcase`:
 
 ```text
@@ -184,6 +192,9 @@ For representative projects, use `project_showcase`:
 - 研招自命题查重：保密环境独立开发；600+ 套试卷解析
 - AI 知识库平台：高质量 RAG 引擎；教学与学科大模型底座
 ```
+
+Use three or four representative projects. Each project item should be compact:
+one title, one or two short outcomes, and no long comma chains.
 
 For platform/product explanation, use `media_explain`:
 

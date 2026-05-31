@@ -24,6 +24,494 @@ def _login_redirect(request: Request) -> RedirectResponse:
     return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
 
+@router.get("/decks/{deck_id}/outline", response_class=HTMLResponse, response_model=None)
+def outline_view(
+    deck_id: str,
+    request: Request,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> Response:
+    try:
+        get_current_user(request, session=session, settings=settings)
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            return _login_redirect(request)
+        raise
+
+    root_path = _root_path(request)
+    escaped_root_path = html.escape(root_path, quote=True)
+    escaped_deck_id = html.escape(deck_id, quote=True)
+    return HTMLResponse(
+        """<!doctype html>
+<html lang="zh-CN" data-root-path="__ROOT_PATH__" data-deck-id="__DECK_ID__">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIPPT · 大纲预览</title>
+  <link rel="icon" type="image/x-icon" href="__ROOT_PATH__/static/img/favicons/favicon.ico?v=20260531">
+  <style>
+    :root {
+      --canvas: #f7f8fb;
+      --surface: #ffffff;
+      --line: #e7ebf2;
+      --line-strong: #d7deea;
+      --ink: #111827;
+      --muted: #667085;
+      --soft: #f1f5fb;
+      --accent: #3157c8;
+      --accent-soft: #eef3ff;
+      --ready: #22a06b;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; letter-spacing: 0; }
+    .outline-shell {
+      display: grid;
+      grid-template-columns: 286px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .outline-rail {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: #fff;
+      border-right: 1px solid var(--line);
+      padding: 24px 18px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 22px;
+    }
+    .back-link,
+    .outline-action {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 11px;
+      color: #475467;
+      font-size: 13px;
+      font-weight: 680;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 0 6px;
+      font-size: 20px;
+      font-weight: 780;
+    }
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-size: 29px;
+      font-weight: 900;
+      font-style: italic;
+    }
+    .rail-title {
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .rail-title strong {
+      font-size: 17px;
+      line-height: 1.3;
+    }
+    .rail-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .page-nav {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      padding-right: 2px;
+    }
+    .page-nav a {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 9px 10px;
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+      color: #475467;
+    }
+    .page-nav a:hover {
+      background: var(--accent-soft);
+      border-color: #dbe5ff;
+      color: var(--accent);
+    }
+    .page-no {
+      width: 30px;
+      height: 26px;
+      border-radius: 8px;
+      background: #f2f5fa;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 760;
+    }
+    .page-nav-title {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-weight: 680;
+    }
+    .outline-main {
+      min-width: 0;
+      padding: 40px clamp(24px, 6vw, 92px) 72px;
+    }
+    .outline-hero {
+      max-width: 980px;
+      margin: 0 auto 24px;
+      display: grid;
+      gap: 12px;
+    }
+    .eyebrow {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 680;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 56px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 0 9px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 720;
+    }
+    .pill.ready {
+      color: var(--ready);
+      background: #eaf8f1;
+    }
+    .outline-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .outline-action.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+    .pages {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+    .page-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.045);
+      padding: 24px 28px 26px;
+      scroll-margin-top: 28px;
+    }
+    .page-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .page-card-head strong {
+      color: var(--accent);
+      font-size: 14px;
+    }
+    .markdown {
+      color: #1f2937;
+    }
+    .markdown h2,
+    .markdown h3,
+    .markdown h4 {
+      margin: 14px 0 8px;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+    .markdown h2 { font-size: 24px; }
+    .markdown h3 { font-size: 18px; }
+    .markdown h4 { font-size: 15px; }
+    .markdown p {
+      margin: 8px 0;
+      color: #344054;
+    }
+    .markdown ul,
+    .markdown ol {
+      margin: 8px 0 10px;
+      padding-left: 22px;
+      color: #344054;
+    }
+    .markdown li {
+      margin: 5px 0;
+    }
+    .markdown code {
+      padding: 1px 5px;
+      border-radius: 6px;
+      background: #f2f4f7;
+      font: 0.92em/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    .markdown blockquote {
+      margin: 10px 0;
+      padding: 8px 12px;
+      border-left: 3px solid var(--accent);
+      background: var(--soft);
+      color: #475467;
+    }
+    .empty {
+      max-width: 760px;
+      margin: 80px auto;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fff;
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+    @media (max-width: 860px) {
+      .outline-shell { grid-template-columns: 1fr; }
+      .outline-rail {
+        position: relative;
+        height: auto;
+        grid-template-rows: auto;
+      }
+      .page-nav {
+        display: flex;
+        overflow-x: auto;
+      }
+      .page-nav a {
+        min-width: 160px;
+      }
+      .outline-main {
+        padding: 26px 16px 56px;
+      }
+      .page-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="outline-shell">
+    <aside class="outline-rail">
+      <div>
+        <a class="back-link" href="__ROOT_PATH__/">← 回到工作台</a>
+        <div class="brand"><span class="brand-mark">A</span><span>AIPPT</span></div>
+        <div class="rail-title">
+          <strong id="rail-title">PPT 大纲</strong>
+          <span id="rail-sub">逐页 Markdown 预览</span>
+        </div>
+      </div>
+      <nav class="page-nav" id="page-nav" aria-label="页面列表"></nav>
+      <div class="outline-actions" id="rail-actions"></div>
+    </aside>
+    <main class="outline-main">
+      <section class="outline-hero">
+        <div class="eyebrow">个人 · 我的工作区 · 大纲预览</div>
+        <h1 id="deck-title">PPT 大纲</h1>
+        <div class="hero-meta" id="deck-meta"></div>
+        <div class="outline-actions" id="hero-actions"></div>
+      </section>
+      <section class="pages" id="pages"></section>
+    </main>
+  </div>
+
+  <script>
+    const rootPath = document.documentElement.dataset.rootPath || "";
+    const api = rootPath + "/api";
+    const deckId = document.documentElement.dataset.deckId;
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function inlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\\*\\*([^*]+)\\*\\*/g, "<strong>$1</strong>");
+    }
+
+    function markdownToHtml(markdown) {
+      const lines = String(markdown || "").split(/\\r?\\n/);
+      let html = "";
+      let list = "";
+      const closeList = () => {
+        if (list) {
+          html += `</${list}>`;
+          list = "";
+        }
+      };
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line) {
+          closeList();
+          continue;
+        }
+        const heading = line.match(/^(#{1,4})\\s+(.+)$/);
+        if (heading) {
+          closeList();
+          const level = Math.min(4, Math.max(2, heading[1].length + 1));
+          html += `<h${level}>${inlineMarkdown(heading[2])}</h${level}>`;
+          continue;
+        }
+        const bullet = line.match(/^[-*]\\s+(.+)$/);
+        if (bullet) {
+          if (list !== "ul") {
+            closeList();
+            html += "<ul>";
+            list = "ul";
+          }
+          html += `<li>${inlineMarkdown(bullet[1])}</li>`;
+          continue;
+        }
+        const ordered = line.match(/^\\d+[.)]\\s+(.+)$/);
+        if (ordered) {
+          if (list !== "ol") {
+            closeList();
+            html += "<ol>";
+            list = "ol";
+          }
+          html += `<li>${inlineMarkdown(ordered[1])}</li>`;
+          continue;
+        }
+        const quote = line.match(/^>\\s+(.+)$/);
+        if (quote) {
+          closeList();
+          html += `<blockquote>${inlineMarkdown(quote[1])}</blockquote>`;
+          continue;
+        }
+        closeList();
+        html += `<p>${inlineMarkdown(line)}</p>`;
+      }
+      closeList();
+      return html;
+    }
+
+    function statusLabel(status) {
+      return {
+        draft: "草稿",
+        outline_ready: "规划完成",
+        generating: "生成中",
+        ready: "已完成",
+        failed: "失败"
+      }[status] || status;
+    }
+
+    async function request(path) {
+      const response = await fetch(api + path, { credentials: "same-origin" });
+      if (!response.ok) throw new Error(response.statusText);
+      return response.json();
+    }
+
+    function fileActions(files) {
+      const pptx = files.find((file) => file.kind === "pptx");
+      const preview = files.find((file) => file.kind === "preview");
+      return `
+        ${preview ? `<a class="outline-action" href="${api}/files/${preview.id}/download" target="_blank" rel="noopener">预览</a>` : ""}
+        ${pptx ? `<a class="outline-action primary" href="${api}/files/${pptx.id}/download">下载 PPTX</a>` : ""}
+      `;
+    }
+
+    async function boot() {
+      try {
+        const [outline, files] = await Promise.all([
+          request(`/decks/${deckId}/outline`),
+          request(`/files/decks/${deckId}`).catch(() => [])
+        ]);
+        const deck = outline.deck || {};
+        const pages = outline.pages || [];
+        document.title = `AIPPT · ${deck.title || "大纲预览"}`;
+        document.getElementById("deck-title").textContent = deck.title || "PPT 大纲";
+        document.getElementById("rail-title").textContent = deck.title || "PPT 大纲";
+        document.getElementById("rail-sub").textContent = `${pages.length || 0} 页 · Markdown 大纲`;
+        document.getElementById("deck-meta").innerHTML = `
+          <span class="pill ${deck.status === "ready" ? "ready" : ""}">${escapeHtml(statusLabel(deck.status))}</span>
+          <span>${pages.length || 0} 页</span>
+          <span>SJTU 模板</span>
+        `;
+        const actions = fileActions(files);
+        document.getElementById("hero-actions").innerHTML = actions;
+        document.getElementById("rail-actions").innerHTML = actions;
+
+        const nav = document.getElementById("page-nav");
+        nav.innerHTML = pages.map((page) => `
+          <a href="#page-${page.number}">
+            <span class="page-no">${page.number}</span>
+            <span class="page-nav-title">${escapeHtml(page.title)}</span>
+          </a>
+        `).join("");
+
+        const container = document.getElementById("pages");
+        if (!pages.length) {
+          container.innerHTML = `<div class="empty">大纲还在生成中，稍等几秒刷新后就能看到逐页内容。</div>`;
+          return;
+        }
+        container.innerHTML = pages.map((page) => `
+          <article class="page-card" id="page-${page.number}">
+            <div class="page-card-head">
+              <strong>第 ${page.number} 页</strong>
+              <span>${escapeHtml(page.title)}</span>
+            </div>
+            <div class="markdown">${markdownToHtml(page.markdown)}</div>
+          </article>
+        `).join("");
+      } catch (error) {
+        document.getElementById("pages").innerHTML = `<div class="empty">没有读取到大纲，请回到工作台稍后再试。</div>`;
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>""".replace("__ROOT_PATH__", escaped_root_path).replace("__DECK_ID__", escaped_deck_id)
+    )
+
+
 @router.get("/", response_class=HTMLResponse, response_model=None)
 def workbench(
     request: Request,
@@ -2200,6 +2688,7 @@ def workbench(
           </div>
           <div class="deck-actions">
             ${state.isRunning ? progress : renderPreviewAction(preview)}
+            <a class="row-action" href="${rootPath}/decks/${deck.id}/outline">${icon("list")}大纲</a>
             ${pptx ? `<a class="row-action primary" href="${api}/files/${pptx.id}/download">${icon("download")}下载 PPTX</a>` : ""}
             <span class="row-more" aria-hidden="true">⋮</span>
           </div>
@@ -2259,6 +2748,7 @@ def workbench(
                 <div class="task-meta"><span class="pill ready">已完成</span><span>${escapeHtml(time)}</span></div>
               </div>
               <div class="task-actions">
+                <a class="row-action" href="${rootPath}/decks/${deck.id}/outline">${icon("list")}大纲</a>
                 ${renderPreviewAction(preview)}
                 ${pptx ? `<a class="row-action primary" href="${api}/files/${pptx.id}/download">${icon("download")}下载 PPTX</a>` : ""}
               </div>
@@ -2277,7 +2767,10 @@ def workbench(
               <h2 class="task-title">${escapeHtml(deck.title)}</h2>
               <div class="task-meta"><span class="pill ${statusClass(deck.status)}">${statusLabel(deck.status)}</span><span>${escapeHtml(time)}</span></div>
             </div>
-            <button class="row-action" type="button" data-task-detail>查看详情</button>
+            <div class="task-actions">
+              <a class="row-action" href="${rootPath}/decks/${deck.id}/outline">${icon("list")}大纲</a>
+              <button class="row-action" type="button" data-task-detail>查看详情</button>
+            </div>
           </div>
           <div class="task-summary">正在生成第 ${state.activeIndex + 1} 步：${escapeHtml(state.activeLabel)}</div>
           <div class="task-sub">已完成 ${state.completeCount}/5 步，预计剩余约 ${state.remainingMinutes} 分钟</div>

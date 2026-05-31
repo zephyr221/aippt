@@ -193,6 +193,9 @@ Use `metric_strip` for report overview numbers:
 - 平台职责：平台 / AI 应用平台负责人
 ```
 
+Do not feed `metric_strip` long indicator-name lists without values. If the page
+has no real numbers, use `fact_grid` or `compare_matrix`.
+
 Use `milestone_timeline` for dated stage cards:
 
 ```text
@@ -201,6 +204,9 @@ Use `milestone_timeline` for dated stage cards:
 - 2024.11：AI 应用平台上线；招生 AI 审核；AI 组卷助手
 ```
 
+Each milestone should stay compact: one short date/title and at most two short
+points.
+
 Use `project_showcase` for representative projects:
 
 ```text
@@ -208,6 +214,9 @@ Use `project_showcase` for representative projects:
 - AI 组卷助手：上线平台；大规模使用
 - AI 知识库平台：RAG 引擎；课程知识沉淀
 ```
+
+Use three or four project items and keep each body to one or two concise
+outcomes.
 
 Use `media_explain` when a platform/product page needs a screenshot placeholder:
 
