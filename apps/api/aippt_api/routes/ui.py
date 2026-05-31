@@ -1,15 +1,43 @@
 import html
+from urllib.parse import quote
 
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from sqlmodel import Session
+
+from ..auth import get_current_user
+from ..config import Settings, get_settings
+from ..db import get_session
 
 
 router = APIRouter()
 
 
-@router.get("/", response_class=HTMLResponse)
-def workbench(request: Request) -> HTMLResponse:
-    root_path = str(request.scope.get("root_path") or "").rstrip("/")
+def _root_path(request: Request) -> str:
+    return str(request.scope.get("root_path") or "").rstrip("/")
+
+
+def _login_redirect(request: Request) -> RedirectResponse:
+    root_path = _root_path(request)
+    next_url = f"{root_path}/" if root_path else "/"
+    login_url = f"{root_path}/api/auth/jaccount/login?next={quote(next_url, safe='/')}"
+    return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+
+
+@router.get("/", response_class=HTMLResponse, response_model=None)
+def workbench(
+    request: Request,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> Response:
+    try:
+        get_current_user(request, session=session, settings=settings)
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            return _login_redirect(request)
+        raise
+
+    root_path = _root_path(request)
     escaped_root_path = html.escape(root_path, quote=True)
     return HTMLResponse(
         """<!doctype html>
@@ -18,6 +46,9 @@ def workbench(request: Request) -> HTMLResponse:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AIPPT</title>
+  <link rel="icon" type="image/x-icon" href="__ROOT_PATH__/static/img/favicons/favicon.ico?v=20260531">
+  <link rel="icon" type="image/png" sizes="32x32" href="__ROOT_PATH__/static/img/favicons/favicon-32.png?v=20260531">
+  <link rel="icon" type="image/png" sizes="16x16" href="__ROOT_PATH__/static/img/favicons/favicon-16.png?v=20260531">
   <style>
     :root {
       color-scheme: light;
@@ -1007,54 +1038,6 @@ def workbench(request: Request) -> HTMLResponse:
       font: 12px/1.5 var(--mono);
     }
 
-    .login-shell {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 32px 18px;
-      background: var(--canvas);
-    }
-
-    .login-card {
-      width: min(100%, 430px);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--surface);
-      box-shadow: var(--shadow-soft);
-      padding: 26px;
-      text-align: center;
-      display: grid;
-      gap: 14px;
-    }
-
-    .login-card .brand {
-      justify-content: center;
-      font-size: 21px;
-    }
-
-    .login-card p {
-      margin: 0;
-      color: var(--ink-3);
-    }
-
-    .login-action {
-      justify-self: center;
-      min-height: 38px;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #fff;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 0 14px;
-      font-weight: 680;
-    }
-
-    .login-action:hover {
-      background: var(--accent-2);
-    }
-
     @media (max-width: 900px) {
       .app-shell {
         grid-template-columns: 230px minmax(0, 1fr);
@@ -1235,26 +1218,13 @@ def workbench(request: Request) -> HTMLResponse:
         renderWorkbench(user);
         window.setInterval(refreshDecksQuietly, 5000);
       } catch (error) {
-        renderLogin();
+        redirectToLogin();
       }
     }
 
-    function renderLogin() {
+    function redirectToLogin() {
       const next = encodeURIComponent(rootPath + "/");
-      app.innerHTML = `
-        <section class="login-shell">
-          <div class="login-card">
-            <div class="brand">
-              <span class="brand-mark">${icon("brand")}</span>
-              <strong>AIPPT</strong>
-            </div>
-            <p>上海交通大学 AI PPT 生成工作台</p>
-            <a class="login-action" href="${api}/auth/jaccount/login?next=${next}">
-              ${icon("spark")} jAccount 登录
-            </a>
-          </div>
-        </section>
-      `;
+      window.location.replace(`${api}/auth/jaccount/login?next=${next}`);
     }
 
     async function loadDecks() {

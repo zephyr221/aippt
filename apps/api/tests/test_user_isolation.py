@@ -54,19 +54,43 @@ def register(client: TestClient, email: str) -> dict:
     return response.json()
 
 
-def test_root_redirect_respects_proxy_root_path(app_context) -> None:
+def test_root_redirects_unauthenticated_user_to_jaccount(app_context) -> None:
     app, _tmp_path = app_context
     with TestClient(app, root_path="/ppt") as client:
+        response = client.get("/", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"] == "/ppt/api/auth/jaccount/login?next=/ppt/"
+
+
+def test_authenticated_workbench_respects_proxy_root_path(app_context) -> None:
+    app, _tmp_path = app_context
+    with TestClient(app, root_path="/ppt") as client:
+        login_response = client.get(
+            "/api/auth/jaccount/login?dev_login=moran&next=/ppt/",
+            follow_redirects=False,
+        )
+        assert login_response.status_code == 302
+        assert login_response.headers["location"] == "/ppt/"
+
         response = client.get("/")
         assert response.status_code == 200
         assert 'data-root-path="/ppt"' in response.text
-        assert "AI PPT 生成工作台" in response.text
+        assert 'href="/ppt/static/img/favicons/favicon.ico' in response.text
         assert "生成 PPT" in response.text
         assert "快速生成 PPTX" not in response.text
         assert "AI 审稿" not in response.text
         assert "当前大纲" not in response.text
+        assert "jAccount 登录" not in response.text
         assert "parseApiTime" in response.text
         assert 'timeZone: "Asia/Shanghai"' in response.text
+
+
+def test_favicon_assets_are_served(app_context) -> None:
+    app, _tmp_path = app_context
+    with TestClient(app) as client:
+        response = client.get("/static/img/favicons/favicon.ico")
+        assert response.status_code == 200
+        assert response.content.startswith(b"\x00\x00\x01\x00")
 
 
 def test_users_only_see_their_own_decks(app_context) -> None:
