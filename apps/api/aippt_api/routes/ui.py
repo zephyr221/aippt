@@ -53,7 +53,7 @@ def workbench(
     :root {
       color-scheme: light;
       --canvas: #ffffff;
-      --rail: #fafafa;
+      --rail: #fbfcff;
       --surface: #ffffff;
       --subtle: #f5f6f8;
       --line: rgba(15, 18, 28, 0.075);
@@ -63,15 +63,15 @@ def workbench(
       --ink-2: #3f4654;
       --ink-3: #6b7280;
       --ink-4: #a1a6b0;
-      --accent: #2c3e78;
-      --accent-2: #4659a0;
-      --accent-soft: rgba(44, 62, 120, 0.07);
-      --accent-line: rgba(44, 62, 120, 0.2);
-      --ready: #127047;
-      --ready-soft: rgba(18, 112, 71, 0.08);
+      --accent: #1f62ff;
+      --accent-2: #174ed2;
+      --accent-soft: rgba(31, 98, 255, 0.08);
+      --accent-line: rgba(31, 98, 255, 0.22);
+      --ready: #17966a;
+      --ready-soft: rgba(23, 150, 106, 0.09);
       --warn: #a03a16;
       --warn-soft: rgba(160, 58, 22, 0.08);
-      --shadow-soft: 0 1px 2px rgba(15, 18, 28, 0.04), 0 18px 44px -28px rgba(15, 18, 28, 0.18);
+      --shadow-soft: 0 1px 2px rgba(15, 18, 28, 0.04), 0 20px 52px -32px rgba(31, 98, 255, 0.28);
       --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
     }
 
@@ -115,7 +115,7 @@ def workbench(
 
     .app-shell {
       display: grid;
-      grid-template-columns: 268px minmax(0, 1fr);
+      grid-template-columns: 284px minmax(0, 1fr);
       min-height: 100vh;
       height: 100vh;
       overflow: hidden;
@@ -133,8 +133,8 @@ def workbench(
     }
 
     .side-head {
-      height: 58px;
-      padding: 0 16px;
+      height: 78px;
+      padding: 0 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -145,21 +145,51 @@ def workbench(
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
+      gap: 11px;
       min-width: 0;
       color: var(--ink);
       font-weight: 730;
-      font-size: 17px;
+      font-size: 20px;
       line-height: 1;
       white-space: nowrap;
     }
 
     .brand-mark {
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
       display: grid;
       place-items: center;
-      color: var(--ink);
+      color: var(--accent);
+      position: relative;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+    }
+
+    .brand-mark::before {
+      content: "A";
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 0;
+      transform: skewX(-7deg);
+      text-shadow: 8px 0 0 rgba(88, 166, 255, 0.24);
+    }
+
+    .brand-mark::after {
+      display: none;
+    }
+
+    .brand-mark i {
+      display: none;
     }
 
     .side-create {
@@ -181,21 +211,21 @@ def workbench(
 
     .side-nav,
     .side-section {
-      padding: 8px 10px;
+      padding: 8px 16px;
       display: grid;
-      gap: 2px;
+      gap: 8px;
     }
 
     .side-section {
       border-top: 1px solid var(--line-soft);
-      margin-top: 6px;
-      padding-top: 16px;
+      margin-top: 8px;
+      padding-top: 22px;
       min-height: 0;
       overflow: auto;
     }
 
     .side-section-title {
-      padding: 0 10px 8px;
+      padding: 0 8px 10px;
       color: var(--ink-4);
       font-size: 12px;
       font-weight: 650;
@@ -206,22 +236,22 @@ def workbench(
       width: 100%;
       min-width: 0;
       border: 0;
-      border-radius: 7px;
+      border-radius: 8px;
       background: transparent;
       color: var(--ink-3);
       display: grid;
-      grid-template-columns: 18px minmax(0, 1fr) auto;
+      grid-template-columns: 20px minmax(0, 1fr) auto;
       align-items: center;
       gap: 9px;
-      min-height: 34px;
-      padding: 0 10px;
+      min-height: 44px;
+      padding: 0 12px;
       text-align: left;
       cursor: pointer;
     }
 
     .side-row:hover,
     .side-deck:hover {
-      background: var(--line-soft);
+      background: rgba(31, 98, 255, 0.055);
       color: var(--ink);
     }
 
@@ -229,6 +259,7 @@ def workbench(
       background: var(--accent-soft);
       color: var(--accent);
       font-weight: 650;
+      box-shadow: inset 0 0 0 1px rgba(31, 98, 255, 0.08);
     }
 
     .side-row span,
@@ -247,31 +278,47 @@ def workbench(
       white-space: nowrap;
     }
 
+    .side-badge {
+      min-width: 24px;
+      height: 22px;
+      border-radius: 8px;
+      display: inline-grid;
+      place-items: center;
+      background: #edf1f7;
+      color: var(--ink-3);
+      padding: 0 7px;
+      font-weight: 650;
+    }
+
     .side-deck {
-      font-size: 13px;
-      min-height: 32px;
+      font-size: 14px;
+      min-height: 38px;
       grid-template-columns: 16px minmax(0, 1fr);
     }
 
     .side-empty {
-      padding: 8px 10px;
+      padding: 8px;
       color: var(--ink-4);
       font-size: 13px;
     }
 
     .side-user {
       margin-top: auto;
-      padding: 12px 14px 14px;
+      margin: auto 16px 18px;
+      padding: 12px;
       display: grid;
-      grid-template-columns: 34px minmax(0, 1fr) 30px;
+      grid-template-columns: 32px minmax(0, 1fr) 24px;
       align-items: center;
       gap: 10px;
-      border-top: 1px solid var(--line-soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 8px 24px -22px rgba(15, 18, 28, 0.28);
     }
 
     .avatar {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 999px;
       display: grid;
       place-items: center;
@@ -388,10 +435,10 @@ def workbench(
 
     .hero {
       width: 100%;
-      max-width: 760px;
+      max-width: 900px;
       min-height: 100vh;
       margin: 0 auto;
-      padding: 70px 32px 28px;
+      padding: 46px 32px 44px;
       display: flex;
       flex-direction: column;
     }
@@ -401,7 +448,7 @@ def workbench(
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 0 0 26px;
+      margin: 0 0 18px;
     }
 
     .scope-eyebrow {
@@ -411,7 +458,7 @@ def workbench(
       color: var(--ink-3);
       font-size: 13px;
       font-weight: 500;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .scope-eyebrow svg {
@@ -421,14 +468,14 @@ def workbench(
     .scope-title {
       margin: 0;
       color: var(--ink);
-      font-size: 44px;
+      font-size: 48px;
       line-height: 1.08;
-      font-weight: 680;
+      font-weight: 740;
       letter-spacing: 0;
     }
 
     .scope-tabs {
-      margin-top: 20px;
+      margin-top: 18px;
       padding: 4px;
       border-radius: 9px;
       background: var(--subtle);
@@ -483,11 +530,11 @@ def workbench(
 
     .prompt-card {
       background: var(--surface);
-      border: 1px solid transparent;
-      border-radius: 18px;
-      padding: 16px 18px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px 20px;
       box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(15, 18, 28, 0.04),
-        0 14px 30px -24px rgba(15, 18, 28, 0.24);
+        0 22px 46px -32px rgba(31, 98, 255, 0.34);
       transition: box-shadow 0.18s ease;
     }
 
@@ -507,54 +554,85 @@ def workbench(
 
     .prompt-card textarea {
       width: 100%;
-      min-height: 118px;
-      max-height: 280px;
+      min-height: 70px;
+      max-height: 180px;
       border: 0;
       outline: 0;
       resize: vertical;
       background: transparent;
       color: var(--ink);
-      padding: 4px 0 8px;
-      font-size: 16px;
+      padding: 4px 0 10px;
+      font-size: 17px;
       line-height: 1.58;
     }
 
-    .prompt-tools {
+    .prompt-insights {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
-      padding-top: 4px;
+      margin: 2px 0 16px;
     }
 
-    .prompt-chip {
-      height: 30px;
+    .insight-chip {
+      min-height: 32px;
       border: 0;
-      border-radius: 7px;
-      background: transparent;
+      border-radius: 8px;
+      background: #f6f8fc;
       color: var(--ink-3);
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 0 10px;
+      padding: 0 11px;
       font-size: 13px;
-      font-weight: 560;
-      cursor: pointer;
+      font-weight: 620;
       white-space: nowrap;
     }
 
-    .prompt-chip:hover {
-      background: var(--line-soft);
-      color: var(--ink);
+    .insight-chip svg {
+      color: var(--ink-4);
     }
 
-    .spacer {
-      flex: 1 1 auto;
-      min-width: 10px;
+    .prompt-divider {
+      height: 1px;
+      margin: 0 0 16px;
+      background: var(--line-soft);
+    }
+
+    .prompt-footer {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, max-content)) minmax(120px, 1fr);
+      align-items: center;
+      gap: 10px;
+    }
+
+    .prompt-control {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink-3);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 11px;
+      font-size: 13px;
+      white-space: nowrap;
+      cursor: default;
+    }
+
+    .prompt-control strong {
+      color: var(--ink-2);
+      font-weight: 650;
+    }
+
+    .prompt-control svg {
+      color: var(--ink-4);
     }
 
     .primary-action {
-      min-height: 34px;
+      justify-self: end;
+      min-height: 38px;
       border: 0;
       border-radius: 8px;
       background: var(--accent);
@@ -563,7 +641,7 @@ def workbench(
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 0 13px;
+      padding: 0 15px;
       font-weight: 680;
       cursor: pointer;
       box-shadow: 0 8px 20px -16px rgba(44, 62, 120, 0.8);
@@ -621,6 +699,253 @@ def workbench(
 
     .notice.show {
       display: block;
+    }
+
+    .workflow-section {
+      margin-top: 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: start;
+      gap: 0;
+      padding: 0 8px;
+    }
+
+    .flow-step {
+      position: relative;
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      color: var(--ink-4);
+      font-size: 13px;
+      font-weight: 650;
+      text-align: center;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: calc(50% + 28px);
+      right: calc(-50% + 28px);
+      top: 21px;
+      border-top: 2px dashed #d7dce6;
+      z-index: 0;
+    }
+
+    .flow-step.done:not(:last-child)::after {
+      border-top-style: solid;
+      border-color: rgba(23, 150, 106, 0.78);
+    }
+
+    .flow-dot {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      background: #edf1f7;
+      color: var(--ink-3);
+      font-weight: 760;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 0 0 6px var(--canvas);
+    }
+
+    .flow-step.done {
+      color: var(--ready);
+    }
+
+    .flow-step.done .flow-dot {
+      background: var(--ready);
+      color: #fff;
+      box-shadow: 0 0 0 6px rgba(23, 150, 106, 0.1);
+    }
+
+    .flow-step.active {
+      color: var(--accent);
+      font-weight: 760;
+    }
+
+    .flow-step.active .flow-dot {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 0 7px rgba(31, 98, 255, 0.12), 0 0 0 14px rgba(31, 98, 255, 0.055);
+    }
+
+    .flow-step.active .flow-dot::before {
+      content: "";
+      position: absolute;
+      inset: -9px;
+      border-radius: 999px;
+      border: 2px solid rgba(31, 98, 255, 0.18);
+      border-top-color: var(--accent);
+      animation: spin 1.2s linear infinite;
+    }
+
+    .flow-stars::before,
+    .flow-stars::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: #72adff;
+      box-shadow: 26px 9px 0 -1px #72adff, -18px 16px 0 -1px #a9ceff;
+    }
+
+    .flow-stars::before {
+      width: 5px;
+      height: 5px;
+      top: -10px;
+      left: -18px;
+    }
+
+    .flow-stars::after {
+      width: 4px;
+      height: 4px;
+      right: -20px;
+      bottom: 2px;
+    }
+
+    .flow-step.failed {
+      color: var(--warn);
+    }
+
+    .flow-step.failed .flow-dot {
+      background: var(--warn);
+      color: #fff;
+    }
+
+    .task-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      display: grid;
+      gap: 8px;
+    }
+
+    .task-head {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .task-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .task-icon.is-running {
+      background: var(--accent);
+      box-shadow: 0 0 0 5px rgba(31, 98, 255, 0.1);
+    }
+
+    .task-title-wrap {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .task-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 760;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-meta,
+    .task-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-4);
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .task-actions {
+      justify-content: flex-end;
+    }
+
+    .task-summary {
+      margin: 4px 0 0;
+      color: var(--ink-2);
+      font-weight: 680;
+    }
+
+    .task-sub,
+    .task-result-meta {
+      margin: 0;
+      color: var(--ink-3);
+      font-size: 13px;
+    }
+
+    .task-log {
+      margin-top: 2px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcff;
+      padding: 9px 11px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .log-line {
+      color: var(--ink-3);
+      font-size: 13px;
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .log-line::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .task-details {
+      color: var(--ink-3);
+      font-size: 13px;
+    }
+
+    .task-details summary {
+      cursor: pointer;
+      color: var(--ink-3);
+      font-weight: 650;
+    }
+
+    .task-details pre {
+      margin: 8px 0 0;
+      max-height: 160px;
+      overflow: auto;
+      white-space: pre-wrap;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 10px;
+      font: 12px/1.55 var(--mono);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .deck-section {
@@ -1038,6 +1363,189 @@ def workbench(
       font: 12px/1.5 var(--mono);
     }
 
+    .deck-section {
+      margin-top: 18px;
+    }
+
+    .deck-section::before,
+    .deck-section::after {
+      display: none;
+    }
+
+    .deck-section-head {
+      min-height: 46px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .deck-toggle {
+      width: auto;
+      height: 28px;
+      padding: 0 4px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .deck-toggle:hover {
+      background: transparent;
+      color: var(--accent-2);
+    }
+
+    .deck-shelf,
+    .deck-section.is-open .deck-shelf,
+    .deck-section.is-collapsed .deck-shelf {
+      min-height: 0;
+      max-height: none;
+      overflow: visible;
+      padding: 0;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 16px 34px -30px rgba(15, 18, 28, 0.28);
+      cursor: default;
+    }
+
+    .deck-section.is-collapsed .deck-shelf::after {
+      display: none;
+    }
+
+    .deck-empty {
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      color: var(--ink-4);
+      font-size: 14px;
+    }
+
+    .deck-list {
+      gap: 0;
+    }
+
+    .deck-row {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 12px 14px;
+      grid-template-columns: 144px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .deck-row:last-child {
+      border-bottom: 0;
+    }
+
+    .deck-cover {
+      width: 144px;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #eaf1ff;
+      border: 1px solid var(--line-soft);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .deck-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .deck-cover-fallback {
+      background:
+        linear-gradient(135deg, rgba(31, 98, 255, 0.92), rgba(19, 137, 209, 0.88)),
+        radial-gradient(circle at 75% 20%, rgba(255, 255, 255, 0.5), transparent 34%);
+      padding: 10px;
+      align-items: end;
+      justify-items: start;
+    }
+
+    .deck-cover-fallback span {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .deck-main {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .deck-title {
+      font-size: 16px;
+      font-weight: 740;
+    }
+
+    .deck-actions {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 9px;
+    }
+
+    .row-action.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .row-action.primary:hover {
+      background: var(--accent-2);
+    }
+
+    .row-action.is-disabled {
+      color: var(--ink-4);
+      cursor: not-allowed;
+      opacity: 0.72;
+    }
+
+    .row-more {
+      width: 28px;
+      height: 32px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink-4);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .row-more:hover {
+      background: var(--line-soft);
+      color: var(--ink);
+    }
+
+    .mini-progress {
+      width: 120px;
+      height: 4px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #dfe5ef;
+    }
+
+    .mini-progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .mini-percent {
+      color: var(--ink-3);
+      font-size: 13px;
+    }
+
     @media (max-width: 900px) {
       .app-shell {
         grid-template-columns: 230px minmax(0, 1fr);
@@ -1045,6 +1553,12 @@ def workbench(
 
       .agent-steps {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .flow-steps {
+        grid-template-columns: repeat(5, minmax(72px, 1fr));
+        overflow-x: auto;
+        padding-bottom: 8px;
       }
     }
 
@@ -1065,24 +1579,9 @@ def workbench(
         overflow: visible;
       }
 
-      .top-tools {
-        position: static;
-        padding: 14px 14px 0;
-        justify-content: space-between;
-      }
-
-      .deck-search-wrap {
-        width: min(100%, 280px);
-        flex: 1 1 auto;
-      }
-
-      .mobile-user {
-        display: inline-flex;
-      }
-
       .hero {
         min-height: 0;
-        padding: 40px 14px 26px;
+        padding: 38px 14px 26px;
       }
 
       .scope-head {
@@ -1099,27 +1598,48 @@ def workbench(
       }
 
       .prompt-card textarea {
-        min-height: 160px;
+        min-height: 108px;
+      }
+
+      .prompt-footer {
+        grid-template-columns: 1fr;
+      }
+
+      .prompt-control,
+      .primary-action {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .primary-action {
+        justify-self: stretch;
+      }
+
+      .task-head {
+        grid-template-columns: 30px minmax(0, 1fr);
+      }
+
+      .task-actions,
+      .task-head > .row-action {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
       }
 
       .deck-main {
         grid-template-columns: 1fr;
       }
 
+      .deck-row {
+        grid-template-columns: 96px minmax(0, 1fr);
+      }
+
       .deck-actions {
+        grid-column: 1 / -1;
         justify-content: flex-start;
       }
     }
 
     @media (max-width: 460px) {
-      .top-tools {
-        align-items: stretch;
-      }
-
-      .mobile-user span {
-        display: none;
-      }
-
       .scope-title {
         font-size: 32px;
       }
@@ -1132,17 +1652,11 @@ def workbench(
         padding: 0 10px;
       }
 
-      .prompt-tools {
-        display: grid;
-        grid-template-columns: auto auto 1fr;
+      .deck-row {
+        grid-template-columns: 1fr;
       }
 
-      .prompt-tools .spacer {
-        display: none;
-      }
-
-      .primary-action {
-        grid-column: 1 / -1;
+      .deck-cover {
         width: 100%;
       }
     }
@@ -1274,17 +1788,16 @@ def workbench(
           <aside class="side" aria-label="AIPPT 工作区">
             <div class="side-head">
               <a class="brand" href="${rootPath || "/"}" aria-label="AIPPT 首页">
-                <span class="brand-mark">${icon("brand")}</span>
+                <span class="brand-mark" aria-hidden="true"><i></i></span>
                 <strong>AIPPT</strong>
               </a>
-              <button class="side-create" type="button" data-jump="compose" title="新建 PPT" aria-label="新建 PPT">${icon("plus")}</button>
             </div>
             <nav class="side-nav" aria-label="主导航">
               <button type="button" class="side-row is-active" data-jump="compose">
                 ${icon("spark")}<span>生成</span><em>首页</em>
               </button>
               <button type="button" class="side-row" data-jump="deck-list">
-                ${icon("deck")}<span>我的 PPT</span><em id="side-total-count">${decks.length}</em>
+                ${icon("deck")}<span>我的 PPT</span><em class="side-badge" id="side-total-count">${decks.length}</em>
               </button>
             </nav>
             <div class="side-section">
@@ -1302,16 +1815,6 @@ def workbench(
           </aside>
 
           <section class="workspace">
-            <div class="top-tools">
-              <label class="deck-search-wrap">
-                ${icon("search")}
-                <input class="deck-search" id="deck-search" type="search" placeholder="搜索 PPT..." value="${escapeHtml(searchQuery)}" aria-label="搜索 PPT">
-              </label>
-              <a class="mobile-user" href="${api}/auth/logout" title="退出">
-                <span>${escapeHtml(userName)}</span>${icon("logout")}
-              </a>
-            </div>
-
             <main class="hero" id="compose">
               <section class="scope-head">
                 <div class="scope-eyebrow">${icon("folder")}<span>个人 · 我的工作区</span></div>
@@ -1331,12 +1834,18 @@ def workbench(
               <div class="prompt-wrap">
                 <form id="deck-form" class="prompt-card" autocomplete="off">
                   <textarea id="outline" name="outline" required placeholder="告诉我主题、页数、使用场景，或直接粘贴 Markdown 大纲...">${escapeHtml(draftOutline)}</textarea>
-                  <div class="prompt-tools">
-                    <button class="prompt-chip suggestion-fill" type="button" data-title="课程汇报" data-outline="请制作 8 页 PPT，用于课程汇报。要求结构清晰，包含背景、核心概念、案例、总结与讨论问题。">
-                      ${icon("folder")}SJTU 模板
+                  <div class="prompt-insights" id="prompt-insights">${renderInsightChips(draftOutline)}</div>
+                  <div class="prompt-divider"></div>
+                  <div class="prompt-footer">
+                    <button class="prompt-control" type="button" title="模板">
+                      ${icon("folder")}<span>模板</span><strong>SJTU 模板</strong>
                     </button>
-                    <button class="icon-button" type="button" id="refresh" title="刷新列表" aria-label="刷新列表">${icon("refresh")}</button>
-                    <span class="spacer"></span>
+                    <button class="prompt-control" type="button" title="页数">
+                      ${icon("file")}<span>页数</span><strong id="page-control-label">${escapeHtml(inferPageLabel(draftOutline))}</strong>
+                    </button>
+                    <button class="prompt-control" type="button" title="风格">
+                      ${icon("spark")}<span>风格</span><strong id="style-control-label">${escapeHtml(inferStyleLabel(draftOutline))}</strong>
+                    </button>
                     <button id="submit" class="primary-action" type="submit" ${busy ? "disabled" : ""}>
                       ${icon("arrowUp")}生成 PPT
                     </button>
@@ -1350,14 +1859,14 @@ def workbench(
                 </div>
               </div>
 
-              <section class="deck-section ${decksExpanded ? "is-open" : "is-collapsed"}" id="deck-list" aria-labelledby="deck-list-title">
+              ${renderCurrentWorkflow()}
+
+              <section class="deck-section" id="deck-list" aria-labelledby="deck-list-title">
                 <div class="deck-section-head">
                   <span class="deck-section-title" id="deck-list-title">${icon("deck")}最近 · 我的 PPT</span>
                   <span class="deck-section-actions">
                     <span class="deck-section-count" id="deck-section-count">${deckCountLabel()}</span>
-                    <button class="deck-toggle" id="toggle-decks" type="button" aria-expanded="${decksExpanded}" title="${decksExpanded ? "收起" : "展开"}" aria-label="${decksExpanded ? "收起最近 PPT" : "展开最近 PPT"}">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
+                    ${filteredDecks().length > 3 ? `<button class="deck-toggle" id="toggle-decks" type="button" aria-expanded="${decksExpanded}" title="${decksExpanded ? "收起" : "查看全部"}">${decksExpanded ? "收起" : "查看全部"}</button>` : ""}
                   </span>
                 </div>
                 <div class="deck-shelf" id="deck-list-body">${renderDeckShelf()}</div>
@@ -1372,19 +1881,11 @@ def workbench(
 
     function bindWorkbenchEvents(user) {
       document.getElementById("deck-form").addEventListener("submit", createDeck);
-      document.getElementById("refresh").addEventListener("click", async () => {
-        noticeText = "";
-        await loadDecks();
-        renderWorkbench(user);
-      });
       document.getElementById("outline").addEventListener("input", (event) => {
         draftOutline = event.target.value;
         draftTitle = deriveTitle(draftOutline);
         autosizeOutline();
-      });
-      document.getElementById("deck-search").addEventListener("input", (event) => {
-        searchQuery = event.target.value;
-        updateDeckViews();
+        updatePromptInsights();
       });
       document.querySelectorAll("[data-jump]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -1399,15 +1900,16 @@ def workbench(
         updateDeckViews();
         document.getElementById("deck-list").scrollIntoView({ behavior: "smooth", block: "start" });
       });
-      document.getElementById("toggle-decks").addEventListener("click", () => {
+      document.getElementById("toggle-decks")?.addEventListener("click", () => {
         decksExpanded = !decksExpanded;
         updateDeckViews();
       });
-      document.getElementById("deck-list-body").addEventListener("click", () => {
-        if (!decksExpanded && filteredDecks().length > 0) {
-          decksExpanded = true;
-          updateDeckViews();
-        }
+      document.querySelector("[data-task-detail]")?.addEventListener("click", (event) => {
+        const detail = document.getElementById("task-detail-panel");
+        if (!detail) return;
+        const isHidden = detail.hasAttribute("hidden");
+        detail.toggleAttribute("hidden", !isHidden);
+        event.currentTarget.textContent = isHidden ? "收起详情" : "查看详情";
       });
       document.querySelectorAll(".suggestion-fill").forEach((button) => {
         button.addEventListener("click", () => {
@@ -1415,6 +1917,7 @@ def workbench(
           draftOutline = button.dataset.outline || draftOutline;
           document.getElementById("outline").value = draftOutline;
           autosizeOutline();
+          updatePromptInsights();
           document.getElementById("outline").focus();
         });
       });
@@ -1424,8 +1927,17 @@ def workbench(
       const textarea = document.getElementById("outline");
       if (!textarea) return;
       textarea.style.height = "auto";
-      const nextHeight = Math.min(Math.max(textarea.scrollHeight, 118), 280);
+      const nextHeight = Math.min(Math.max(textarea.scrollHeight, 70), 180);
       textarea.style.height = `${nextHeight}px`;
+    }
+
+    function updatePromptInsights() {
+      const insights = document.getElementById("prompt-insights");
+      const page = document.getElementById("page-control-label");
+      const style = document.getElementById("style-control-label");
+      if (insights) insights.innerHTML = renderInsightChips(draftOutline);
+      if (page) page.textContent = inferPageLabel(draftOutline);
+      if (style) style.textContent = inferStyleLabel(draftOutline);
     }
 
     function updateDeckViews() {
@@ -1437,14 +1949,11 @@ def workbench(
       const tabCount = document.getElementById("tab-deck-count");
       const totalCount = document.getElementById("side-total-count");
       if (list) list.innerHTML = renderDeckShelf();
-      if (section) {
-        section.classList.toggle("is-open", decksExpanded);
-        section.classList.toggle("is-collapsed", !decksExpanded);
-      }
+      if (section) section.classList.toggle("is-expanded", decksExpanded);
       if (toggle) {
         toggle.setAttribute("aria-expanded", String(decksExpanded));
-        toggle.setAttribute("aria-label", decksExpanded ? "收起最近 PPT" : "展开最近 PPT");
-        toggle.setAttribute("title", decksExpanded ? "收起" : "展开");
+        toggle.textContent = decksExpanded ? "收起" : "查看全部";
+        toggle.setAttribute("title", decksExpanded ? "收起" : "查看全部");
       }
       if (side) side.innerHTML = renderSidebarDecks();
       if (count) count.textContent = deckCountLabel();
@@ -1484,98 +1993,251 @@ def workbench(
     function renderDeckShelf() {
       const visible = filteredDecks();
       if (visible.length === 0) {
-        return `<div class="deck-peek empty">${searchQuery.trim() ? "没有匹配的 PPT" : "暂无 PPT"}</div>`;
+        return `<div class="deck-empty">${searchQuery.trim() ? "没有匹配的 PPT" : "暂无 PPT"}</div>`;
       }
-      if (!decksExpanded) return renderDeckPeek(visible[0], visible.length);
-      return `<div class="deck-list">${visible.map(renderDeck).join("")}</div>`;
-    }
-
-    function renderDeckPeek(deck, total) {
-      const updated = formatTime(deck.updated_at || deck.created_at);
-      return `
-        <div class="deck-peek" title="${escapeHtml(deck.title)}">
-          <div class="deck-peek-main">
-            <div class="deck-peek-title">${escapeHtml(deck.title)}</div>
-            <div class="deck-peek-meta">
-              <span class="pill ${statusClass(deck.status)}">${statusLabel(deck.status)}</span>
-              <span>更新 ${escapeHtml(updated)}</span>
-            </div>
-          </div>
-          <span class="deck-section-count">${total > 1 ? `还有 ${total - 1} 个` : "展开"}</span>
-        </div>
-      `;
+      const shown = decksExpanded ? visible : visible.slice(0, 3);
+      return `<div class="deck-list">${shown.map(renderDeck).join("")}</div>`;
     }
 
     function renderDeck(deck) {
       const files = filesByDeck.get(deck.id) || [];
       const pptx = files.find((file) => file.kind === "pptx");
+      const preview = files.find((file) => file.kind === "preview");
       const jobs = jobsByDeck.get(deck.id) || [];
-      const updated = formatTime(deck.updated_at || deck.created_at);
+      const state = workflowState(deck, jobs, files);
+      const updated = formatDeckTime(deck.updated_at || deck.created_at);
+      const progress = state.isRunning ? `
+        <div class="mini-progress" aria-label="生成进度 ${state.percent}%">
+          <span style="width: ${state.percent}%"></span>
+        </div>
+        <strong class="mini-percent">${state.percent}%</strong>
+      ` : "";
       return `
         <article class="deck-row">
+          ${renderDeckCover(deck, preview)}
           <div class="deck-main">
-            <div>
-              <h2 class="deck-title">${escapeHtml(deck.title)}</h2>
-              <div class="deck-meta">
-                <span class="pill ${statusClass(deck.status)}">${statusLabel(deck.status)}</span>
-                <span>更新 ${escapeHtml(updated)}</span>
-              </div>
-            </div>
-            <div class="deck-actions">
-              ${pptx ? `<a class="row-action primary" href="${api}/files/${pptx.id}/download">${icon("download")}下载 PPTX</a>` : ""}
+            <h2 class="deck-title">${escapeHtml(deck.title)}</h2>
+            <div class="deck-meta">
+              <span class="pill ${statusClass(deck.status)}">${statusLabel(deck.status)}</span>
+              <span>${escapeHtml(inferPageLabel(deck.outline_md))}</span>
+              <span>SJTU 模板</span>
+              <span>${escapeHtml(updated)}</span>
             </div>
           </div>
-          ${renderAgentProgress(deck, jobs)}
-          ${renderOutlinePreview(deck)}
+          <div class="deck-actions">
+            ${state.isRunning ? progress : renderPreviewAction(preview)}
+            ${pptx ? `<a class="row-action primary" href="${api}/files/${pptx.id}/download">${icon("download")}下载 PPTX</a>` : ""}
+            <button class="row-more" type="button" aria-label="更多操作">⋮</button>
+          </div>
         </article>
       `;
     }
 
-    function renderOutlinePreview(deck) {
-      if (!deck.outline_md) return "";
+    function renderCurrentWorkflow() {
+      const deck = decks[0];
+      if (!deck || deck.status === "draft") return "";
+      const jobs = jobsByDeck.get(deck.id) || [];
+      const files = filesByDeck.get(deck.id) || [];
+      const state = workflowState(deck, jobs, files);
       return `
-        <details class="outline-preview">
-          <summary>需求或大纲</summary>
-          <pre>${escapeHtml(deck.outline_md)}</pre>
-        </details>
+        <section class="workflow-section" aria-label="当前生成进度">
+          ${renderFlowSteps(state)}
+          ${renderTaskCard(deck, state, files)}
+        </section>
       `;
     }
 
-    function renderAgentProgress(deck, jobs) {
-      if (!jobs.length) return "";
-      const plan = jobs.find((job) => job.type === "plan_outline");
-      const build = jobs.find((job) => job.type === "build_pptx");
-      if (!plan && !build) return "";
-      const labels = ["理解需求", "规划结构", "渲染 PPTX", "完成下载"];
-      const failedJob = [plan, build].find((job) => job && job.status === "failed");
-      const isDone = Boolean(build && build.status === "succeeded");
-      const isFailed = Boolean(failedJob);
-      let activeIndex = 0;
-      if (plan && plan.status === "running") activeIndex = 1;
-      if (plan && plan.status === "succeeded") activeIndex = 2;
-      if (build && ["queued", "running"].includes(build.status)) activeIndex = 2;
-      if (isDone) activeIndex = 3;
-      if (isFailed && failedJob.type === "build_pptx") activeIndex = 2;
-      const statusText = isDone ? "完成" : isFailed ? "失败" : "进行中";
-      const displayJob = build || plan;
-      const steps = labels.map((label, index) => {
-        let cls = "";
-        if (isDone || index < activeIndex) cls = "done";
-        else if (isFailed && index === activeIndex) cls = "failed";
-        else if (index === activeIndex) cls = "running";
-        return `<span class="agent-step ${cls}"><strong>${index + 1}</strong>${escapeHtml(label)}</span>`;
-      }).join("");
-      const log = formatAgentLog([plan, build].map((job) => job ? jobLogs.get(job.id) || "" : "").join("\\n"));
+    function renderFlowSteps(state) {
       return `
-        <div class="agent-progress">
-          <div class="agent-head">
-            <strong>Agent 生成流程 · ${escapeHtml(statusText)}</strong>
-            <span>${escapeHtml(formatTime(displayJob.created_at))}</span>
-          </div>
-          <div class="agent-steps">${steps}</div>
-          ${log ? `<pre class="agent-log">${escapeHtml(log)}</pre>` : ""}
+        <div class="flow-steps">
+          ${state.steps.map((label, index) => {
+            let cls = "future";
+            if (index < state.completeCount) cls = "done";
+            if (index === state.activeIndex && !state.isDone) cls = state.isFailed ? "failed" : "active";
+            if (state.isDone) cls = "done";
+            return `
+              <div class="flow-step ${cls}">
+                <span class="flow-dot">
+                  ${cls === "done" ? "✓" : index + 1}
+                  ${cls === "active" ? "<span class=\\"flow-stars\\"></span>" : ""}
+                </span>
+                <span class="flow-label">${index + 1} ${escapeHtml(label)}</span>
+              </div>
+            `;
+          }).join("")}
         </div>
       `;
+    }
+
+    function renderTaskCard(deck, state, files) {
+      const pptx = files.find((file) => file.kind === "pptx");
+      const preview = files.find((file) => file.kind === "preview");
+      const time = formatTime(deck.updated_at || deck.created_at);
+      const meta = `${inferPageLabel(deck.outline_md)} · SJTU 模板 · ${inferStyleLabel(deck.outline_md)}`;
+      const logLines = taskLogLines(state);
+      if (state.isDone) {
+        return `
+          <article class="task-card is-result">
+            <div class="task-head">
+              <span class="task-icon">${icon("file")}</span>
+              <div class="task-title-wrap">
+                <h2 class="task-title">${escapeHtml(deck.title)}</h2>
+                <div class="task-meta"><span class="pill ready">已完成</span><span>${escapeHtml(time)}</span></div>
+              </div>
+              <div class="task-actions">
+                ${renderPreviewAction(preview)}
+                ${pptx ? `<a class="row-action primary" href="${api}/files/${pptx.id}/download">${icon("download")}下载 PPTX</a>` : ""}
+              </div>
+            </div>
+            <p class="task-result-meta">${escapeHtml(meta)}</p>
+          </article>
+        `;
+      }
+      return `
+        <article class="task-card">
+          <div class="task-head">
+            <span class="task-icon is-running">${icon("file")}</span>
+            <div class="task-title-wrap">
+              <h2 class="task-title">${escapeHtml(deck.title)}</h2>
+              <div class="task-meta"><span class="pill ${statusClass(deck.status)}">${statusLabel(deck.status)}</span><span>${escapeHtml(time)}</span></div>
+            </div>
+            <button class="row-action" type="button" data-task-detail>查看详情</button>
+          </div>
+          <div class="task-summary">正在生成第 ${state.activeIndex + 1} 步：${escapeHtml(state.activeLabel)}</div>
+          <div class="task-sub">已完成 ${state.completeCount}/5 步，预计剩余约 ${state.remainingMinutes} 分钟</div>
+          <div class="task-log">
+            ${logLines.map((line) => `<div class="log-line">${escapeHtml(line)}</div>`).join("")}
+          </div>
+          <div class="task-details" id="task-detail-panel" hidden>
+            <pre>${escapeHtml(state.fullLog || deck.outline_md || "暂无更多细节")}</pre>
+          </div>
+        </article>
+      `;
+    }
+
+    function workflowState(deck, jobs, files = []) {
+      const steps = ["理解需求", "规划大纲", "生成内容", "渲染 PPTX", "完成下载"];
+      const plan = jobs.find((job) => job.type === "plan_outline");
+      const build = jobs.find((job) => job.type === "build_pptx");
+      const pptx = files.find((file) => file.kind === "pptx");
+      const failedJob = jobs.find((job) => job.status === "failed");
+      const fullLog = formatAgentLog(jobs.map((job) => jobLogs.get(job.id) || "").join("\\n"));
+      const hasRenderSignal = /渲染|pptx|deck ir|soffice|已生成/i.test(fullLog);
+      const isDone = Boolean(pptx || deck.status === "ready" || build?.status === "succeeded");
+      const isFailed = Boolean(failedJob || deck.status === "failed");
+      let activeIndex = 0;
+      if (plan) activeIndex = 1;
+      if (plan?.status === "succeeded") activeIndex = 2;
+      if (build && ["queued", "running"].includes(build.status)) {
+        activeIndex = hasRenderSignal ? 3 : 2;
+      }
+      if (isDone) activeIndex = 4;
+      if (isFailed && build) activeIndex = Math.max(activeIndex, 3);
+      const completeCount = isDone ? 5 : Math.max(0, activeIndex);
+      const percent = isDone ? 100 : Math.max(8, Math.min(92, completeCount * 20));
+      return {
+        steps,
+        activeIndex,
+        activeLabel: steps[activeIndex] || steps[0],
+        completeCount,
+        percent,
+        fullLog,
+        isDone,
+        isFailed,
+        isRunning: deck.status === "generating" || jobs.some((job) => ["queued", "running"].includes(job.status)),
+        remainingMinutes: Math.max(1, Math.ceil((5 - completeCount) / 2))
+      };
+    }
+
+    function taskLogLines(state) {
+      const lines = agentLogLines(state.fullLog).slice(-3);
+      if (lines.length) return lines;
+      const fallback = [];
+      if (state.completeCount >= 1) fallback.push("已完成需求理解");
+      if (state.completeCount >= 2) fallback.push("已生成 PPT 大纲");
+      if (!state.isDone) fallback.push(`正在处理：${state.activeLabel}`);
+      return fallback.length ? fallback.slice(-3) : ["正在准备生成任务"];
+    }
+
+    function agentLogLines(logText) {
+      return String(logText || "")
+        .split("\\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    }
+
+    function renderDeckCover(deck, preview) {
+      if (preview) {
+        return `
+          <div class="deck-cover">
+            <img src="${api}/files/${preview.id}/download" alt="${escapeHtml(deck.title)} 预览">
+          </div>
+        `;
+      }
+      return `
+        <div class="deck-cover deck-cover-fallback">
+          <span>${escapeHtml(deck.title)}</span>
+        </div>
+      `;
+    }
+
+    function renderPreviewAction(preview) {
+      if (preview) {
+        return `<a class="row-action preview" href="${api}/files/${preview.id}/download" target="_blank" rel="noopener">${icon("search")}预览</a>`;
+      }
+      return `<button class="row-action preview is-disabled" type="button" aria-disabled="true">${icon("search")}预览</button>`;
+    }
+
+    function renderInsightChips(outline) {
+      return promptInsights(outline).map((item) => `
+        <span class="insight-chip">${icon(item.icon)}${escapeHtml(item.label)}</span>
+      `).join("");
+    }
+
+    function promptInsights(outline) {
+      const title = deriveTitle(outline);
+      const style = inferStyleLabel(outline);
+      return [
+        { icon: "file", label: inferPageLabel(outline) },
+        { icon: "deck", label: title === "未命名 PPT" ? "主题待定" : title },
+        { icon: "spark", label: style },
+        { icon: "folder", label: "SJTU 模板" }
+      ];
+    }
+
+    function inferPageLabel(outline) {
+      const text = String(outline || "");
+      const range = text.match(/(\\d+)\\s*[-~到至]\\s*(\\d+)\\s*页/u);
+      if (range) return `${range[1]}-${range[2]} 页`;
+      const single = text.match(/(\\d+)\\s*页/u);
+      if (single) return `${single[1]} 页`;
+      return "5-6 页";
+    }
+
+    function inferStyleLabel(outline) {
+      const text = String(outline || "");
+      if (/汇报|商务|项目|阶段/u.test(text)) return "简洁专业";
+      if (/课程|讲解|教学|本科生/u.test(text)) return "课程讲解";
+      if (/科普|介绍|入门/u.test(text)) return "科普";
+      return "简洁专业";
+    }
+
+    function formatDeckTime(value) {
+      const date = parseApiTime(value);
+      const today = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date());
+      const current = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(date);
+      const time = formatTime(value);
+      return current === today ? `今天 ${time}` : `${current} ${time}`;
     }
 
     function statusClass(status) {
@@ -1590,7 +2252,7 @@ def workbench(
         draft: "草稿",
         outline_ready: "规划完成",
         generating: "生成中",
-        ready: "可下载",
+        ready: "已完成",
         failed: "失败"
       }[status] || status;
     }
