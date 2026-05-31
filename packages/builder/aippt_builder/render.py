@@ -35,6 +35,14 @@ WARM_GRAY_2 = "EDECEA"
 WARM_GRAY_3 = "D2D0CD"
 BROWN = "8B5C3E"
 OFF_WHITE = "FAFAFB"
+OFFICE_BLUE = "3157C8"
+OFFICE_BLUE_DARK = "174EA6"
+OFFICE_BLUE_SOFT = "EAF2FF"
+OFFICE_BLUE_PALE = "F4F8FF"
+OFFICE_MINT = "20A77A"
+OFFICE_MINT_SOFT = "EAF8F2"
+OFFICE_PURPLE = "6B5BD7"
+OFFICE_PURPLE_SOFT = "F0EEFF"
 DATE_RE = re.compile(r"(?:20\d{2}[./-]\d{1,2}[./-]\d{1,2}|20\d{2}\s*年|三年前|上周)")
 TABLE_RULE_RE = re.compile(r"^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$")
 KEY_VALUE_RE = re.compile(r"^([^：:]{1,14})[：:]\s*(.+)$")
@@ -430,6 +438,14 @@ def render_body(slide, slide_data: Slide) -> None:
         _render_concept_diagram(slide, items, support)
     elif visual == "example_walkthrough":
         _render_example_walkthrough(slide, items)
+    elif visual == "learning_modes":
+        _render_learning_modes(slide, items, support)
+    elif visual == "numbered_cards":
+        _render_numbered_cards(slide, items, support)
+    elif visual == "compare_matrix":
+        _render_compare_matrix(slide, items, support)
+    elif visual == "loop_flow":
+        _render_loop_flow(slide, items, support)
     elif slide_data.layout == Layout.TABLE or visual == "table":
         _render_table_slide(slide, slide_data.table, items)
     elif slide_data.layout in {Layout.TWO_COLUMN, Layout.COMPARISON} or visual == "two_column":
@@ -1206,6 +1222,279 @@ def _example_relation_line(slide, left: float, top: float, card_w: float, gap: f
         _rect(slide, x, top, max(0.05, gap - 0.06), 0.035, GOLD)
 
 
+def _render_learning_modes(slide, items: list[str], support: str | None) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+        panel_top = 2.18
+    else:
+        rest = items
+        panel_top = 1.42
+
+    modes = rest[:4] or [
+        "监督学习：有标签样本；分类或回归；适合可验证预测任务",
+        "无监督学习：没有标准答案；聚类或降维；适合发现结构",
+        "半监督/自监督学习：少量标签或自造信号；适合预训练表征",
+        "强化学习：通过奖励学习策略；适合连续决策任务",
+    ]
+    _round_rect(slide, 0.9, panel_top, 11.55, 3.82, OFFICE_BLUE_PALE, border="DCE7F7", radius=0.035)
+    _rect(slide, 6.66, panel_top + 0.22, 0.018, 3.38, "D7E4F7")
+    _rect(slide, 1.16, panel_top + 1.91, 11.02, 0.018, "D7E4F7")
+    _axis_label(slide, 5.82, panel_top + 0.18, "标签明确")
+    _axis_label(slide, 5.72, panel_top + 3.38, "反馈稀疏")
+    _axis_label(slide, 1.12, panel_top + 1.72, "发现结构")
+    _axis_label(slide, 10.72, panel_top + 1.72, "优化行动")
+
+    positions = [
+        (1.18, panel_top + 0.42, 4.92, 1.34, OFFICE_BLUE, OFFICE_BLUE_SOFT),
+        (7.12, panel_top + 0.42, 4.92, 1.34, OFFICE_MINT, OFFICE_MINT_SOFT),
+        (1.18, panel_top + 2.06, 4.92, 1.34, OFFICE_PURPLE, OFFICE_PURPLE_SOFT),
+        (7.12, panel_top + 2.06, 4.92, 1.34, GOLD, GOLD_PALE),
+    ]
+    for idx, mode in enumerate(modes[:4], start=1):
+        _learning_mode_card(slide, *positions[idx - 1], idx, mode)
+
+def _axis_label(slide, left: float, top: float, text: str) -> None:
+    pill = _round_rect(slide, left, top, 1.05, 0.26, WHITE, border="D8E2F0", radius=0.12)
+    _shape_text(pill, text, 8.2, TEXT_CAPTION, bold=True, align=PP_ALIGN.CENTER)
+
+
+def _learning_mode_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    accent: str,
+    fill: str,
+    idx: int,
+    text: str,
+) -> None:
+    title, body = _split_key_value(text)
+    if not body:
+        title, body = _trim(text, 16), text
+    _round_rect(slide, left, top, width, height, WHITE, border="DDE6F2", radius=0.035, shadow=True)
+    _rect(slide, left, top, 0.08, height, accent)
+    _circle(slide, left + width - 0.56, top + 0.12, 0.34, fill, border="D7E3F2")
+    _circle(slide, left + width - 0.34, top + 0.31, 0.18, accent)
+    badge = _round_rect(slide, left + 0.3, top + 0.22, 0.54, 0.34, fill, border="CFDDF2", radius=0.12)
+    _shape_text(badge, f"{idx:02d}", 10.4, accent, bold=True, align=PP_ALIGN.CENTER)
+
+    title_box = slide.shapes.add_textbox(Inches(left + 0.98), Inches(top + 0.18), Inches(width - 1.55), Inches(0.32))
+    title_box.text_frame.word_wrap = True
+    title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 18)
+    _style_paragraph(p, 13.4, TEXT_PRIMARY, bold=True)
+
+    _draw_card_points(
+        slide,
+        left + 0.32,
+        top + 0.66,
+        width - 0.66,
+        height - 0.78,
+        _split_card_points(body),
+        compact=True,
+    )
+
+
+def _render_numbered_cards(slide, items: list[str], support: str | None) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+        top_start = 2.16
+    else:
+        rest = items
+        top_start = 1.48
+
+    cards = rest[:4] or items[:4]
+    if len(cards) <= 3:
+        positions = [
+            (0.92, top_start, 3.64, 3.58),
+            (4.84, top_start, 3.64, 3.58),
+            (8.76, top_start, 3.64, 3.58),
+        ]
+    else:
+        positions = [
+            (0.92, top_start, 5.55, 1.72),
+            (6.82, top_start, 5.55, 1.72),
+            (0.92, top_start + 2.04, 5.55, 1.72),
+            (6.82, top_start + 2.04, 5.55, 1.72),
+        ]
+
+    accents = [OFFICE_BLUE, OFFICE_MINT, OFFICE_PURPLE, GOLD]
+    fills = [OFFICE_BLUE_SOFT, OFFICE_MINT_SOFT, OFFICE_PURPLE_SOFT, GOLD_PALE]
+    for idx, card in enumerate(cards[: len(positions)], start=1):
+        left, top, width, height = positions[idx - 1]
+        _numbered_content_card(slide, left, top, width, height, idx, card, accents[(idx - 1) % 4], fills[(idx - 1) % 4])
+
+def _numbered_content_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    idx: int,
+    text: str,
+    accent: str,
+    fill: str,
+) -> None:
+    title, body = _split_key_value(text)
+    if not body:
+        title, body = _trim(text, 18), text
+    _round_rect(slide, left, top, width, height, WHITE, border="E0E7F1", radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, accent)
+    _circle(slide, left + width - 0.72, top + 0.14, 0.46, fill)
+    _circle(slide, left + width - 0.42, top + 0.42, 0.2, accent)
+    number = _round_rect(slide, left + 0.28, top + 0.24, 0.62, 0.42, fill, border="D5E1F0", radius=0.13)
+    _shape_text(number, f"{idx:02d}", 13, accent, bold=True, align=PP_ALIGN.CENTER)
+
+    title_box = slide.shapes.add_textbox(Inches(left + 1.08), Inches(top + 0.22), Inches(width - 1.7), Inches(0.36))
+    title_box.text_frame.word_wrap = True
+    title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 18 if width < 4 else 24)
+    _style_paragraph(p, 14.2 if width >= 5 else 13.4, TEXT_PRIMARY, bold=True)
+
+    _draw_card_points(
+        slide,
+        left + 0.34,
+        top + 0.78,
+        width - 0.68,
+        height - 0.9,
+        _split_card_points(body),
+        compact=True,
+    )
+
+
+def _render_compare_matrix(slide, items: list[str], support: str | None) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+        top_start = 2.18
+    else:
+        rest = items
+        top_start = 1.46
+
+    matrix_items = rest[:4] or items[:4]
+    _round_rect(slide, 0.9, top_start, 11.55, 3.86, "F6F9FD", border="E1E8F2", radius=0.035)
+    if support:
+        _matrix_support_band(slide, 1.18, top_start + 0.22, support)
+        card_top = top_start + 0.84
+        card_h = 1.34
+    else:
+        card_top = top_start + 0.35
+        card_h = 1.48
+
+    positions = [
+        (1.18, card_top, 5.3, card_h),
+        (6.86, card_top, 5.3, card_h),
+        (1.18, card_top + 1.68, 5.3, card_h),
+        (6.86, card_top + 1.68, 5.3, card_h),
+    ]
+    accents = [OFFICE_BLUE, OFFICE_MINT, OFFICE_PURPLE, GOLD]
+    for idx, item in enumerate(matrix_items[:4], start=1):
+        _comparison_matrix_card(slide, *positions[idx - 1], idx, item, accents[(idx - 1) % 4])
+
+
+def _matrix_support_band(slide, left: float, top: float, text: str) -> None:
+    band = _round_rect(slide, left, top, 10.98, 0.38, OFFICE_BLUE_SOFT, border="D3E0F2", radius=0.12)
+    _shape_text(band, _trim(text, 70), 10.2, OFFICE_BLUE_DARK, bold=True, align=PP_ALIGN.CENTER)
+
+
+def _comparison_matrix_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    idx: int,
+    text: str,
+    accent: str,
+) -> None:
+    title, body = _split_key_value(text)
+    if not body:
+        title, body = _trim(text, 18), text
+    _round_rect(slide, left, top, width, height, WHITE, border="DFE7F0", radius=0.035, shadow=True)
+    _rect(slide, left, top, 0.06, height, accent)
+    _number_badge(slide, left + 0.25, top + 0.22, str(idx), size=0.34, color=accent)
+
+    title_box = slide.shapes.add_textbox(Inches(left + 0.76), Inches(top + 0.19), Inches(width - 1.0), Inches(0.28))
+    title_box.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 20)
+    _style_paragraph(p, 12.8, TEXT_PRIMARY, bold=True)
+    _draw_card_points(
+        slide,
+        left + 0.34,
+        top + 0.62,
+        width - 0.62,
+        height - 0.72,
+        _split_card_points(body),
+        compact=True,
+    )
+
+
+def _render_loop_flow(slide, items: list[str], support: str | None) -> None:
+    lead, rest = _split_lead(items)
+    if lead:
+        _lead_callout(slide, lead, compact=True)
+        panel_top = 2.12
+    else:
+        rest = items
+        panel_top = 1.42
+
+    steps = rest[:4] or [
+        "数据准备：收集样本；清洗异常；划分数据集",
+        "模型训练：设定目标；更新参数；观察损失",
+        "效果验证：比较新样本误差；复盘失败案例；检查泛化",
+        "迭代上线：补充数据；监控漂移；保留回滚机制",
+    ]
+    _round_rect(slide, 0.9, panel_top, 11.55, 3.92, "F7FAFD", border="DFE7F0", radius=0.035)
+    _rect(slide, 5.12, panel_top + 0.88, 3.1, 0.035, "BBD0EE")
+    _rect(slide, 10.18, panel_top + 1.54, 0.035, 0.95, "BBD0EE")
+    _rect(slide, 5.12, panel_top + 3.1, 3.1, 0.035, "BBD0EE")
+    _rect(slide, 3.1, panel_top + 1.54, 0.035, 0.95, "BBD0EE")
+    _circle(slide, 5.75, panel_top + 1.44, 1.38, OFFICE_BLUE_SOFT, border="CFE0F6")
+    _circle(slide, 6.03, panel_top + 1.72, 0.82, OFFICE_BLUE, border=OFFICE_BLUE_DARK)
+    center_box = slide.shapes.add_textbox(Inches(5.82), Inches(panel_top + 1.83), Inches(1.22), Inches(0.34))
+    p = center_box.text_frame.paragraphs[0]
+    p.text = "反馈"
+    _style_paragraph(p, 14.4, WHITE, bold=True, align=PP_ALIGN.CENTER)
+
+    positions = [
+        (1.14, panel_top + 0.42, 4.18, 1.28),
+        (8.0, panel_top + 0.42, 4.18, 1.28),
+        (8.0, panel_top + 2.52, 4.18, 1.28),
+        (1.14, panel_top + 2.52, 4.18, 1.28),
+    ]
+    accents = [OFFICE_BLUE, OFFICE_MINT, OFFICE_PURPLE, GOLD]
+    for idx, step in enumerate(steps[:4], start=1):
+        _loop_step_card(slide, *positions[idx - 1], idx, step, accents[(idx - 1) % 4])
+
+def _loop_step_card(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    idx: int,
+    text: str,
+    accent: str,
+) -> None:
+    title, body = _split_key_value(text)
+    if not body:
+        title, body = _trim(text, 16), text
+    _round_rect(slide, left, top, width, height, WHITE, border="DFE7F0", radius=0.035, shadow=True)
+    _rect(slide, left, top, width, 0.05, accent)
+    _number_badge(slide, left + 0.24, top + 0.22, str(idx), size=0.34, color=accent)
+    title_box = slide.shapes.add_textbox(Inches(left + 0.76), Inches(top + 0.18), Inches(width - 1.0), Inches(0.28))
+    p = title_box.text_frame.paragraphs[0]
+    p.text = _trim(title, 18)
+    _style_paragraph(p, 12.8, TEXT_PRIMARY, bold=True)
+    _draw_card_points(slide, left + 0.3, top + 0.58, width - 0.58, height - 0.66, _split_card_points(body), compact=True)
+
+
 def _lead_callout(slide, text: str, compact: bool = False) -> None:
     text = text or "核心结论"
     h = 0.88 if compact else 1.05
@@ -1630,6 +1919,26 @@ def _number_badge(
     shape.line.fill.background()
     shape.shadow.inherit = False
     _shape_text(shape, text, 10, WHITE, bold=True, align=PP_ALIGN.CENTER)
+    return shape
+
+
+def _circle(
+    slide,
+    left: float,
+    top: float,
+    size: float,
+    fill: str,
+    border: str | None = None,
+):
+    shape = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(left), Inches(top), Inches(size), Inches(size))
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = rgb(fill)
+    if border:
+        shape.line.color.rgb = rgb(border)
+        shape.line.width = Pt(0.45)
+    else:
+        shape.line.fill.background()
+    shape.shadow.inherit = False
     return shape
 
 

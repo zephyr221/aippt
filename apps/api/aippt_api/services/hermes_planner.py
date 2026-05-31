@@ -211,15 +211,17 @@ SJTU PPT 生成器的 Markdown 大纲。
 - 内容页要像专业教学/汇报 PPT：每页一个清楚判断或讲解目标，下面 2-3 个主题方向，每个方向有 2-4 个具体要点。
 - AIPPT 支持各类 PPT：教学/培训侧重定义、例子、步骤和练习；项目汇报侧重进展、风险和行动项；研究/申报侧重证据、方法和结果；产品介绍侧重场景、能力和价值。
 - 规划时先在心里判定 PPT 类型，但不要输出类型标签：课程/培训、项目汇报、研究汇报、产品介绍或通用说明。
-- 课程/培训型要像老师备课：学习目标/动机 -> 核心概念 -> 最小案例 walkthrough -> 类型或流程 -> 常见误区 -> 小结/下一步；核心概念页优先用 `组件：concept_diagram`，最小案例页优先用 `组件：example_walkthrough`。
-- 例如“机器学习导论”应展开为为什么需要机器学习、核心思想、房价预测最小例子、监督/无监督/强化学习、训练验证流程、常见误区与下一步，而不是只列算法名。
+- 课程/培训型要像老师备课：学习目标/动机 -> 核心概念 -> 最小案例 walkthrough -> 类型/范式 -> 流程闭环 -> 评估或误区 -> 小结/下一步；核心概念页优先用 `组件：concept_diagram`，最小案例页优先用 `组件：example_walkthrough`。
+- 例如“机器学习导论”应展开为为什么需要机器学习、核心思想、房价预测最小例子、四类学习范式、训练验证闭环、经典算法速览、模型评估指标、常见误区与下一步，而不是只列算法名。
+- 机器学习或 AI 教学页要主动使用更丰富的办公模板节奏：四类学习范式用 `组件：learning_modes`，训练/验证闭环用 `组件：loop_flow`，算法速览用 `组件：numbered_cards`，评估指标或过拟合对比用 `组件：compare_matrix`。
 - 导论型课程时间有限，除非用户明确要求，不要硬塞练习页或检查理解页；更重要的是选一条主例子贯穿始终，例如机器学习导论用房价预测串起输入、模型、预测、损失、任务类型和验证闭环。
 - 汇报/产品类 PPT 不要全做卡片：总览页优先用 `metric_strip`，阶段进展用 `milestone_timeline`，代表项目用 `project_showcase`，平台/系统介绍用 `media_explain`。
-- 避免整页只有稀疏 bullet；优先组织成可被渲染为卡片、流程、事实块、公式块的内容。
+- 避免整页只有稀疏 bullet；优先组织成可被渲染为卡片、流程、事实块、公式块、数字卡、四象限和对比矩阵的内容。
+- 避免连续三页使用同一种卡片样式；穿插 `concept_diagram`、`example_walkthrough`、`learning_modes`、`loop_flow`、`numbered_cards`、`compare_matrix`、`summary`，让页面节奏像成熟办公模板而不是同一组件复制。
 - 投影可读性优先：内容页通常 2-3 个卡片/步骤，每个卡片 2-3 个短点；不要为了显得丰富而塞满四五行长句。
 - 你需要承担页面设计：为内容页选择安全白名单里的版式和组件，让后端按你的设计信号渲染。
 - 可用版式：one_column、two_column、three_column、horizontal、comparison、table、summary。
-- 可用组件：rich_cards、fact_grid、timeline、process、concept_diagram、example_walkthrough、metric_strip、milestone_timeline、project_showcase、media_explain、stat_callout、quote_block、card_grid、two_column、three_column、horizontal、table、summary。
+- 可用组件：rich_cards、fact_grid、timeline、process、loop_flow、concept_diagram、example_walkthrough、learning_modes、numbered_cards、compare_matrix、metric_strip、milestone_timeline、project_showcase、media_explain、stat_callout、quote_block、card_grid、two_column、three_column、horizontal、table、summary。
 - 版式/组件写成普通正文行，例如 `版式：three_column`、`组件：rich_cards`、`洞察：...`；不要写代码或 JSON。
 - 每个内容页尽量写 `支撑：...`，说明该页如何具体展开；可以是定义、例子、步骤、案例、行动项、数据、流程、公式、时间线或来源。
 - `洞察：...` 不只是总结，也可以承担转场：说明为什么下一页自然要讲这个。
@@ -241,7 +243,7 @@ SJTU PPT 生成器的 Markdown 大纲。
 
 ## 第 2 页 · {{页面标题}}
 版式：{{one_column / two_column / three_column / horizontal / comparison / table / summary}}
-组件：{{rich_cards / fact_grid / timeline / process / concept_diagram / example_walkthrough / metric_strip / milestone_timeline / project_showcase / media_explain / stat_callout / quote_block / card_grid / table，可省略}}
+组件：{{rich_cards / fact_grid / timeline / process / loop_flow / concept_diagram / example_walkthrough / learning_modes / numbered_cards / compare_matrix / metric_strip / milestone_timeline / project_showcase / media_explain / stat_callout / quote_block / card_grid / table，可省略}}
 支撑：{{定义、例子、步骤、案例、行动项、数据、流程、公式、时间线或来源；可省略但建议保留}}
 {{本页核心判断，直接写内容，不加标签}}
 - {{主题一}}：{{2-3 句具体展开}}
@@ -330,17 +332,24 @@ def _extend_outline_page_headings(
         ),
         (
             "应用场景与例子",
-            "three_column",
-            "rich_cards",
+            "horizontal",
+            "numbered_cards",
             "用三个场景把抽象知识落到真实问题。",
             ["场景一：说明输入材料是什么；目标是什么；结果如何判断", "场景二：解释为什么适合这个方法；需要哪些前提；可能遇到什么限制", "场景三：给出可迁移的观察；连接到课程或汇报主线"],
         ),
         (
             "方法流程拆解",
             "horizontal",
-            "process",
+            "loop_flow",
             "按准备、执行、验证和迭代形成闭环。",
             ["准备：明确问题和材料；列出约束；设定评价标准", "执行：按步骤完成核心动作；记录中间结果；避免跳过检查点", "验证：用新样例或反例测试；观察失败原因；决定下一轮改进"],
+        ),
+        (
+            "对比矩阵与判断标准",
+            "horizontal",
+            "compare_matrix",
+            "用对比维度说明什么时候该选哪种方法。",
+            ["适用场景：说明最匹配的问题；列出必要前提；指出不适用边界", "评价指标：说明如何判断好坏；连接真实风险；保留验证方式", "取舍建议：给出选择顺序；说明成本；提示下一步动作"],
         ),
         (
             "常见误区与检查",
@@ -412,12 +421,26 @@ def _topic_from_request(text: str) -> str:
     compact = re.sub(r"\s+", " ", text).strip()
     match = re.search(r"关于\s*(.+?)(?:的)?(?:科普|介绍|分享|报告|PPT|ppt|幻灯片|$)", compact)
     if match:
-        return match.group(1).strip(" ，,。") or "主题"
+        return _trim_request_topic(match.group(1)) or "主题"
     compact = re.sub(r"\d{1,2}\s*(?:[-~到至]|—)?\s*\d{0,2}\s*页", " ", compact)
     compact = re.sub(r"(请|帮我|制作|生成|做|写|一份|PPT|ppt|幻灯片|关于|科普|介绍|分享|报告)", " ", compact)
     compact = re.sub(r"[，,。.!！?？:：；;、]+", " ", compact)
     compact = re.sub(r"\s+", " ", compact).strip()
-    return compact[:30] or "主题"
+    return _trim_request_topic(compact)[:30] or "主题"
+
+
+def _trim_request_topic(topic: str) -> str:
+    topic = re.split(
+        r"[，,。.!！?？:：；;、]\s*(?:其中|重点|主要|尤其|希望|要求|请|并|要|讲)",
+        topic,
+        maxsplit=1,
+    )[0]
+    topic = re.split(
+        r"\s+(?:其中|重点|主要|尤其|希望|要求|并且|要|重点讲|讲讲|讲一下)\s*",
+        topic,
+        maxsplit=1,
+    )[0]
+    return re.sub(r"\s+", " ", topic).strip(" ，,。")
 
 
 def _emit_outline_progress(workspace: Path, text: str, seen: set[str]) -> str:

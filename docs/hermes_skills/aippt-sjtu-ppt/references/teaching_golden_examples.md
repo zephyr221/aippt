@@ -9,8 +9,9 @@ Do not treat a machine learning intro as an algorithm list. The hard part is the
 cognitive slope:
 
 ```text
-why rules fail -> core vocabulary -> one worked example -> task families ->
-training/validation loop -> common mistakes and next steps
+why rules fail -> core vocabulary -> one worked example -> four learning
+paradigms -> training/validation loop -> algorithm overview -> evaluation
+metrics -> common mistakes and next steps
 ```
 
 Use house-price prediction as the main throughline:
@@ -20,9 +21,14 @@ Use house-price prediction as the main throughline:
 - Vocabulary: area, location, and age become input x; the model fθ predicts
   price ŷ; the loss J compares prediction with transaction price.
 - Worked example: show data preparation, model setup, loss, and generalization.
-- Task families: house-price prediction is supervised regression; spam
-  classification is only a supporting contrast for supervised classification.
+- Learning paradigms: supervised learning uses labels, unsupervised learning
+  discovers structure, semi/self-supervised learning creates or economizes
+  supervision, and reinforcement learning optimizes action through reward.
 - Validation: test on new listings, inspect error, and update data or features.
+- Algorithm overview: use numbered cards for KNN, decision tree, SVM, and naive
+  Bayes; explain when to use them instead of dumping formulas.
+- Evaluation: use a comparison matrix for classification metrics, regression
+  metrics, generalization checks, and business risk.
 - Summary: students should be able to retell "data in, model predicts, error
   corrects" before learning algorithm names.
 
@@ -37,3 +43,10 @@ unless the user explicitly asks. Prefer clear transitions:
 The goal is not to make every page a proof. The goal is to make every page
 carry a concrete teaching object: definition, relation, example, formula,
 process, contrast, or misconception.
+
+Recommended component rhythm:
+
+```text
+rich_cards -> concept_diagram -> example_walkthrough -> learning_modes ->
+loop_flow -> numbered_cards -> compare_matrix -> summary
+```

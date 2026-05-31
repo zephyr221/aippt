@@ -36,8 +36,12 @@ rich_cards
 fact_grid
 timeline
 process
+loop_flow
 concept_diagram
 example_walkthrough
+learning_modes
+numbered_cards
+compare_matrix
 metric_strip
 milestone_timeline
 project_showcase
@@ -62,10 +66,18 @@ coordinates, generated scripts, SVG logos, or arbitrary new components.
 - `timeline`: two or more dated events.
 - `process`: workflow, agent loop, model training, validation pipeline, or any
   `A -> B -> C` sequence.
+- `loop_flow`: four-step feedback loop such as data -> training -> validation
+  -> iteration, especially when the user should feel the cycle.
 - `concept_diagram`: core vocabulary where 3-4 concepts relate to each other,
   such as input, model, output, loss, feedback, or boundary.
 - `example_walkthrough`: one worked teaching example with input, model/action,
   formula or result, and validation.
+- `learning_modes`: four learning paradigms or modes; use for supervised,
+  unsupervised, semi/self-supervised, and reinforcement learning.
+- `numbered_cards`: four numbered cards for algorithm families, scenarios,
+  steps, capabilities, or recommendations.
+- `compare_matrix`: 2x2 comparison matrix for indicators, trade-offs,
+  overfitting/underfitting, task types, or selection criteria.
 - `metric_strip`: report overview with 3-4 large KPI/result numbers plus
   optional workstream detail.
 - `milestone_timeline`: dated stages, project roadmap, or multi-phase progress
@@ -98,11 +110,18 @@ For brief prompts, choose the deck spine before choosing components:
 
 For "机器学习导论", do not jump straight to a list of algorithms. A stronger
 teaching flow is: why rules are insufficient, data/model/loss vocabulary,
-house-price prediction walkthrough, supervised/unsupervised/reinforcement
-tasks, training-validation loop, common mistakes and next steps. Use house-price
-prediction as the main throughline across the concept, example, task, and
-validation slides; use another example such as spam classification only as a
-supporting contrast.
+house-price prediction walkthrough, four learning paradigms, training-validation
+loop, algorithm overview, model evaluation, common mistakes and next steps. Use
+house-price prediction as the main throughline across the concept, example,
+task, and validation slides; use another example such as spam classification
+only as a supporting contrast. For this topic, prefer:
+
+- `learning_modes` for supervised / unsupervised / semi- or self-supervised /
+  reinforcement learning.
+- `loop_flow` for data preparation, model training, validation, and iteration.
+- `numbered_cards` for KNN, decision tree, SVM, naive Bayes, or scenario cards.
+- `compare_matrix` for evaluation metrics, overfitting, underfitting, and
+  regularization trade-offs.
 
 For intro courses with limited time, do not force a practice or understanding
 check page unless the user explicitly asks. The harder job is to make the
@@ -214,6 +233,59 @@ For worked examples, use `example_walkthrough`:
 - 建立模型：从线性关系开始；预测值写作 ŷ=fθ(x)；参数代表特征影响
 - 公式：J(θ)=1/m ∑ᵢ L(yᵢ, fθ(xᵢ))，损失越小代表整体预测越接近标签
 - 验证泛化：留出新房源测试；看误差是否稳定；失败样例提示数据问题
+```
+
+For four learning paradigms, use `learning_modes`:
+
+```text
+## 第 5 页 · 四类学习范式
+版式：horizontal
+组件：learning_modes
+支撑：用标签、反馈信号、典型任务和课堂例子区分四类学习范式。
+学习范式回答的是反馈信号从哪里来，以及模型如何知道自己做得好不好。
+- 监督学习：有标签样本；分类或回归；房价预测、垃圾邮件识别、疾病筛查
+- 无监督学习：没有标准答案；聚类或降维；客户分群、异常发现、主题探索
+- 半监督/自监督学习：少量标签或自造监督信号；表征预训练、文本填空、图像对比学习
+- 强化学习：行动后获得奖励；策略持续优化；机器人控制、推荐策略、游戏智能体
+```
+
+For feedback loops, use `loop_flow`:
+
+```text
+## 第 6 页 · 训练流程与验证闭环
+版式：horizontal
+组件：loop_flow
+一个可用模型来自反复验证，而不是一次训练完成。
+- 数据准备：收集房源样本；清洗异常成交价；划分训练/验证/测试集
+- 模型训练：设定目标函数；更新参数 θ；观察损失是否下降
+- 效果验证：用新房源比较误差；查看失败案例；确认是否能迁移
+- 迭代上线：补充数据；监控漂移；保留人工复核和回滚机制
+```
+
+For algorithm or scenario overviews, use `numbered_cards`:
+
+```text
+## 第 7 页 · 经典算法速览
+版式：horizontal
+组件：numbered_cards
+算法不是越复杂越好，先按任务和数据形态选择够用的方法。
+- KNN：用相似样本投票；直观易懂；适合小样本和入门演示
+- 决策树：按规则层层划分；解释性强；容易过拟合，需要剪枝
+- SVM：寻找最大间隔边界；高维小样本表现稳；参数和核函数要谨慎
+- 朴素贝叶斯：基于概率假设快速分类；文本分类常见；条件独立是假设边界
+```
+
+For comparison and evaluation pages, use `compare_matrix`:
+
+```text
+## 第 8 页 · 模型评估指标
+版式：horizontal
+组件：compare_matrix
+评估不是给模型打一个分，而是判断它能否在新样本上稳定解决问题。
+- 分类指标：准确率看总体正确；精确率看误报成本；召回率看漏报风险
+- 回归指标：MAE 直观；MSE 放大大误差；R² 解释整体拟合程度
+- 泛化检查：训练集和测试集差距；交叉验证；失败样例复盘
+- 业务指标：误差是否可接受；是否节省人工；上线后是否持续监控
 ```
 
 For metric slides, make the first segment a large number:

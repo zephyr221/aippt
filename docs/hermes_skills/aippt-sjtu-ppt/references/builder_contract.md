@@ -147,8 +147,12 @@ rich_cards
 fact_grid
 timeline
 process
+loop_flow
 concept_diagram
 example_walkthrough
+learning_modes
+numbered_cards
+compare_matrix
 metric_strip
 milestone_timeline
 project_showcase
@@ -237,6 +241,46 @@ Use `example_walkthrough` for one worked teaching example:
 - 验证泛化：留出新样本测试
 ```
 
+Use `learning_modes` for four learning paradigms or modes:
+
+```text
+组件：learning_modes
+- 监督学习：有标签样本；分类或回归；房价预测、垃圾邮件识别
+- 无监督学习：没有标准答案；聚类或降维；客户分群、异常发现
+- 半监督/自监督学习：少量标签或自造监督信号；表征预训练
+- 强化学习：通过奖励学习策略；机器人控制、推荐策略
+```
+
+Use `loop_flow` for feedback loops:
+
+```text
+组件：loop_flow
+- 数据准备：收集样本；清洗异常；划分训练/验证/测试集
+- 模型训练：设定目标；更新参数 θ；观察损失
+- 效果验证：用新样本比较误差；复盘失败案例
+- 迭代上线：补充数据；监控漂移；保留人工复核
+```
+
+Use `numbered_cards` for four algorithm, scenario, or recommendation cards:
+
+```text
+组件：numbered_cards
+- KNN：用相似样本投票；直观易懂；适合小样本
+- 决策树：按规则层层划分；解释性强；需要剪枝
+- SVM：寻找最大间隔边界；高维小样本表现稳
+- 朴素贝叶斯：基于概率假设快速分类；文本分类常见
+```
+
+Use `compare_matrix` for 2x2 evaluation or trade-off pages:
+
+```text
+组件：compare_matrix
+- 分类指标：准确率看总体正确；精确率看误报成本；召回率看漏报风险
+- 回归指标：MAE 直观；MSE 放大大误差；R² 解释整体拟合程度
+- 泛化检查：训练集和测试集差距；交叉验证；失败样例复盘
+- 业务指标：误差是否可接受；是否节省人工；上线后是否持续监控
+```
+
 Use `quote_block` for one strong sourced conclusion:
 
 ```text
@@ -252,7 +296,11 @@ The current builder chooses visual rhythm from content cues:
 ```text
 timeline      multiple date anchors
 process       arrows, loops, "how it works"
+loop flow     feedback cycles and four-step validation loops
 concept map   3-4 related concepts, vocabulary, input/model/output/loss
+learning map  four paradigms or modes with feedback signals
+number cards  numbered algorithm/scenario/recommendation cards
+matrix        evaluation metrics, trade-offs, and selection criteria
 metrics       report overview with 3-4 large KPI/result numbers
 milestones    dated roadmap or stage progress
 showcase      representative projects/cases with screenshot placeholders

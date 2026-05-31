@@ -85,10 +85,11 @@ Use these mental playbooks for short prompts. Do not output the playbook name;
 turn it into slide titles, support objects, and component signals.
 
 - Teaching/training: learning goal and motivation -> core concepts -> smallest
-  worked example -> categories or process -> common mistakes -> summary and
-  next steps. For intro courses, do not force an exercise page unless the user
-  asks for one. For "机器学习导论", use house-price prediction as the throughline
-  across vocabulary, walkthrough, task types, and validation.
+  worked example -> categories or paradigms -> process loop -> evaluation or
+  misconceptions -> summary and next steps. For intro courses, do not force an
+  exercise page unless the user asks for one. For "机器学习导论", use
+  house-price prediction as the throughline across vocabulary, walkthrough,
+  four learning paradigms, validation, and evaluation.
 - Project report: current conclusion -> progress and milestones -> blockers ->
   risks -> decisions needed -> owner/action table.
 - Research report: question -> gap -> method -> experiment -> results ->
@@ -102,8 +103,12 @@ Use the user's authored structure first. When choosing slide rhythms:
 
 - Date-heavy content -> timeline.
 - `→` loops or "how it works" -> process cards.
+- Feedback loops such as training/validation/iteration -> `loop_flow`.
 - Multiple key-value rows -> fact cards.
 - Core vocabulary with relationships -> `concept_diagram`.
+- Four learning paradigms/modes -> `learning_modes`.
+- Four algorithms, scenarios, or recommendations -> `numbered_cards`.
+- Evaluation metrics, trade-offs, or selection criteria -> `compare_matrix`.
 - Report overview with 3-4 big numbers -> `metric_strip`.
 - Roadmap or stage progress with dates -> `milestone_timeline`.
 - Representative projects/cases -> `project_showcase`.
@@ -115,6 +120,9 @@ Use the user's authored structure first. When choosing slide rhythms:
 - A worked example -> `example_walkthrough`; use process cards for broader
   workflows.
 - A teaching transition -> use `洞察：...` to connect why the next slide follows.
+- Avoid using the same card grid for three consecutive content slides; alternate
+  concept map, worked example, learning modes, loop flow, number cards, matrix,
+  and summary pages when the topic supports it.
 
 Do not produce pages that are only large bullet boxes when a stronger structure
 is available.

@@ -122,7 +122,7 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
         "为什么需要机器学习",
         "核心思想：从数据中学习规律",
         "最小例子：房价预测",
-        "三类经典任务",
+        "四类学习范式",
         "谢谢",
     ]
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
@@ -132,6 +132,7 @@ def test_brief_prompt_expands_to_requested_intro_deck() -> None:
     assert "J(θ)=1/m" in body_text
     assert "预测 ŷ" in body_text
     assert "监督学习" in body_text
+    assert "强化学习" in body_text
     assert "课堂练习" not in body_text
     assert len(deck.slides[1].bullets) == 4
     assert deck.slides[1].support == "规则系统的局限、数据中的规律和学习目标。"
@@ -149,8 +150,17 @@ def test_brief_prompt_respects_requested_ten_pages() -> None:
     assert len(deck.slides) == 10
     assert deck.slides[0].layout == "cover"
     assert deck.slides[-1].layout == "thanks"
-    assert deck.slides[7].title == "关键概念再澄清"
-    assert deck.slides[8].title == "应用场景与迁移"
+    assert [slide.title for slide in deck.slides[4:9]] == [
+        "四类学习范式",
+        "训练流程与验证闭环",
+        "经典算法速览",
+        "模型评估指标",
+        "常见误区与下一步",
+    ]
+    assert deck.slides[4].visual == "learning_modes"
+    assert deck.slides[5].visual == "loop_flow"
+    assert deck.slides[6].visual == "numbered_cards"
+    assert deck.slides[7].visual == "compare_matrix"
     assert validate_deck(deck) == []
 
 
@@ -163,17 +173,20 @@ def test_brief_machine_learning_intro_defaults_to_micro_lesson() -> None:
         "为什么需要机器学习",
         "核心思想：从数据中学习规律",
         "最小例子：房价预测",
-        "三类经典任务",
+        "四类学习范式",
         "训练流程与验证闭环",
         "常见误区与下一步",
     ]
     assert deck.slides[1].layout == "three_column"
     assert deck.slides[2].visual == "concept_diagram"
     assert deck.slides[3].visual == "example_walkthrough"
+    assert deck.slides[4].visual == "learning_modes"
+    assert deck.slides[5].visual == "loop_flow"
     assert deck.slides[6].visual == "summary"
     assert deck.slides[6].support == "误区、贯穿主线和学习路径共同收束。"
     body_text = "\n".join("\n".join(slide.bullets) for slide in deck.slides)
     assert "垃圾邮件" in body_text
+    assert "半监督" in body_text
     assert "贯穿主线" in body_text
     assert "课堂练习" not in body_text
     assert "训练集高分不等于真实可靠" in body_text
@@ -354,6 +367,32 @@ def test_report_components_render_as_editable_text(tmp_path) -> None:
     assert "AI 组卷助手" in slide_xml
     assert "AI 知识库首页" in slide_xml
     assert "建议配图" in slide_xml
+
+
+def test_ml_rich_teaching_components_render_as_editable_text(tmp_path) -> None:
+    deck = outline_to_deck("请制作 10 页 PPT，关于机器学习导论，重点讲四类学习范式。")
+
+    assert deck.title == "机器学习导论"
+    assert len(deck.slides) == 10
+    assert deck.slides[4].visual == "learning_modes"
+    assert deck.slides[5].visual == "loop_flow"
+    assert deck.slides[6].visual == "numbered_cards"
+    assert deck.slides[7].visual == "compare_matrix"
+    assert validate_deck(deck) == []
+
+    output = build_pptx(deck, tmp_path / "ml-rich-components.pptx")
+    with zipfile.ZipFile(output) as pptx:
+        slide_xml = "\n".join(
+            pptx.read(name).decode("utf-8")
+            for name in pptx.namelist()
+            if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+        )
+
+    assert "四类学习范式" in slide_xml
+    assert "强化学习" in slide_xml
+    assert "反馈" in slide_xml
+    assert "KNN" in slide_xml
+    assert "MAE" in slide_xml
 
 
 def test_formula_text_remains_editable_text_in_pptx(tmp_path) -> None:

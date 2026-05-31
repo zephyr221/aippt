@@ -145,6 +145,31 @@ VISUAL_ALIASES = {
     "quote_block": "quote_block",
     "引用": "quote_block",
     "金句": "quote_block",
+    "learning_modes": "learning_modes",
+    "learning_mode_map": "learning_modes",
+    "learning_paradigms": "learning_modes",
+    "学习范式": "learning_modes",
+    "学习模式": "learning_modes",
+    "四类学习": "learning_modes",
+    "四象限学习": "learning_modes",
+    "numbered_cards": "numbered_cards",
+    "number_cards": "numbered_cards",
+    "number_card_grid": "numbered_cards",
+    "数字卡片": "numbered_cards",
+    "编号卡片": "numbered_cards",
+    "编号卡": "numbered_cards",
+    "compare_matrix": "compare_matrix",
+    "comparison_matrix": "compare_matrix",
+    "compare_grid": "compare_matrix",
+    "matrix": "compare_matrix",
+    "对比矩阵": "compare_matrix",
+    "矩阵": "compare_matrix",
+    "对照表": "compare_matrix",
+    "loop_flow": "loop_flow",
+    "flow_loop": "loop_flow",
+    "closed_loop": "loop_flow",
+    "闭环流程": "loop_flow",
+    "反馈闭环": "loop_flow",
 }
 
 
@@ -303,6 +328,16 @@ def _prompt_topic(prompt: str) -> str:
 
 
 def _clean_prompt_topic(topic: str) -> str:
+    topic = re.split(
+        r"[，,。.!！?？:：；;、]\s*(?:其中|重点|主要|尤其|希望|要求|请|并|要|讲)",
+        topic,
+        maxsplit=1,
+    )[0]
+    topic = re.split(
+        r"\s+(?:其中|重点|主要|尤其|希望|要求|并且|要|重点讲|讲讲|讲一下)\s*",
+        topic,
+        maxsplit=1,
+    )[0]
     topic = re.sub(r"[，,。.!！?？:：；;、]+", " ", topic)
     topic = re.sub(r"\s+", " ", topic).strip(" 的")
     return _clip(topic or "主题演示", 30)
@@ -342,7 +377,7 @@ def _prompt_kind(topic: str, prompt: str) -> str:
 
 def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]]]:
     if _is_machine_learning_topic(topic):
-        candidates = [
+        core_candidates = [
             (
                 "为什么需要机器学习",
                 [
@@ -384,24 +419,25 @@ def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]
                 ],
             ),
             (
-                "三类经典任务",
+                "四类学习范式",
                 [
-                    "版式：three_column",
-                    "组件：rich_cards",
-                    "支撑：用任务目标、典型例子和评价方式区分三类学习。",
-                    "不同任务的差别，不在模型名字，而在反馈信号和评价方式。",
-                    "监督学习：房价预测是回归，垃圾邮件是分类；都有标签样本；看准确率或预测误差",
-                    "无监督学习：没有成交价这类标准答案；用于聚类、降维和异常发现；重在探索结构",
-                    "强化学习：通过行动获得奖励；用于策略优化；关键是长期收益而非单步正确",
-                    "洞察：任务类型回答的是反馈信号来自哪里，不是先背算法名字。",
+                    "版式：horizontal",
+                    "组件：learning_modes",
+                    "支撑：用标签、反馈信号、典型任务和课堂例子区分四类学习范式。",
+                    "学习范式回答的是反馈信号从哪里来，以及模型如何知道自己做得好不好。",
+                    "监督学习：有标签样本；分类或回归；房价预测、垃圾邮件识别、疾病筛查",
+                    "无监督学习：没有标准答案；聚类或降维；客户分群、异常发现、主题探索",
+                    "半监督/自监督学习：少量标签或自造监督信号；表征预训练、文本填空、图像对比学习",
+                    "强化学习：行动后获得奖励；策略持续优化；机器人控制、推荐策略、游戏智能体",
+                    "洞察：先看反馈信号，再选择算法；这比直接背模型名更稳。",
                 ],
             ),
             (
                 "训练流程与验证闭环",
                 [
                     "版式：horizontal",
-                    "组件：process",
-                    "支撑：按数据、训练、验证、迭代四步展开。",
+                    "组件：loop_flow",
+                    "支撑：按数据、训练、验证、迭代四步展开，强调反馈闭环。",
                     "一个可用模型来自反复验证，而不是一次训练完成。",
                     "数据准备：收集房源样本；清洗异常成交价；划分训练/验证/测试集",
                     "模型训练：设定目标函数；更新参数 θ；观察房价预测损失是否下降",
@@ -409,20 +445,76 @@ def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]
                     "迭代上线：补充数据；监控漂移；保留人工复核和回滚机制",
                 ],
             ),
+        ]
+        optional_candidates = [
             (
-                "常见误区与下一步",
+                "经典算法速览",
                 [
-                    "版式：summary",
-                    "组件：summary",
-                    "支撑：误区、贯穿主线和学习路径共同收束。",
-                    "学完导论后，最重要的是能用同一条主线复述：数据进来，模型预测，用误差修正。",
-                    "常见误区：训练集高分不等于真实可靠；相关性不等于因果；大模型不一定适合所有任务",
-                    "贯穿主线：房价预测只是缩影；换成垃圾邮件或图像识别，仍然先找输入、标签、模型和评价",
-                    "继续学习：先跑通小数据实验；记录假设和失败原因；再进入具体算法和深度学习",
-                    "洞察：机器学习的第一课，是把问题说清楚、把反馈闭环建起来。",
+                    "版式：horizontal",
+                    "组件：numbered_cards",
+                    "支撑：用算法适用场景而不是公式堆叠建立第一印象。",
+                    "算法不是越复杂越好，先按任务和数据形态选择够用的方法。",
+                    "KNN：用相似样本投票；直观易懂；适合小样本和入门演示",
+                    "决策树：按规则层层划分；解释性强；容易过拟合，需要剪枝",
+                    "SVM：寻找最大间隔边界；高维小样本表现稳；参数和核函数要谨慎",
+                    "朴素贝叶斯：基于概率假设快速分类；文本分类常见；条件独立是假设边界",
+                ],
+            ),
+            (
+                "模型评估指标",
+                [
+                    "版式：horizontal",
+                    "组件：compare_matrix",
+                    "支撑：用分类、回归和泛化三个视角说明如何判断模型好坏。",
+                    "评估不是给模型打一个分，而是判断它能否在新样本上稳定解决问题。",
+                    "分类指标：准确率看总体正确；精确率看误报成本；召回率看漏报风险",
+                    "回归指标：MAE 直观；MSE 放大大误差；R² 解释整体拟合程度",
+                    "泛化检查：训练集和测试集差距；交叉验证；失败样例复盘",
+                    "业务指标：误差是否可接受；是否节省人工；上线后是否持续监控",
+                    "洞察：指标必须回到任务风险，否则高分也可能不可用。",
+                ],
+            ),
+            (
+                "过拟合、欠拟合与正则化",
+                [
+                    "版式：horizontal",
+                    "组件：compare_matrix",
+                    "支撑：用三种模型状态和修正动作解释泛化问题。",
+                    "模型好不好，不只看训练集，还要看它是否学到可迁移的规律。",
+                    "欠拟合：模型太简单；训练集也表现差；需要补特征或提高模型能力",
+                    "过拟合：训练集很好、测试集变差；记住噪声；需要正则化或更多数据",
+                    "正则化：限制模型复杂度；减少参数过大；让模型更愿意学习稳定规律",
+                    "数据增强：补充多样样本；覆盖边界情况；用验证集检查是否真正改善",
+                ],
+            ),
+            (
+                "课堂应用场景",
+                [
+                    "版式：horizontal",
+                    "组件：numbered_cards",
+                    "支撑：把机器学习导论迁移到学生熟悉的校园和科研场景。",
+                    "理解范式后，可以把同一套学习闭环迁移到不同问题。",
+                    "学习分析：练习记录作为输入；预测薄弱知识点；给出复习建议",
+                    "图像识别：图片像素或特征作为输入；识别物体类别；需要标注和验证",
+                    "科研筛选：实验或模拟数据作为输入；预测候选材料表现；保留人工复核",
+                    "办公检索：文档向量化与聚类；发现主题结构；辅助整理知识库",
                 ],
             ),
         ]
+        summary_candidate = (
+            "常见误区与下一步",
+            [
+                "版式：summary",
+                "组件：summary",
+                "支撑：误区、贯穿主线和学习路径共同收束。",
+                "学完导论后，最重要的是能用同一条主线复述：数据进来，模型预测，用误差修正。",
+                "常见误区：训练集高分不等于真实可靠；相关性不等于因果；大模型不一定适合所有任务",
+                "贯穿主线：房价预测只是缩影；换成垃圾邮件或图像识别，仍然先找输入、标签、模型和评价",
+                "继续学习：先跑通小数据实验；记录假设和失败原因；再进入具体算法和深度学习",
+                "洞察：机器学习的第一课，是把问题说清楚、把反馈闭环建起来。",
+            ],
+        )
+        return _fit_ml_section_count(core_candidates, optional_candidates, summary_candidate, body_pages)
     else:
         candidates = [
             (
@@ -500,6 +592,26 @@ def _teaching_sections(topic: str, body_pages: int) -> list[tuple[str, list[str]
             ),
         ]
     return _fit_section_count(candidates, body_pages, topic)
+
+
+def _fit_ml_section_count(
+    core_candidates: list[tuple[str, list[str]]],
+    optional_candidates: list[tuple[str, list[str]]],
+    summary_candidate: tuple[str, list[str]],
+    body_pages: int,
+) -> list[tuple[str, list[str]]]:
+    if body_pages <= 4:
+        return core_candidates[:body_pages]
+    if body_pages == 5:
+        return [*core_candidates[:4], summary_candidate]
+
+    sections = list(core_candidates)
+    optional_slots = max(0, body_pages - len(core_candidates) - 1)
+    sections.extend(optional_candidates[:optional_slots])
+    sections.append(summary_candidate)
+    while len(sections) < body_pages:
+        sections.insert(-1, optional_candidates[(len(sections) - len(core_candidates)) % len(optional_candidates)])
+    return sections[:body_pages]
 
 
 def _is_machine_learning_topic(topic: str) -> bool:
@@ -862,7 +974,16 @@ def _slide_from_section(section_title: str, raw_items: list[str]) -> Slide:
         layout = Layout.COMPARISON if layout == Layout.COMPARISON else Layout.TWO_COLUMN
     elif visual == "three_column":
         layout = Layout.THREE_COLUMN
-    elif visual in {"horizontal", "process", "example_walkthrough", "concept_diagram"} and layout == Layout.ONE_COLUMN:
+    elif visual in {
+        "horizontal",
+        "process",
+        "example_walkthrough",
+        "concept_diagram",
+        "learning_modes",
+        "numbered_cards",
+        "compare_matrix",
+        "loop_flow",
+    } and layout == Layout.ONE_COLUMN:
         layout = Layout.HORIZONTAL
     elif visual == "summary" and layout == Layout.ONE_COLUMN:
         layout = Layout.SUMMARY
