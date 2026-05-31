@@ -233,6 +233,137 @@ def outline_view(
       gap: 24px 22px;
       align-items: start;
     }
+    .pages.is-planning {
+      display: block;
+      max-width: 920px;
+    }
+    .planning-stage {
+      display: grid;
+      gap: 16px;
+    }
+    .user-bubble {
+      justify-self: end;
+      max-width: min(640px, 88%);
+      border-radius: 18px;
+      background: #e9ebef;
+      padding: 14px 18px;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.62;
+      white-space: pre-wrap;
+    }
+    .agent-copy {
+      display: grid;
+      gap: 8px;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.7;
+      margin: 4px 0 2px;
+    }
+    .agent-copy p {
+      margin: 0;
+    }
+    .thought-card,
+    .stream-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+      overflow: hidden;
+    }
+    .thought-card.is-live::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(110deg, transparent 0%, rgba(49, 87, 200, 0.07) 44%, transparent 70%);
+      transform: translateX(-100%);
+      animation: pageSweep 2.8s ease-in-out infinite;
+    }
+    .thought-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px 0;
+      font-weight: 760;
+      color: var(--ink);
+    }
+    .thought-head span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .thought-body {
+      padding: 12px 16px 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .stream-card {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .stream-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-weight: 760;
+    }
+    .stream-title small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 680;
+    }
+    .stream-lines {
+      display: grid;
+      gap: 8px;
+    }
+    .stream-line {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .stream-line::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-top: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      opacity: 0.55;
+    }
+    .stream-line.is-active {
+      color: var(--ink-2);
+      background: rgba(49, 87, 200, 0.035);
+      border-radius: 8px;
+      padding: 6px 8px;
+      margin-left: -8px;
+    }
+    .stream-line.is-active::before {
+      opacity: 1;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .planning-skeleton {
+      display: grid;
+      gap: 8px;
+    }
+    .planning-skeleton span {
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #eef2f7, #f8fafc, #eef2f7);
+      background-size: 200% 100%;
+      animation: shimmer 2.4s ease-in-out infinite;
+    }
+    .planning-skeleton span:nth-child(2) { width: 72%; }
+    .planning-skeleton span:nth-child(3) { width: 58%; }
     .page-card {
       position: relative;
       min-width: 0;
@@ -526,6 +657,52 @@ def outline_view(
     .page-nav-state.done {
       background: var(--ready);
     }
+    .rail-chat {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+    }
+    .rail-chat label {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 760;
+    }
+    .rail-chat textarea {
+      width: 100%;
+      min-height: 64px;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .rail-chat textarea::placeholder {
+      color: var(--muted-2);
+    }
+    .rail-chat button {
+      justify-self: end;
+      min-height: 32px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 760;
+      cursor: pointer;
+    }
+    .rail-chat button:disabled,
+    .rail-chat textarea:disabled {
+      cursor: not-allowed;
+      opacity: 0.46;
+    }
     .empty {
       max-width: 760px;
       margin: 86px auto;
@@ -578,6 +755,10 @@ def outline_view(
     @keyframes pulse {
       0%, 100% { opacity: 0.36; transform: scale(0.9); }
       50% { opacity: 1; transform: scale(1.18); }
+    }
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
     }
     @media (max-width: 1080px) {
       .outline-shell {
@@ -646,6 +827,11 @@ def outline_view(
       <div class="assistant-stack" id="assistant-stack"></div>
       <nav class="page-nav" id="page-nav" aria-label="页面列表"></nav>
       <div class="outline-actions" id="rail-actions"></div>
+      <form class="rail-chat" id="rail-chat" autocomplete="off">
+        <label for="rail-message">继续和 AI 沟通</label>
+        <textarea id="rail-message" name="message" rows="3" placeholder="补充修改方向，例如：把第 4 页改成案例讲解..."></textarea>
+        <button id="rail-send" type="submit">发送</button>
+      </form>
     </aside>
   </div>
   <div class="generation-toast" id="generation-toast" aria-live="polite"></div>
@@ -657,7 +843,9 @@ def outline_view(
     let currentOutline = null;
     let currentFiles = [];
     let currentJobs = [];
+    let currentJobLogs = new Map();
     let timersStarted = false;
+    let railChatBound = false;
 
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -774,6 +962,37 @@ def outline_view(
       }[status] || status;
     }
 
+    function formatAgentLog(logText) {
+      const lines = String(logText || "")
+        .split("\\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.startsWith("AIPPT_AGENT:") ? line.slice("AIPPT_AGENT:".length).trim() : "")
+        .filter(Boolean);
+      return lines.slice(-10).join("\\n");
+    }
+
+    function agentLogText() {
+      return formatAgentLog(currentJobs.map((job) => currentJobLogs.get(job.id) || "").join("\\n"));
+    }
+
+    function agentLogLines() {
+      return agentLogText()
+        .split("\\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    }
+
+    function fallbackPlanningLines(markdown) {
+      const requestText = String(markdown || "");
+      const topic = requestText.split(/[。！？!?\\n]/)[0].replace(/^请(帮我|帮忙)?/u, "").trim();
+      return [
+        `识别需求：${topic || "正在读取用户输入"}`,
+        "规划策略：判断内容类型、页数和讲述顺序。",
+        "准备调用 Hermes/MiMo 生成页面结构和可渲染大纲。"
+      ];
+    }
+
     async function request(path, options = {}) {
       const response = await fetch(api + path, {
         credentials: "same-origin",
@@ -799,6 +1018,22 @@ def outline_view(
 
     function buildJob(jobs) {
       return jobs.find((job) => job.type === "build_pptx");
+    }
+
+    function planJob(jobs) {
+      return jobs.find((job) => job.type === "plan_outline");
+    }
+
+    function hasStructuredOutline(markdown) {
+      return /^##\\s*第\\s*\\d+\\s*页/mu.test(String(markdown || ""));
+    }
+
+    function displayPages(pages, jobs) {
+      const plan = planJob(jobs);
+      if (!hasStructuredOutline(currentOutline?.markdown) && plan && ["queued", "running"].includes(plan.status)) {
+        return [];
+      }
+      return pages;
     }
 
     function isReady(deck, files, jobs) {
@@ -856,7 +1091,10 @@ def outline_view(
 
     function renderSummary(deck, pages, files, jobs) {
       const done = completedPages(deck, pages, files, jobs);
-      if (!pages.length) return "正在等待大纲输出";
+      if (!pages.length) {
+        const line = agentLogLines().at(-1) || "Hermes 正在理解需求并规划页面顺序";
+        return `<strong>正在生成 PPT 大纲</strong><span>${escapeHtml(line)}</span>`;
+      }
       if (isReady(deck, files, jobs)) return `<strong>PPT 已完成</strong><span>${pages.length} 页内容已经生成</span>`;
       if (isRendering(deck, files, jobs)) {
         const batchEnd = Math.min(pages.length, done + 3);
@@ -869,10 +1107,16 @@ def outline_view(
       const pct = progressPercent(deck, pages, files, jobs);
       const rendering = isRendering(deck, files, jobs);
       const ready = isReady(deck, files, jobs);
-      const planText = pages.length ? `${pages.length} 页大纲已展开，页面结构、标题和要点可直接预览。` : "正在等待大纲内容。";
+      const planLines = agentLogLines();
+      const planning = rendering && !pages.length;
+      const planText = pages.length
+        ? `${pages.length} 页大纲已展开，页面结构、标题和要点可直接预览。`
+        : (planLines.at(-1) || "Hermes 正在把需求拆成页面标题、讲述顺序和设计组件。");
       const renderText = ready
         ? "PPTX 已完成，可以预览或下载。"
-        : rendering
+        : planning
+          ? "大纲完成后会自动进入 PPTX 渲染。"
+          : rendering
           ? `页面正在按批次生成，当前约 ${pct}% 完成。`
           : "大纲已就绪，可以开始渲染 PPTX。";
       return `
@@ -880,8 +1124,9 @@ def outline_view(
           <div class="assistant-card-title"><span>创作意图</span><span class="pill">${escapeHtml(statusLabel(deck.status))}</span></div>
           <p>${escapeHtml(deck.title || "PPT 大纲")}</p>
         </section>
-        <section class="assistant-card">
-          <div class="assistant-card-title"><span>PPT 大纲</span><span class="pill ready">已完成</span></div>
+        <section class="assistant-card ${planning ? "is-live" : ""}">
+          <div class="assistant-card-title"><span>PPT 大纲</span><span class="pill ${pages.length ? "ready" : ""}">${pages.length ? "已完成" : "生成中"}</span></div>
+          <div class="mini-progress"><span style="width: ${pages.length ? 100 : 54}%"></span></div>
           <p>${escapeHtml(planText)}</p>
         </section>
         <section class="assistant-card ${rendering ? "is-live" : ""}">
@@ -892,10 +1137,52 @@ def outline_view(
       `;
     }
 
+    function renderPlanningStage(deck, jobs) {
+      const markdown = currentOutline?.markdown || deck.title || "";
+      const liveLines = agentLogLines();
+      const lines = liveLines.length ? liveLines : fallbackPlanningLines(markdown);
+      const currentLine = lines.at(-1) || "正在生成大纲";
+      return `
+        <section class="planning-stage" aria-label="AI 正在规划大纲">
+          <div class="user-bubble">${escapeHtml(markdown || deck.title || "帮我做一份 PPT")}</div>
+          <div class="agent-copy">
+            <p>好的，我会先把需求拆成页面结构和讲述顺序。</p>
+            <p>正在为您生成大纲，请稍候。</p>
+          </div>
+          <article class="thought-card is-live">
+            <div class="thought-head">
+              <span>已开始思考</span>
+              <span class="pill">Hermes/MiMo</span>
+            </div>
+            <div class="thought-body">
+              ${escapeHtml(currentLine)}
+            </div>
+          </article>
+          <article class="stream-card">
+            <div class="stream-title">
+              <span>PPT 大纲</span>
+              <small>正在输出大纲内容...</small>
+            </div>
+            <div class="stream-lines">
+              ${lines.slice(-8).map((line, index, array) => `
+                <div class="stream-line ${index === array.length - 1 ? "is-active" : ""}">
+                  <span>${escapeHtml(line)}</span>
+                </div>
+              `).join("")}
+            </div>
+            <div class="planning-skeleton" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+          </article>
+        </section>
+      `;
+    }
+
     function renderPages(deck, pages, files, jobs) {
       const container = document.getElementById("pages");
+      container.classList.toggle("is-planning", !pages.length);
       if (!pages.length) {
-        container.innerHTML = `<div class="empty">大纲还在生成中，稍等几秒刷新后就能看到逐页内容。</div>`;
+        container.innerHTML = renderPlanningStage(deck, jobs);
         return;
       }
       container.innerHTML = pages.map((page, index) => {
@@ -931,9 +1218,14 @@ def outline_view(
 
     function renderToast(deck, pages, files, jobs) {
       const toast = document.getElementById("generation-toast");
-      if (!isRendering(deck, files, jobs) || !pages.length) {
+      if (!isRendering(deck, files, jobs)) {
         toast.classList.remove("show");
         toast.innerHTML = "";
+        return;
+      }
+      if (!pages.length) {
+        toast.innerHTML = `<span>AI 正在生成大纲...</span><span class="stop-dot" aria-hidden="true"></span>`;
+        toast.classList.add("show");
         return;
       }
       const done = completedPages(deck, pages, files, jobs);
@@ -955,16 +1247,66 @@ def outline_view(
       });
     }
 
+    function bindRailChat() {
+      if (railChatBound) return;
+      const form = document.getElementById("rail-chat");
+      if (!form) return;
+      railChatBound = true;
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const textarea = document.getElementById("rail-message");
+        const button = document.getElementById("rail-send");
+        const message = textarea?.value.trim();
+        if (!message) return;
+        button.disabled = true;
+        button.textContent = "发送中";
+        try {
+          const base = String(currentOutline?.markdown || "").trim();
+          const nextOutline = `${base}\\n\\n补充要求：${message}`.trim();
+          await request(`/decks/${deckId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ outline_md: nextOutline, status: "draft" })
+          });
+          await request(`/jobs/decks/${deckId}`, {
+            method: "POST",
+            body: JSON.stringify({ type: "plan_outline", input_snapshot: nextOutline })
+          });
+          textarea.value = "";
+          await refreshData();
+        } catch (error) {
+          textarea.value = message;
+        } finally {
+          button.textContent = "发送";
+          updateRailChatState();
+        }
+      });
+    }
+
+    function updateRailChatState() {
+      const textarea = document.getElementById("rail-message");
+      const button = document.getElementById("rail-send");
+      if (!textarea || !button || !currentOutline) return;
+      const deck = currentOutline.deck || {};
+      const pages = displayPages(currentOutline.pages || [], currentJobs);
+      const locked = isRendering(deck, currentFiles, currentJobs);
+      textarea.disabled = locked;
+      button.disabled = locked;
+      textarea.placeholder = locked
+        ? (pages.length ? "正在生成 PPT 页面，完成后可继续调整..." : "正在生成大纲，完成后可继续调整...")
+        : "补充修改方向，例如：把第 4 页改成案例讲解...";
+    }
+
     function renderAll() {
       if (!currentOutline) return;
       const deck = currentOutline.deck || {};
-      const pages = currentOutline.pages || [];
+      const sourcePages = currentOutline.pages || [];
+      const pages = displayPages(sourcePages, currentJobs);
       document.title = `AIPPT · ${deck.title || "大纲预览"}`;
       document.getElementById("deck-title").textContent = deck.title || "PPT 大纲";
       document.getElementById("top-title").textContent = deck.title || "PPT 大纲";
       document.getElementById("deck-meta").innerHTML = `
         <span class="pill ${deck.status === "ready" ? "ready" : deck.status === "failed" ? "failed" : ""}">${escapeHtml(statusLabel(deck.status))}</span>
-        <span>${pages.length || 0} 页</span>
+        <span>${pages.length ? `${pages.length} 页` : "规划中"}</span>
         <span>SJTU 模板</span>
       `;
       const actions = fileActions(deck, currentFiles, currentJobs);
@@ -976,6 +1318,8 @@ def outline_view(
       renderPages(deck, pages, currentFiles, currentJobs);
       renderToast(deck, pages, currentFiles, currentJobs);
       bindStartBuild();
+      bindRailChat();
+      updateRailChatState();
     }
 
     async function refreshData() {
@@ -984,6 +1328,15 @@ def outline_view(
         request(`/files/decks/${deckId}`).catch(() => []),
         request(`/jobs/decks/${deckId}`).catch(() => [])
       ]);
+      const logEntries = await Promise.all(currentJobs.slice(0, 4).map(async (job) => {
+        try {
+          const payload = await request(`/jobs/${job.id}/log`);
+          return [job.id, payload.log_text || ""];
+        } catch (_) {
+          return [job.id, ""];
+        }
+      }));
+      currentJobLogs = new Map(logEntries);
       renderAll();
     }
 
@@ -3541,10 +3894,7 @@ def workbench(
           method: "POST",
           body: JSON.stringify({ type: jobType })
         });
-        noticeText = "已开始生成，Agent 会先规划结构再渲染 PPTX。";
-        await loadDecks();
-        const me = await request("/auth/me");
-        renderWorkbench(me);
+        window.location.assign(`${rootPath}/decks/${deck.id}/outline`);
       } catch (error) {
         showNotice(error.message || "提交失败");
       } finally {
